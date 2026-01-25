@@ -26,7 +26,9 @@ public class AuthController {
     @PostMapping("/github/callback")
     public ResponseEntity<AuthResponse> githubCallback(@RequestBody Map<String, String> payload) {
         String code = payload.get("code");
-        AuthResponse response = githubAuthService.authenticateWithCode(code);
+        String recipient = payload.get("recipient"); // 获取前端传递的 recipient
+        
+        AuthResponse response = githubAuthService.authenticateWithCode(code, recipient);
         if (response.getError() != null) return ResponseEntity.status(401).body(response);
         return ResponseEntity.ok(response);
     }
@@ -36,8 +38,9 @@ public class AuthController {
         String code = payload.get("code");
         String redirectUri = payload.get("redirectUri");
         String codeVerifier = payload.get("codeVerifier");
+        String recipient = payload.get("recipient"); // 获取前端传递的 recipient
         
-        AuthResponse response = twitterAuthService.authenticateWithCode(code, redirectUri, codeVerifier);
+        AuthResponse response = twitterAuthService.authenticateWithCode(code, redirectUri, codeVerifier, recipient);
         if (response.getError() != null) return ResponseEntity.status(401).body(response);
         return ResponseEntity.ok(response);
     }

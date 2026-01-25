@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GhostLink Prover & Mint Console</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: monospace; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f0f0f0; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        textarea { width: 100%; font-family: monospace; border: 1px solid #ccc; padding: 10px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #000; color: white; border: none; border-radius: 4px; margin-top: 10px; margin-right: 10px;}
+        button:hover { background-color: #333; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #status { margin-top: 20px; font-weight: bold; }
+        pre { background: #eee; padding: 10px; overflow-x: auto; }
+        .section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .step { margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-left: 3px solid #ccc; }
+        .warning { color: red; font-weight: bold; }
+        .info-box { background: #e8f4f8; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #bce8f1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GhostLink Demo</h1>
+
+        <!-- Wallet Section -->
+        <div class="section">
+            <h3>1. Wallet Connection</h3>
+            <button id="connectBtn">Connect Wallet</button>
+            <span id="walletAddress">Not connected</span>
+        </div>
+
+        <!-- Deploy Section -->
+        <div class="section">
+            <h3>2. Deploy Contracts (REQUIRED)</h3>
+            <p class="warning">⚠️ Contract logic changed. Please redeploy!</p>
+
+            <div class="step">
+                <h4>Step A: Verifier Address</h4>
+                <p>Using RISC Zero Official Pre-deployed Verifier</p>
+                <select id="networkSelect" style="width: 100%; padding: 5px; margin-top: 5px; margin-bottom: 10px;">
+                    <option value="sepolia-router">Sepolia - Router (推荐) - 0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187</option>
+                    <option value="sepolia-groth16">Sepolia - Groth16 (直接) - 0x2a098988600d87650Fb061FfAff08B97149Fa84D</option>
+                    <option value="mainnet-router">Mainnet - Router (推荐) - 0x8EaB2D97Dfce405A1692a21b3ff3A172d593D319</option>
+                    <option value="mainnet-groth16">Mainnet - Groth16 (直接) - 0x54aCE3ED46529B4d4F3770C8Bad5dDC48717B9bF</option>
+                </select>
+                <input type="text" id="verifierAddress" placeholder="Verifier Address" value="0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187" style="width: 100%; padding: 5px; margin-top: 5px;" readonly>
+                <p style="font-size: 11px; color: #666; margin-top: 5px;">
+                    <strong>Router（推荐）</strong>: 自动路由到正确的 verifier，支持未来版本更新<br>
+                    <strong>Groth16（直接）</strong>: 直接使用 Groth16 verifier，跳过路由层
+                </p>
+            </div>
+
+            <div class="step">
+                <h4>Step B: Deploy SBT</h4>
+                <p id="bytecodeStatus" style="font-size: 12px; color: #666;">Status: Waiting for artifact...</p>
+                <label>Image ID (Hex):</label>
+                <input type="text" id="deployImageId" placeholder="Paste Image ID here (from Step 3)..." style="width: 100%; padding: 5px; margin-bottom: 10px;">
+                <button id="deploySBTBtn">Deploy SBT</button>
+                <div id="deployStatus"></div>
+            </div>
+        </div>
+
+        <!-- Prover Section -->
+        <div class="section">
+            <h3>3. Generate ZK Proof (Off-chain)</h3>
+            <p>Backend Service: <code>http://localhost:3000/prove</code></p>
+            <p class="info-box" style="margin-bottom: 10px;">
+                <strong>⚠️ 注意：</strong>请确保后端服务正在运行！<br>
+                运行命令：<code>cd host && cargo run</code>
+            </p>
+            <textarea id="jsonInput" rows="5" placeholder='Enter GitHub user JSON data...'></textarea>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                Example: <code>{"id": 12345, "login": "test_user", "created_at": "2020-01-01T00:00:00Z", "public_repos": 5}</code>
+            </p>
+            <button id="loadExampleBtn" style="padding: 5px 10px; font-size: 12px; margin-top: 5px;">Load Example</button>
+            <button id="proveBtn">Generate Proof</button>
+            <div id="proverStatus"></div>
+
+            <div id="imageIdDisplay" class="info-box" style="display:none;">
+                <strong>Current Image ID:</strong> <span id="currentImageId"></span>
+                <br>
+                <small style="color: #666;">👉 Copy this ID to "Step B" above and Deploy!</small>
+            </div>
+        </div>
+
+        <!-- Mint Section -->
+        <div class="section">
+            <h3>4. Mint SBT (On-chain)</h3>
+            <p>Contract Address: <input type="text" id="contractAddress" placeholder="Deploy first, then address will appear here..." style="width: 300px; padding: 5px;"></p>
+            <button id="mintBtn" disabled>Mint SBT</button>
+            <div id="mintStatus"></div>
+        </div>
+
+        <!-- Set Base URI Section -->
+        <div class="section">
+            <h3>5. Set NFT Metadata (Optional)</h3>
+            <p style="font-size: 12px; color: #666;">
+                设置 Base URI 以在 MetaMask 中显示 NFT 图片和元数据<br>
+                <strong>⚠️ 重要：</strong>MetaMask 不支持 <code>ipfs://</code> 协议，请使用 HTTP 网关 URL<br>
+                格式示例: <code>https://YOUR_GATEWAY_NAME.mypinata.cloud/ipfs/YOUR_HASH/</code> (Pinata 自定义网关，推荐)<br>
+                或 <code>https://cloudflare-ipfs.com/ipfs/YOUR_HASH/</code> (Cloudflare 公共网关)<br>
+                如果输入 <code>ipfs://</code> 格式，系统会自动转换为 HTTP 网关 URL
+            </p>
+            <p>Contract Address: <input type="text" id="setURIContractAddress" placeholder="Enter contract address..." style="width: 300px; padding: 5px;"></p>
+            <input type="text" id="baseURIInput" placeholder="Enter Base URI (e.g., https://ipfs.io/ipfs/QmXXX/)" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+            <button id="setBaseURIBtn" disabled>Set Base URI</button>
+            <button id="getBaseURIBtn" disabled>Get Current Base URI</button>
+            <button id="testMetadataBtn" disabled>Test Metadata JSON</button>
+            <div id="baseURIStatus"></div>
+            <div class="info-box" style="margin-top: 10px;">
+                <strong>💡 提示：</strong><br>
+                1. 使用 IPFS: 上传元数据 JSON 到 IPFS，使用文件夹 Hash 作为 Base URI<br>
+                2. 使用 HTTP: 创建元数据服务器，返回 JSON 格式的元数据<br>
+                3. 查看 <a href="../NFT_METADATA_GUIDE.md" target="_blank">NFT_METADATA_GUIDE.md</a> 了解详细步骤
+            </div>
+        </div>
+
+        <!-- Verify & Query Section -->
+        <div class="section">
+            <h3>6. Verify & Query</h3>
+            
+            <div class="step">
+                <h4>5.1 Check My SBTs</h4>
+                <button id="checkMySBTsBtn" disabled>Check My SBTs</button>
+                <div id="mySBTsStatus"></div>
+                <div id="mySBTsResult" style="display: none; margin-top: 10px;">
+                    <h5>Your SBTs:</h5>
+                    <div id="mySBTsList"></div>
+                </div>
+            </div>
+
+            <div class="step">
+                <h4>5.2 Verify Address</h4>
+                <p>Check if an address owns any GhostLink SBT:</p>
+                <input type="text" id="verifyAddressInput" placeholder="Enter address to verify (0x...)" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                <button id="verifyAddressBtn" disabled>Verify Address</button>
+                <div id="verifyAddressStatus"></div>
+            </div>
+
+            <div class="step">
+                <h4>5.3 Check Nullifier</h4>
+                <p>Check if a nullifier has been used:</p>
+                <input type="text" id="checkNullifierInput" placeholder="Enter nullifier (0x...)" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                <button id="checkNullifierBtn" disabled>Check Nullifier</button>
+                <div id="checkNullifierStatus"></div>
+            </div>
+
+            <div class="step">
+                <h4>5.4 Query Token Info</h4>
+                <p>Get token information by tokenId:</p>
+                <input type="number" id="tokenIdInput" placeholder="Enter token ID" style="width: 100%; padding: 5px; margin-bottom: 5px;" min="0">
+                <button id="queryTokenBtn" disabled>Query Token</button>
+                <div id="queryTokenStatus"></div>
+            </div>
+
+            <div class="step">
+                <h4>5.5 Contract Info</h4>
+                <button id="getContractInfoBtn" disabled>Get Contract Info</button>
+                <div id="contractInfoStatus"></div>
+                <div id="contractInfoResult" style="display: none; margin-top: 10px;">
+                    <pre id="contractInfoDisplay"></pre>
+                </div>
+            </div>
+        </div>
+
+        <div id="result" style="display: none;">
+            <h4>Proof Data:</h4>
+            <pre id="jsonOutput"></pre>
+        </div>
+    </div>
+
+    <script>
+        let proofData = null;
+        let provider, signer;
+        let userAddress = null;
+        let sbtArtifact = null;
+
+        // RISC Zero 官方预编译 Verifier 地址
+        // RISC Zero Verifier 地址
+        // Router（推荐）: 自动路由到正确的 verifier，支持未来版本
+        // Groth16（直接）: 直接使用 Groth16 verifier
+        const VERIFIER_ADDRESSES = {
+            "sepolia-router": "0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187",  // RiscZeroVerifierRouter（推荐）
+            "sepolia-groth16": "0x2a098988600d87650Fb061FfAff08B97149Fa84D",  // RiscZeroGroth16Verifier（直接）
+            "mainnet-router": "0x8EaB2D97Dfce405A1692a21b3ff3A172d593D319",  // RiscZeroVerifierRouter（推荐）
+            "mainnet-groth16": "0x54aCE3ED46529B4d4F3770C8Bad5dDC48717B9bF"   // RiscZeroGroth16Verifier（直接）
+        };
+
+        // 更新 verifier 地址（当页面加载完成后）
+        document.addEventListener('DOMContentLoaded', () => {
+            const networkSelect = document.getElementById('networkSelect');
+            const verifierAddress = document.getElementById('verifierAddress');
+            
+            if (networkSelect && verifierAddress) {
+                networkSelect.addEventListener('change', (e) => {
+                    const network = e.target.value;
+                    verifierAddress.value = VERIFIER_ADDRESSES[network];
+                });
+            }
+            
+            // 加载示例 JSON
+            const loadExampleBtn = document.getElementById('loadExampleBtn');
+            const jsonInput = document.getElementById('jsonInput');
+            if (loadExampleBtn && jsonInput) {
+                loadExampleBtn.addEventListener('click', () => {
+                    const exampleJson = {
+                        id: 12345,
+                        login: "test_user",
+                        created_at: "2020-01-01T00:00:00Z",
+                        public_repos: 5
+                    };
+                    jsonInput.value = JSON.stringify(exampleJson, null, 2);
+                });
+                // 自动加载示例
+                loadExampleBtn.click();
+            }
+        });
+
+        async function loadArtifact(filename) {
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) throw new Error("Artifact not found: " + filename);
+                const json = await response.json();
+                let bytecode = null;
+                if (json.bytecode && typeof json.bytecode === 'object' && json.bytecode.object) {
+                    bytecode = json.bytecode.object;
+                } else if (typeof json.bytecode === 'string') {
+                    bytecode = json.bytecode;
+                } else if (json.data && json.data.bytecode && json.data.bytecode.object) {
+                    bytecode = json.data.bytecode.object;
+                }
+                return { abi: json.abi, bytecode: bytecode };
+            } catch (e) {
+                console.warn(e);
+                return null;
+            }
+        }
+
+        async function loadAllArtifacts() {
+            sbtArtifact = await loadArtifact('./GhostLinkSBT.json');
+            const statusEl = document.getElementById('bytecodeStatus');
+            if (!sbtArtifact) {
+                document.getElementById('deployStatus').innerText = "⚠️ Missing GhostLinkSBT.json";
+                statusEl.innerText = "Status: Missing Artifact";
+            } else {
+                statusEl.innerHTML = `<span style="color: green;">✅ Ready to deploy.</span>`;
+            }
+        }
+
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            if (window.ethereum) {
+                try {
+                    provider = new ethers.BrowserProvider(window.ethereum);
+                    signer = await provider.getSigner();
+                    const address = await signer.getAddress();
+                    
+                    // 验证地址格式（确保是有效的以太坊地址）
+                    if (!ethers.isAddress(address)) {
+                        throw new Error("Invalid address format: " + address);
+                    }
+                    
+                    // 确保地址格式正确（小写，带0x前缀）
+                    userAddress = ethers.getAddress(address); // 这会标准化地址格式
+                    
+                    console.log("Connected wallet address:", userAddress);
+                    console.log("Address length:", userAddress.length, "(should be 42)");
+                    
+                    document.getElementById('walletAddress').innerText = userAddress;
+                    loadAllArtifacts();
+                    
+                    // 更新查询按钮状态
+                    setTimeout(() => {
+                        if (typeof updateQueryButtonsState === 'function') {
+                            updateQueryButtonsState();
+                        }
+                    }, 100);
+                } catch (e) {
+                    console.error("Wallet connection error:", e);
+                    alert("Connection failed: " + e.message);
+                }
+            } else {
+                alert("Please install MetaMask!");
+            }
+        });
+
+        document.getElementById('deploySBTBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('deployStatus');
+            const verifierAddr = document.getElementById('verifierAddress').value;
+            const imageId = document.getElementById('deployImageId').value;
+
+            if (!signer) return alert("Connect wallet first!");
+            if (!sbtArtifact) return alert("SBT artifact not loaded!");
+            if (!imageId || imageId.length < 10) return alert("Please enter a valid Image ID!");
+
+            statusDiv.innerText = "Deploying SBT...";
+
+            try {
+                const factory = new ethers.ContractFactory(sbtArtifact.abi, sbtArtifact.bytecode, signer);
+                const contract = await factory.deploy(verifierAddr, imageId);
+
+                statusDiv.innerText = "Deploying... TX: " + contract.deploymentTransaction().hash;
+                await contract.waitForDeployment();
+                const addr = await contract.getAddress();
+
+                statusDiv.innerText = "✅ SBT Deployed at: " + addr;
+                document.getElementById('contractAddress').value = addr;
+                
+                // 更新查询按钮状态
+                if (typeof updateQueryButtonsState === 'function') {
+                    updateQueryButtonsState();
+                }
+
+            } catch (e) {
+                console.error(e);
+                statusDiv.innerText = "❌ Error: " + e.message;
+            }
+        });
+
+        document.getElementById('proveBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('proverStatus');
+            const resultDiv = document.getElementById('result');
+            const outputPre = document.getElementById('jsonOutput');
+            const mintBtn = document.getElementById('mintBtn');
+            let json = document.getElementById('jsonInput').value.trim();
+            const imageIdDisplay = document.getElementById('imageIdDisplay');
+            const currentImageIdSpan = document.getElementById('currentImageId');
+
+            if (!userAddress) {
+                alert("Please connect wallet first!");
+                return;
+            }
+
+            // 清理和验证 JSON 格式
+            try {
+                // 移除可能的 BOM 和不可见字符
+                json = json.replace(/^\uFEFF/, '').trim();
+                
+                // 尝试解析 JSON
+                let parsed;
+                try {
+                    parsed = JSON.parse(json);
+                } catch (parseError) {
+                    // 提供更详细的错误信息
+                    const errorMsg = parseError.message || 'Invalid JSON format';
+                    const position = parseError.message?.match(/position (\d+)/)?.[1];
+                    let helpfulMsg = errorMsg;
+                    
+                    if (position) {
+                        const pos = parseInt(position);
+                        const lines = json.split('\n');
+                        let lineNum = 1;
+                        let charCount = 0;
+                        for (let i = 0; i < lines.length; i++) {
+                            if (charCount + lines[i].length + 1 > pos) {
+                                lineNum = i + 1;
+                                break;
+                            }
+                            charCount += lines[i].length + 1;
+                        }
+                        helpfulMsg = `${errorMsg}\nAt line ${lineNum}, column ${pos - charCount + 1}`;
+                    }
+                    
+                    statusDiv.innerHTML = `❌ JSON Parse Error: ${helpfulMsg}<br><small>Please check your JSON input. Make sure it's valid JSON format.</small>`;
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('JSON content:', json);
+                    return;
+                }
+                
+                // 验证必需字段
+                if (typeof parsed.id !== 'number') {
+                    throw new Error('JSON must contain "id" field (number)');
+                }
+                if (typeof parsed.login !== 'string') {
+                    throw new Error('JSON must contain "login" field (string)');
+                }
+                if (typeof parsed.created_at !== 'string') {
+                    throw new Error('JSON must contain "created_at" field (string)');
+                }
+                if (typeof parsed.public_repos !== 'number') {
+                    throw new Error('JSON must contain "public_repos" field (number)');
+                }
+                
+                // 重新序列化以确保格式正确
+                json = JSON.stringify(parsed);
+                
+                console.log('Validated JSON:', json);
+            } catch (e) {
+                statusDiv.innerHTML = `❌ Validation Error: ${e.message}<br><small>Please check your JSON input</small>`;
+                console.error('Validation Error:', e);
+                return;
+            }
+
+            statusDiv.innerText = "Processing... (Generating ZK Proof)";
+            mintBtn.disabled = true;
+            resultDiv.style.display = "none";
+            imageIdDisplay.style.display = "none";
+
+            try {
+                // 确保地址格式正确
+                if (!userAddress || !ethers.isAddress(userAddress)) {
+                    throw new Error("Invalid wallet address. Please reconnect your wallet.");
+                }
+                
+                // 标准化地址格式
+                const normalizedAddress = ethers.getAddress(userAddress);
+                console.log("Sending proof request with recipient:", normalizedAddress);
+                
+                const response = await fetch('http://localhost:3000/prove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input_json: json,
+                        recipient: normalizedAddress
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status !== "success") {
+                    throw new Error(data.status || "Proof generation failed");
+                }
+
+                // 验证返回的数据格式
+                console.log("=== Proof Data Validation ===");
+                console.log("Receipt hex length:", data.receipt_hex?.length || 0, "chars");
+                console.log("Journal hex length:", data.journal_hex?.length || 0, "chars (should be 128)");
+                console.log("Nullifier hex length:", data.nullifier_hex?.length || 0, "chars (should be 64)");
+                console.log("Image ID hex length:", data.image_id_hex?.length || 0, "chars (should be 64)");
+                
+                // 检查 journal 格式
+                if (data.journal_hex && data.journal_hex.length !== 128) {
+                    console.warn("⚠️ WARNING: Journal hex length is", data.journal_hex.length, "but should be 128!");
+                    console.warn("  Journal hex:", data.journal_hex);
+                    console.warn("  This may cause verification to fail!");
+                }
+                
+                // 检查 nullifier 格式
+                if (data.nullifier_hex && data.nullifier_hex.length !== 64) {
+                    console.warn("⚠️ WARNING: Nullifier hex length is", data.nullifier_hex.length, "but should be 64!");
+                }
+
+                proofData = data;
+                statusDiv.innerText = "✅ Proof Generated!";
+                resultDiv.style.display = "block";
+                outputPre.innerText = JSON.stringify(data, null, 2);
+                mintBtn.disabled = false;
+
+                if (data.image_id_hex) {
+                    const hexId = "0x" + data.image_id_hex;
+                    currentImageIdSpan.innerText = hexId;
+                    imageIdDisplay.style.display = "block";
+                    const deployInput = document.getElementById('deployImageId');
+                    if (!deployInput.value) {
+                        deployInput.value = hexId;
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+                statusDiv.innerText = "❌ Error: " + e.message;
+            }
+        });
+
+        document.getElementById('mintBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('mintStatus');
+            const contractAddr = document.getElementById('contractAddress').value;
+
+            if (!contractAddr) return alert("Enter contract address!");
+            if (!signer) return alert("Connect wallet first!");
+            if (!proofData) return alert("Generate proof first!");
+
+            statusDiv.innerText = "Preparing transaction...";
+
+            try {
+                // 强制重新获取并验证地址（防止地址被错误修改）
+                const currentAddress = await signer.getAddress();
+                if (!ethers.isAddress(currentAddress)) {
+                    throw new Error(`Invalid address from signer: ${currentAddress}`);
+                }
+                userAddress = ethers.getAddress(currentAddress); // 标准化地址
+                
+                if (userAddress.length !== 42) {
+                    throw new Error(`Invalid address length: ${userAddress.length}, expected 42. Address: ${userAddress}`);
+                }
+                
+                console.log("✅ Validated address:", userAddress, "Length:", userAddress.length);
+                const abi = sbtArtifact ? sbtArtifact.abi : [
+                    "function mint(bytes calldata seal, address recipient, bytes32 nullifier) external",
+                    "function imageId() external view returns (bytes32)",
+                    "function verifier() external view returns (address)",
+                    "function nullifiers(bytes32) external view returns (bool)"
+                ];
+
+                // 创建只读合约实例用于预检查
+                const readOnlyContract = new ethers.Contract(contractAddr, abi, provider);
+                // 创建可写合约实例用于交易
+                const contract = new ethers.Contract(contractAddr, abi, signer);
+
+                // 验证合约参数（使用只读合约）
+                statusDiv.innerText = "Verifying contract parameters...";
+                const contractImageId = await readOnlyContract.imageId();
+                const proofImageId = "0x" + proofData.image_id_hex;
+                
+                console.log("Contract Image ID:", contractImageId);
+                console.log("Proof Image ID:", proofImageId);
+                
+                if (contractImageId.toLowerCase() !== proofImageId.toLowerCase()) {
+                    throw new Error(`Image ID mismatch!\nContract: ${contractImageId}\nProof: ${proofImageId}\n\nPlease ensure the contract was deployed with the correct Image ID.`);
+                }
+                console.log("✅ Image ID matches");
+
+                // 处理 seal：确保有 0x 前缀
+                let seal = proofData.receipt_hex;
+                if (!seal.startsWith("0x")) {
+                    seal = "0x" + seal;
+                }
+                
+                // 处理 nullifier：确保有 0x 前缀，且格式正确
+                let nullifier = proofData.nullifier_hex;
+                // 移除可能存在的 0x 前缀
+                if (nullifier.startsWith("0x")) {
+                    nullifier = nullifier.substring(2);
+                }
+                // 确保是 64 个十六进制字符
+                if (nullifier.length !== 64) {
+                    throw new Error(`Invalid nullifier length: expected 64 hex chars, got ${nullifier.length}. Value: ${nullifier}`);
+                }
+                // 验证是否为有效的十六进制
+                if (!/^[0-9a-fA-F]{64}$/.test(nullifier)) {
+                    throw new Error(`Invalid nullifier format: must be 64 hex characters. Value: ${nullifier}`);
+                }
+                // 添加 0x 前缀
+                nullifier = "0x" + nullifier;
+
+                // 验证参数格式
+                if (!seal || seal.length < 10) {
+                    throw new Error("Invalid seal format");
+                }
+                if (!nullifier || nullifier.length !== 66) { // 0x + 64 hex chars
+                    throw new Error(`Invalid nullifier format. Expected 66 chars, got ${nullifier.length}: ${nullifier}`);
+                }
+                
+                // 输出验证后的参数（用于调试）
+                console.log("Processed parameters:");
+                console.log("  Seal:", seal.substring(0, 20) + "...", "Length:", seal.length);
+                console.log("  Nullifier:", nullifier, "Length:", nullifier.length);
+                console.log("  Recipient:", userAddress);
+                
+                // 验证 seal 格式（Groth16 seal 应该以特定选择器开头）
+                console.log("=== Seal Analysis ===");
+                console.log("Seal first 10 chars:", seal.substring(0, 10));
+                console.log("Seal length:", seal.length, "chars");
+                
+                // 提取 seal 的选择器（前4个字节，去掉0x后是8个字符）
+                const sealSelector = seal.substring(0, 10); // "0x" + 8 hex chars = 10 chars
+                console.log("Seal selector (first 4 bytes):", sealSelector);
+                console.log("Seal selector hex (without 0x):", seal.substring(2, 10));
+                
+                // 检查 seal 长度（Groth16 seal 应该是约 256-300 字节 = 512-600 字符）
+                const sealByteLength = (seal.length - 2) / 2; // 减去 "0x"，除以2得到字节数
+                console.log("Seal byte length:", sealByteLength, "bytes");
+                
+                if (sealByteLength < 200 || sealByteLength > 400) {
+                    console.warn("⚠️ Seal length unusual. Groth16 seals are typically 256-300 bytes.");
+                }
+                
+                // 验证 journal 编码（用于调试）
+                // 合约期望：abi.encode(recipient, nullifier)
+                // 这会产生 64 字节：12字节填充 + 20字节地址 + 32字节nullifier
+                try {
+                    const expectedJournal = ethers.AbiCoder.defaultAbiCoder().encode(
+                        ["address", "bytes32"],
+                        [userAddress, nullifier]
+                    );
+                    const expectedJournalDigest = ethers.sha256(expectedJournal);
+                    
+                    // 获取后端返回的 journal（如果有）
+                    const backendJournal = proofData.journal_hex ? ("0x" + proofData.journal_hex) : null;
+                    
+                    console.log("=== Journal Verification ===");
+                    console.log("Expected journal (from contract):", expectedJournal);
+                    console.log("Expected journal digest:", expectedJournalDigest);
+                    console.log("Backend journal hex:", backendJournal);
+                    
+                    if (backendJournal) {
+                        const backendJournalDigest = ethers.sha256(backendJournal);
+                        console.log("Backend journal digest:", backendJournalDigest);
+                        console.log("Journal match:", expectedJournal.toLowerCase() === backendJournal.toLowerCase());
+                        console.log("Journal digest match:", expectedJournalDigest.toLowerCase() === backendJournalDigest.toLowerCase());
+                        
+                        if (expectedJournal.toLowerCase() !== backendJournal.toLowerCase()) {
+                            console.warn("⚠️ WARNING: Journal mismatch!");
+                            console.warn("  Expected:", expectedJournal);
+                            console.warn("  Backend: ", backendJournal);
+                        }
+                    }
+                    
+                    console.log("Journal length:", expectedJournal.length, "bytes (should be 64 bytes = 128 hex chars + 0x)");
+                } catch (e) {
+                    console.warn("Could not encode journal:", e);
+                }
+                
+                // 地址已在函数开始时验证，这里再次确认
+                console.log("Using address for mint:", userAddress, "Length:", userAddress.length);
+
+                console.log("Mint Parameters:");
+                console.log("  Seal length:", seal.length);
+                console.log("  Nullifier:", nullifier);
+                console.log("  Recipient:", userAddress);
+                console.log("  Image ID:", proofImageId);
+
+                // 预检查：检查 nullifier 是否已被使用（使用只读合约）
+                statusDiv.innerText = "Checking nullifier...";
+                try {
+                    const nullifierUsed = await readOnlyContract.nullifiers(nullifier);
+                    if (nullifierUsed) {
+                        throw new Error("This proof has already been used. Please generate a new proof.");
+                    }
+                    console.log("✅ Nullifier not used");
+                } catch (checkError) {
+                    if (checkError.message && checkError.message.includes("already been used")) {
+                        throw checkError;
+                    }
+                    console.warn("Could not check nullifier:", checkError);
+                }
+
+                // 预检查：使用 callStatic 模拟交易以获取详细错误
+                statusDiv.innerText = "Simulating transaction...";
+                
+                // 验证参数类型和格式
+                console.log("Parameter types check:");
+                console.log("  seal type:", typeof seal, "is hex:", seal.startsWith("0x"));
+                console.log("  userAddress type:", typeof userAddress, "is address:", ethers.isAddress(userAddress));
+                console.log("  nullifier type:", typeof nullifier, "is hex:", nullifier.startsWith("0x"));
+                
+                // 确保 seal 是有效的 bytes
+                if (!seal.startsWith("0x")) {
+                    throw new Error("Seal must be a hex string starting with 0x");
+                }
+                
+                // 再次验证 nullifier 格式（确保没有被修改）
+                if (!nullifier.startsWith("0x") || nullifier.length !== 66) {
+                    console.error("Nullifier validation failed:", {
+                        value: nullifier,
+                        length: nullifier.length,
+                        startsWith0x: nullifier.startsWith("0x")
+                    });
+                    throw new Error(`Nullifier must be a hex string of 66 characters (0x + 64 hex), got: ${nullifier.length}. Value: ${nullifier}`);
+                }
+                
+                // 验证 nullifier 是有效的 bytes32
+                try {
+                    // 尝试将 nullifier 转换为 bytes32 格式
+                    const nullifierBytes = ethers.hexlify(nullifier);
+                    if (nullifierBytes.length !== 66) {
+                        throw new Error(`Invalid nullifier bytes length: ${nullifierBytes.length}`);
+                    }
+                    console.log("✅ Nullifier format validated:", nullifierBytes);
+                } catch (e) {
+                    console.error("❌ Nullifier format error:", e);
+                    throw new Error(`Invalid nullifier format: ${e.message}. Value: ${nullifier}`);
+                }
+                
+                try {
+                    console.log("Calling mint.staticCall with parameters:");
+                    console.log("  seal:", seal.substring(0, 20) + "...", "type:", typeof seal);
+                    console.log("  userAddress:", userAddress, "type:", typeof userAddress);
+                    console.log("  nullifier:", nullifier, "type:", typeof nullifier);
+                    
+                    await contract.mint.staticCall(seal, userAddress, nullifier);
+                    console.log("✅ Transaction simulation successful");
+                } catch (simError) {
+                    console.error("Transaction simulation failed:", simError);
+                    console.error("Error data:", simError.data);
+                    console.error("Error transaction:", simError.transaction);
+                    
+                    let errorMsg = "Transaction will fail";
+                    
+                    // 尝试解析错误信息
+                    if (simError.reason) {
+                        errorMsg = simError.reason;
+                    } else if (simError.data) {
+                        // 检查是否是标准错误（Error(string)）
+                        const errorData = simError.data;
+                        if (errorData.length >= 138) {
+                            try {
+                                // Error(string) 选择器是 0x08c379a0
+                                // 如果错误数据以 0x08c379a0 开头，尝试解码
+                                const reason = ethers.AbiCoder.defaultAbiCoder().decode(
+                                    ["string"],
+                                    "0x" + errorData.slice(10) // 跳过选择器 (4 bytes = 8 hex chars) + offset (32 bytes = 64 hex chars)
+                                );
+                                if (reason && reason[0]) {
+                                    errorMsg = reason[0];
+                                    console.log("Decoded error reason:", reason[0]);
+                                }
+                            } catch (e) {
+                                console.warn("Could not decode error reason:", e);
+                            }
+                        }
+                        
+                        // 尝试解码自定义错误
+                        try {
+                            const errorInterface = new ethers.Interface([
+                                "error InvalidMint(string message)",
+                                "error NotTokenOwner(string message)",
+                                "error TokenNotTransferable(string message)",
+                                "error ProofVerificationFailed()",
+                                "error ImageIdMismatch()",
+                                "error NullifierAlreadyUsed()"
+                            ]);
+                            const decoded = errorInterface.parseError(errorData);
+                            if (decoded) {
+                                errorMsg = decoded.name + (decoded.args.length > 0 ? ": " + decoded.args[0] : "");
+                                console.log("Decoded custom error:", decoded);
+                            }
+                        } catch (decodeError) {
+                            console.warn("Could not decode custom error:", decodeError);
+                        }
+                        
+                        // 如果错误数据是 0xe4ea6542，这可能是 verifier 的错误
+                        if (errorData.startsWith("0xe4ea6542")) {
+                            errorMsg = "❌ Proof verification failed (0xe4ea6542). This usually means:\n" +
+                                      "  1. Seal format is incorrect\n" +
+                                      "  2. Image ID doesn't match\n" +
+                                      "  3. Journal digest doesn't match\n" +
+                                      "  4. Verifier address is wrong";
+                            
+                            console.error("⚠️ Verifier error detected (0xe4ea6542). Detailed check:");
+                            console.error("  1. Seal format and length:", seal.length, "chars");
+                            console.error("     Seal first 10 chars:", seal.substring(0, 10));
+                            console.error("     Seal selector (bytes 0-3):", seal.substring(2, 10));
+                            console.error("     Seal byte length:", (seal.length - 2) / 2, "bytes");
+                            console.error("  2. Image ID match:", contractImageId.toLowerCase() === proofImageId.toLowerCase());
+                            console.error("     Contract Image ID:", contractImageId);
+                            console.error("     Proof Image ID:", proofImageId);
+                            
+                            // 计算期望的 journal digest
+                            try {
+                                const expectedJournal = ethers.AbiCoder.defaultAbiCoder().encode(
+                                    ["address", "bytes32"],
+                                    [userAddress, nullifier]
+                                );
+                                const expectedDigest = ethers.sha256(expectedJournal);
+                                
+                                // 获取后端返回的 journal
+                                const backendJournal = proofData.journal_hex ? ("0x" + proofData.journal_hex) : null;
+                                
+                                console.error("  3. Journal encoding check:");
+                                console.error("     Expected journal:", expectedJournal);
+                                console.error("     Expected digest:", expectedDigest);
+                                
+                                if (backendJournal) {
+                                    const backendDigest = ethers.sha256(backendJournal);
+                                    console.error("     Backend journal:", backendJournal);
+                                    console.error("     Backend digest:", backendDigest);
+                                    console.error("     Journal match:", expectedJournal.toLowerCase() === backendJournal.toLowerCase());
+                                    console.error("     Digest match:", expectedDigest.toLowerCase() === backendDigest.toLowerCase());
+                                    
+                                    if (expectedJournal.toLowerCase() !== backendJournal.toLowerCase()) {
+                                        console.error("     ❌ JOURNAL MISMATCH - This is likely the problem!");
+                                    }
+                                }
+                                
+                                console.error("  4. Verifier address:", document.getElementById('verifierAddress').value);
+                                console.error("  5. Recipient address:", userAddress);
+                                console.error("  6. Nullifier:", nullifier);
+                            } catch (e) {
+                                console.error("  3. Could not compute journal digest:", e);
+                            }
+                        }
+                    } else if (simError.message) {
+                        // 尝试从消息中提取有用的信息
+                        if (simError.message.includes("execution reverted")) {
+                            errorMsg = "Transaction execution reverted. Check parameters.";
+                        } else {
+                            errorMsg = simError.message;
+                        }
+                    }
+                    
+                    throw new Error(errorMsg);
+                }
+
+                statusDiv.innerText = "Estimating gas...";
+
+                // 最终验证参数格式（在调用前再次确认）
+                console.log("Final parameter validation before contract call:");
+                console.log("  seal:", seal.substring(0, 30) + "...", "starts with 0x:", seal.startsWith("0x"));
+                console.log("  userAddress:", userAddress, "is valid:", ethers.isAddress(userAddress));
+                console.log("  nullifier:", nullifier, "starts with 0x:", nullifier.startsWith("0x"), "length:", nullifier.length);
+                
+                // 确保 nullifier 格式正确
+                if (!nullifier.startsWith("0x")) {
+                    console.error("❌ CRITICAL: Nullifier missing 0x prefix!");
+                    console.error("  Current value:", nullifier);
+                    nullifier = "0x" + nullifier;
+                    console.log("  Fixed value:", nullifier);
+                }
+                
+                // 使用 ethers.hexlify 确保格式正确
+                try {
+                    nullifier = ethers.hexlify(nullifier);
+                    console.log("✅ Nullifier hexlified:", nullifier);
+                } catch (e) {
+                    console.error("❌ Failed to hexlify nullifier:", e);
+                    throw new Error(`Invalid nullifier format: ${e.message}. Value: ${nullifier}`);
+                }
+                
+                // 调用 mint 函数：mint(bytes calldata seal, address recipient, bytes32 nullifier)
+                // 使用 estimateGas 先估算 gas
+                let gasEstimate;
+                try {
+                    console.log("Estimating gas with parameters:");
+                    console.log("  seal length:", seal.length);
+                    console.log("  userAddress:", userAddress);
+                    console.log("  nullifier:", nullifier);
+                    
+                    gasEstimate = await contract.mint.estimateGas(seal, userAddress, nullifier);
+                    console.log("Estimated gas:", gasEstimate.toString());
+                } catch (estimateError) {
+                    console.error("Gas estimation failed:", estimateError);
+                    console.error("Parameters used:");
+                    console.error("  seal:", seal.substring(0, 30) + "...");
+                    console.error("  userAddress:", userAddress);
+                    console.error("  nullifier:", nullifier, "type:", typeof nullifier);
+                    
+                    // 如果估算失败，尝试从 staticCall 的错误中获取信息
+                    let errorMsg = "Gas estimation failed";
+                    
+                    if (estimateError.reason) {
+                        errorMsg = estimateError.reason;
+                    } else if (estimateError.data) {
+                        errorMsg = "Transaction will revert. Check console for details.";
+                    } else if (estimateError.message) {
+                        errorMsg = estimateError.message;
+                    }
+                    
+                    throw new Error(errorMsg);
+                }
+
+                statusDiv.innerText = "Sending transaction...";
+
+                console.log("Sending transaction with parameters:");
+                console.log("  seal:", seal.substring(0, 30) + "...");
+                console.log("  userAddress:", userAddress);
+                console.log("  nullifier:", nullifier);
+
+                const tx = await contract.mint(seal, userAddress, nullifier, { 
+                    gasLimit: gasEstimate * BigInt(2)  // 使用估算值的 2 倍作为安全边界
+                });
+                
+                statusDiv.innerText = "Transaction sent: " + tx.hash + "\nWaiting for confirmation...";
+
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    statusDiv.innerText = "✅ Minted Successfully!\nTX: " + tx.hash;
+                } else {
+                    throw new Error("Transaction failed");
+                }
+
+            } catch (e) {
+                console.error("Mint Error Details:", e);
+                console.error("Error object:", JSON.stringify(e, Object.getOwnPropertyNames(e)));
+                
+                let errorMsg = e.message || "Unknown error";
+                let helpfulTips = "";
+                
+                // 尝试解析更详细的错误信息
+                if (e.reason) {
+                    errorMsg = e.reason;
+                } else if (e.data) {
+                    errorMsg = "Transaction reverted. Check console for details.";
+                }
+                
+                // 根据错误类型提供帮助提示
+                if (errorMsg.includes("Image ID") || errorMsg.includes("imageId")) {
+                    helpfulTips = "<br><strong>💡 Tip:</strong> Ensure the contract was deployed with the same Image ID as the proof.";
+                } else if (errorMsg.includes("already been used") || errorMsg.includes("nullifier")) {
+                    helpfulTips = "<br><strong>💡 Tip:</strong> Generate a new proof with different data.";
+                } else if (errorMsg.includes("sender") || errorMsg.includes("recipient")) {
+                    helpfulTips = "<br><strong>💡 Tip:</strong> Ensure you're using the same wallet that generated the proof.";
+                } else if (errorMsg.includes("Gas") || errorMsg.includes("estimation")) {
+                    helpfulTips = "<br><strong>💡 Tip:</strong> Check console (F12) for detailed error. Common issues: Image ID mismatch, nullifier already used, or invalid proof.";
+                }
+                
+                statusDiv.innerHTML = `❌ Mint Error: ${errorMsg}${helpfulTips}<br><small>Check browser console (F12) for full details</small>`;
+            }
+        });
+
+        // ==================== 验证和查询功能 ====================
+
+        // 获取合约实例的辅助函数
+        function getContractInstance() {
+            const contractAddr = document.getElementById('contractAddress').value;
+            if (!contractAddr) {
+                throw new Error("Please enter contract address first!");
+            }
+            if (!provider) {
+                throw new Error("Please connect wallet first!");
+            }
+
+            const abi = sbtArtifact ? sbtArtifact.abi : [
+                "function balanceOf(address owner) external view returns (uint256)",
+                "function ownerOf(uint256 tokenId) external view returns (address)",
+                "function tokenURI(uint256 tokenId) external view returns (string)",
+                "function nullifiers(bytes32) external view returns (bool)",
+                "function imageId() external view returns (bytes32)",
+                "function verifier() external view returns (address)",
+                "function name() external view returns (string)",
+                "function symbol() external view returns (string)",
+                "event Minted(address indexed recipient, uint256 indexed tokenId, bytes32 nullifier)"
+            ];
+
+            return new ethers.Contract(contractAddr, abi, provider);
+        }
+
+        // 5.1 检查我的 SBTs
+        document.getElementById('checkMySBTsBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('mySBTsStatus');
+            const resultDiv = document.getElementById('mySBTsResult');
+            const listDiv = document.getElementById('mySBTsList');
+
+            if (!userAddress) {
+                statusDiv.innerText = "❌ Please connect wallet first!";
+                return;
+            }
+
+            statusDiv.innerText = "Checking...";
+
+            try {
+                const contract = getContractInstance();
+                const balance = await contract.balanceOf(userAddress);
+                const balanceNum = Number(balance);
+
+                if (balanceNum === 0) {
+                    statusDiv.innerHTML = "ℹ️ You don't own any GhostLink SBTs yet.";
+                    resultDiv.style.display = "none";
+                    return;
+                }
+
+                statusDiv.innerHTML = `✅ Found ${balanceNum} SBT(s)`;
+
+                // 由于 ERC721 没有直接获取所有 token 的方法，我们需要遍历
+                // 这里我们尝试从 tokenId 0 开始查找
+                const tokens = [];
+                let foundCount = 0;
+                const maxCheck = 1000; // 最多检查 1000 个 tokenId
+
+                for (let i = 0; i < maxCheck && foundCount < balanceNum; i++) {
+                    try {
+                        const owner = await contract.ownerOf(i);
+                        if (owner.toLowerCase() === userAddress.toLowerCase()) {
+                            tokens.push(i);
+                            foundCount++;
+                        }
+                    } catch (e) {
+                        // Token doesn't exist, continue
+                    }
+                }
+
+                if (tokens.length > 0) {
+                    let html = `<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">`;
+                    html += `<tr style="background: #f0f0f0;"><th style="padding: 8px; text-align: left;">Token ID</th><th style="padding: 8px; text-align: left;">Owner</th><th style="padding: 8px; text-align: left;">Token URI</th></tr>`;
+                    
+                    for (const tokenId of tokens) {
+                        try {
+                            const owner = await contract.ownerOf(tokenId);
+                            let tokenURI = "N/A";
+                            try {
+                                tokenURI = await contract.tokenURI(tokenId);
+                            } catch (e) {
+                                // Token URI not set
+                            }
+                            html += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${tokenId}</td><td style="padding: 8px; border: 1px solid #ddd;">${owner}</td><td style="padding: 8px; border: 1px solid #ddd;">${tokenURI}</td></tr>`;
+                        } catch (e) {
+                            console.error(`Error fetching token ${tokenId}:`, e);
+                        }
+                    }
+                    html += `</table>`;
+                    listDiv.innerHTML = html;
+                    resultDiv.style.display = "block";
+                } else {
+                    statusDiv.innerHTML = `⚠️ Found ${balanceNum} SBT(s) but couldn't retrieve token IDs.`;
+                    resultDiv.style.display = "none";
+                }
+
+            } catch (e) {
+                console.error("Check My SBTs Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}`;
+                resultDiv.style.display = "none";
+            }
+        });
+
+        // 5.2 验证地址
+        document.getElementById('verifyAddressBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('verifyAddressStatus');
+            const addressInput = document.getElementById('verifyAddressInput').value.trim();
+
+            if (!addressInput) {
+                statusDiv.innerText = "❌ Please enter an address!";
+                return;
+            }
+
+            if (!ethers.isAddress(addressInput)) {
+                statusDiv.innerText = "❌ Invalid address format!";
+                return;
+            }
+
+            statusDiv.innerText = "Verifying...";
+
+            try {
+                const contract = getContractInstance();
+                const balance = await contract.balanceOf(addressInput);
+                const balanceNum = Number(balance);
+
+                if (balanceNum > 0) {
+                    statusDiv.innerHTML = `✅ <strong>Verified!</strong><br>` +
+                                        `Address <code>${addressInput}</code> owns <strong>${balanceNum}</strong> GhostLink SBT(s).`;
+                } else {
+                    statusDiv.innerHTML = `❌ <strong>Not verified.</strong><br>` +
+                                        `Address <code>${addressInput}</code> does not own any GhostLink SBTs.`;
+                }
+
+            } catch (e) {
+                console.error("Verify Address Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}`;
+            }
+        });
+
+        // 5.3 检查 Nullifier
+        document.getElementById('checkNullifierBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('checkNullifierStatus');
+            let nullifier = document.getElementById('checkNullifierInput').value.trim();
+
+            if (!nullifier) {
+                statusDiv.innerText = "❌ Please enter a nullifier!";
+                return;
+            }
+
+            // 确保有 0x 前缀
+            if (!nullifier.startsWith("0x")) {
+                nullifier = "0x" + nullifier;
+            }
+
+            // 验证格式
+            if (nullifier.length !== 66) {
+                statusDiv.innerText = `❌ Invalid nullifier format! Expected 66 characters (0x + 64 hex), got ${nullifier.length}`;
+                return;
+            }
+
+            statusDiv.innerText = "Checking...";
+
+            try {
+                const contract = getContractInstance();
+                const used = await contract.nullifiers(nullifier);
+
+                if (used) {
+                    statusDiv.innerHTML = `⚠️ <strong>Nullifier already used!</strong><br>` +
+                                        `Nullifier <code>${nullifier}</code> has been used and cannot be used again.`;
+                } else {
+                    statusDiv.innerHTML = `✅ <strong>Nullifier available!</strong><br>` +
+                                        `Nullifier <code>${nullifier}</code> has not been used yet.`;
+                }
+
+            } catch (e) {
+                console.error("Check Nullifier Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}`;
+            }
+        });
+
+        // 5.4 查询 Token 信息
+        document.getElementById('queryTokenBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('queryTokenStatus');
+            const tokenId = document.getElementById('tokenIdInput').value;
+
+            if (!tokenId || tokenId === "") {
+                statusDiv.innerText = "❌ Please enter a token ID!";
+                return;
+            }
+
+            statusDiv.innerText = "Querying...";
+
+            try {
+                const contract = getContractInstance();
+                const owner = await contract.ownerOf(tokenId);
+                let tokenURI = "N/A";
+                try {
+                    tokenURI = await contract.tokenURI(tokenId);
+                } catch (e) {
+                    // Token URI not set
+                }
+
+                statusDiv.innerHTML = `
+                    <div style="background: #f9f9f9; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                        <strong>Token ID:</strong> ${tokenId}<br>
+                        <strong>Owner:</strong> <code>${owner}</code><br>
+                        <strong>Token URI:</strong> ${tokenURI}<br>
+                        <strong>Is yours:</strong> ${owner.toLowerCase() === userAddress?.toLowerCase() ? "✅ Yes" : "❌ No"}
+                    </div>
+                `;
+
+            } catch (e) {
+                console.error("Query Token Error:", e);
+                if (e.message && e.message.includes("nonexistent token")) {
+                    statusDiv.innerHTML = `❌ Token ID ${tokenId} does not exist.`;
+                } else {
+                    statusDiv.innerHTML = `❌ Error: ${e.message}`;
+                }
+            }
+        });
+
+        // 5.5 获取合约信息
+        document.getElementById('getContractInfoBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('contractInfoStatus');
+            const resultDiv = document.getElementById('contractInfoResult');
+            const displayDiv = document.getElementById('contractInfoDisplay');
+
+            statusDiv.innerText = "Fetching contract info...";
+
+            try {
+                const contract = getContractInstance();
+                const contractAddr = document.getElementById('contractAddress').value;
+
+                const [name, symbol, imageId, verifierAddr] = await Promise.all([
+                    contract.name(),
+                    contract.symbol(),
+                    contract.imageId(),
+                    contract.verifier()
+                ]);
+
+                // 尝试获取总供应量（通过检查多个 tokenId）
+                let totalTokens = 0;
+                const maxCheck = 1000;
+                for (let i = 0; i < maxCheck; i++) {
+                    try {
+                        await contract.ownerOf(i);
+                        totalTokens = i + 1;
+                    } catch (e) {
+                        break;
+                    }
+                }
+
+                const info = {
+                    "Contract Address": contractAddr,
+                    "Name": name,
+                    "Symbol": symbol,
+                    "Image ID": imageId,
+                    "Verifier Address": verifierAddr,
+                    "Total Tokens Minted": totalTokens > 0 ? totalTokens : "Unknown"
+                };
+
+                displayDiv.innerText = JSON.stringify(info, null, 2);
+                resultDiv.style.display = "block";
+                statusDiv.innerHTML = "✅ Contract info retrieved!";
+
+            } catch (e) {
+                console.error("Get Contract Info Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}`;
+                resultDiv.style.display = "none";
+            }
+        });
+
+        // 启用/禁用查询按钮
+        function updateQueryButtonsState() {
+            const contractAddr = document.getElementById('contractAddress').value;
+            const hasContract = contractAddr && contractAddr.length > 0;
+            const hasWallet = !!userAddress;
+
+            document.getElementById('checkMySBTsBtn').disabled = !hasContract || !hasWallet;
+            document.getElementById('verifyAddressBtn').disabled = !hasContract;
+            document.getElementById('checkNullifierBtn').disabled = !hasContract;
+            document.getElementById('queryTokenBtn').disabled = !hasContract;
+            document.getElementById('getContractInfoBtn').disabled = !hasContract;
+        }
+
+        // 监听合约地址变化
+        document.getElementById('contractAddress').addEventListener('input', updateQueryButtonsState);
+        
+        // 监听钱包连接
+        const originalConnectHandler = document.getElementById('connectBtn').onclick;
+        document.getElementById('connectBtn').addEventListener('click', () => {
+            if (originalConnectHandler) originalConnectHandler();
+            setTimeout(updateQueryButtonsState, 500);
+        });
+
+        // 初始化按钮状态
+        updateQueryButtonsState();
+
+        // ==================== Base URI 设置功能 ====================
+        
+        // 监听合约地址输入，启用/禁用按钮
+        document.getElementById('setURIContractAddress').addEventListener('input', () => {
+            const contractAddr = document.getElementById('setURIContractAddress').value.trim();
+            const hasContract = contractAddr && ethers.isAddress(contractAddr);
+            document.getElementById('setBaseURIBtn').disabled = !hasContract || !signer;
+            document.getElementById('getBaseURIBtn').disabled = !hasContract || !provider;
+            document.getElementById('testMetadataBtn').disabled = !hasContract || !provider;
+        });
+
+        // 转换 JSON 中的 ipfs:// 图片 URL 为 HTTP URL
+        function convertImageUrlInMetadata(metadata) {
+            if (!metadata || !metadata.image) return metadata;
+            
+            let imageUrl = metadata.image;
+            
+            // 如果是 ipfs:// 协议，转换为 HTTP 网关
+            if (imageUrl.startsWith('ipfs://')) {
+                const hash = imageUrl.replace('ipfs://', '').trim();
+                imageUrl = `https://cloudflare-ipfs.com/ipfs/${hash}`;
+                metadata.image = imageUrl;
+            }
+            
+            return metadata;
+        }
+
+        // 测试元数据 JSON
+        document.getElementById('testMetadataBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('baseURIStatus');
+            const contractAddr = document.getElementById('setURIContractAddress').value.trim();
+
+            if (!contractAddr || !ethers.isAddress(contractAddr)) {
+                statusDiv.innerText = "❌ Please enter a valid contract address!";
+                return;
+            }
+
+            if (!provider) {
+                statusDiv.innerText = "❌ Please connect wallet first!";
+                return;
+            }
+
+            try {
+                const abi = sbtArtifact ? sbtArtifact.abi : [
+                    "function tokenURI(uint256 tokenId) external view returns (string)"
+                ];
+
+                const contract = new ethers.Contract(contractAddr, abi, provider);
+
+                statusDiv.innerHTML = "Testing metadata...<br>";
+
+                // 尝试获取 Token 0 的 URI
+                let tokenURI;
+                try {
+                    tokenURI = await contract.tokenURI(0);
+                } catch (e) {
+                    // 如果 Token 0 不存在，尝试 Token 1
+                    try {
+                        tokenURI = await contract.tokenURI(1);
+                    } catch (e2) {
+                        throw new Error("No tokens found. Please mint a token first.");
+                    }
+                }
+
+                if (!tokenURI || tokenURI === "") {
+                    throw new Error("Token URI is empty. Please set Base URI first.");
+                }
+
+                statusDiv.innerHTML += `Token URI: <code>${tokenURI}</code><br><br>Fetching metadata JSON...`;
+
+                // 获取元数据 JSON
+                const response = await fetch(tokenURI);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch metadata: HTTP ${response.status}`);
+                }
+
+                const metadata = await response.json();
+                
+                // 检查并转换图片 URL
+                const originalImage = metadata.image;
+                const convertedMetadata = convertImageUrlInMetadata(JSON.parse(JSON.stringify(metadata)));
+
+                let resultHtml = `
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; margin-top: 10px; text-align: left;">
+                        <h4 style="margin-top: 0;">✅ Metadata JSON 测试结果</h4>
+                        <strong>Token URI:</strong> <code>${tokenURI}</code><br><br>
+                        
+                        <strong>元数据内容:</strong><br>
+                        <pre style="background: white; padding: 10px; overflow-x: auto; font-size: 12px;">${JSON.stringify(metadata, null, 2)}</pre><br>
+                        
+                        <strong>图片 URL 检查:</strong><br>
+                `;
+
+                if (!metadata.image) {
+                    resultHtml += `<span style="color: red;">❌ 缺少 "image" 字段</span><br>`;
+                } else {
+                    const imageUrl = metadata.image;
+                    const isIpfsProtocol = imageUrl.startsWith('ipfs://');
+                    const isHttp = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+                    
+                    resultHtml += `<strong>原始图片 URL:</strong> <code>${imageUrl}</code><br>`;
+                    
+                    if (isIpfsProtocol) {
+                        resultHtml += `<span style="color: orange;">⚠️ 图片 URL 使用 ipfs:// 协议（MetaMask 不支持）</span><br>`;
+                        resultHtml += `<strong>建议的 HTTP URL:</strong> <code>${convertedMetadata.image}</code><br>`;
+                        resultHtml += `<a href="${convertedMetadata.image}" target="_blank" style="color: blue;">测试图片链接</a><br>`;
+                    } else if (isHttp) {
+                        resultHtml += `<span style="color: green;">✅ 图片 URL 格式正确（HTTP/HTTPS）</span><br>`;
+                        resultHtml += `<a href="${imageUrl}" target="_blank" style="color: blue;">测试图片链接</a><br>`;
+                    } else {
+                        resultHtml += `<span style="color: red;">❌ 图片 URL 格式无效</span><br>`;
+                    }
+                }
+
+                resultHtml += `<br><strong>调试步骤:</strong><br>`;
+                resultHtml += `1. 点击上面的"测试图片链接"检查图片是否可以访问<br>`;
+                resultHtml += `2. 如果图片 URL 是 ipfs:// 格式，需要更新元数据 JSON 中的 image 字段<br>`;
+                resultHtml += `3. 在浏览器中直接打开 Token URI 检查 JSON 内容<br>`;
+                resultHtml += `4. 清除 MetaMask 缓存并刷新<br>`;
+                resultHtml += `</div>`;
+
+                statusDiv.innerHTML = resultHtml;
+
+            } catch (e) {
+                console.error("Test Metadata Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}<br><br><small>请确保：<br>1. 已 mint 至少一个 Token<br>2. 已设置 Base URI<br>3. Token URI 可以正常访问</small>`;
+            }
+        });
+
+        // 转换 ipfs:// 协议为 HTTP 网关 URL
+        function convertIpfsToHttp(uri) {
+            if (!uri) return uri;
+            
+            // 如果已经是 HTTP/HTTPS，直接返回
+            if (uri.startsWith('http://') || uri.startsWith('https://')) {
+                return uri;
+            }
+            
+            // 如果是 ipfs:// 协议，转换为 HTTP 网关
+            if (uri.startsWith('ipfs://')) {
+                // 移除 ipfs:// 前缀
+                const hash = uri.replace('ipfs://', '').trim();
+                // 使用 Cloudflare IPFS 网关（速度快，稳定）
+                return `https://cloudflare-ipfs.com/ipfs/${hash}`;
+            }
+            
+            // 如果只是 Hash（没有协议前缀），添加 HTTP 网关
+            if (/^[Qmb][a-zA-Z0-9]{43,}$/.test(uri) || /^baf[a-z0-9]+$/.test(uri)) {
+                // 检查是否以 / 结尾
+                const hash = uri.endsWith('/') ? uri.slice(0, -1) : uri;
+                return `https://cloudflare-ipfs.com/ipfs/${hash}/`;
+            }
+            
+            return uri;
+        }
+
+        // 设置 Base URI
+        document.getElementById('setBaseURIBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('baseURIStatus');
+            const contractAddr = document.getElementById('setURIContractAddress').value.trim();
+            let baseURI = document.getElementById('baseURIInput').value.trim();
+
+            if (!contractAddr || !ethers.isAddress(contractAddr)) {
+                statusDiv.innerText = "❌ Please enter a valid contract address!";
+                return;
+            }
+
+            if (!baseURI) {
+                statusDiv.innerText = "❌ Please enter Base URI!";
+                return;
+            }
+
+            if (!signer) {
+                statusDiv.innerText = "❌ Please connect wallet first!";
+                return;
+            }
+
+            try {
+                // 自动转换 ipfs:// 为 HTTP 网关
+                const originalURI = baseURI;
+                baseURI = convertIpfsToHttp(baseURI);
+                
+                // 确保以 / 结尾
+                if (!baseURI.endsWith('/')) {
+                    baseURI += '/';
+                }
+                
+                // 如果转换了，显示提示
+                if (originalURI !== baseURI) {
+                    statusDiv.innerHTML = `ℹ️ 已自动转换 IPFS 协议为 HTTP 网关:<br>原始: <code>${originalURI}</code><br>转换后: <code>${baseURI}</code><br><br>继续设置...`;
+                }
+
+                const abi = sbtArtifact ? sbtArtifact.abi : [
+                    "function setBaseURI(string calldata baseURI) external",
+                    "function owner() external view returns (address)"
+                ];
+
+                const contract = new ethers.Contract(contractAddr, abi, signer);
+
+                // 检查是否是 owner
+                statusDiv.innerText = "Checking permissions...";
+                const owner = await contract.owner();
+                const currentAddress = await signer.getAddress();
+                
+                if (owner.toLowerCase() !== currentAddress.toLowerCase()) {
+                    throw new Error("Only contract owner can set Base URI!");
+                }
+
+                // 设置 Base URI
+                statusDiv.innerText = "Setting Base URI...";
+                const tx = await contract.setBaseURI(baseURI);
+                statusDiv.innerText = `Transaction sent: ${tx.hash}\nWaiting for confirmation...`;
+                
+                const receipt = await tx.wait();
+                
+                if (receipt.status === 1) {
+                    statusDiv.innerHTML = `✅ Base URI set successfully!<br>TX: ${tx.hash}`;
+                    // 自动获取并显示新的 Base URI
+                    setTimeout(() => {
+                        document.getElementById('getBaseURIBtn').click();
+                    }, 1000);
+                } else {
+                    throw new Error("Transaction failed");
+                }
+
+            } catch (e) {
+                console.error("Set Base URI Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}`;
+            }
+        });
+
+        // 获取当前 Base URI
+        document.getElementById('getBaseURIBtn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('baseURIStatus');
+            const contractAddr = document.getElementById('setURIContractAddress').value.trim();
+
+            if (!contractAddr || !ethers.isAddress(contractAddr)) {
+                statusDiv.innerText = "❌ Please enter a valid contract address!";
+                return;
+            }
+
+            if (!provider) {
+                statusDiv.innerText = "❌ Please connect wallet first!";
+                return;
+            }
+
+            try {
+                const abi = sbtArtifact ? sbtArtifact.abi : [
+                    "function tokenURI(uint256 tokenId) external view returns (string)"
+                ];
+
+                const contract = new ethers.Contract(contractAddr, abi, provider);
+
+                // 尝试获取 tokenURI(0) 来推断 Base URI
+                statusDiv.innerText = "Fetching Base URI...";
+                
+                try {
+                    const tokenURI0 = await contract.tokenURI(0);
+                    if (!tokenURI0 || tokenURI0 === "") {
+                        statusDiv.innerHTML = `
+                            <strong>Token URI (Token #0):</strong><br>
+                            <code>(empty)</code><br><br>
+                            <small>Base URI 未设置，请先设置 Base URI</small>
+                        `;
+                    } else {
+                        // 尝试获取并显示元数据预览
+                        try {
+                            const response = await fetch(tokenURI0);
+                            if (response.ok) {
+                                const metadata = await response.json();
+                                statusDiv.innerHTML = `
+                                    <strong>Token URI (Token #0):</strong><br>
+                                    <code>${tokenURI0}</code><br><br>
+                                    <strong>元数据预览:</strong><br>
+                                    <pre style="background: #f0f0f0; padding: 10px; overflow-x: auto; font-size: 11px;">${JSON.stringify(metadata, null, 2)}</pre><br>
+                                    ${metadata.image ? `<strong>图片 URL:</strong> <code>${metadata.image}</code><br><a href="${metadata.image}" target="_blank">测试图片</a>` : '<span style="color: red;">⚠️ 缺少图片 URL</span>'}
+                                `;
+                            } else {
+                                statusDiv.innerHTML = `
+                                    <strong>Token URI (Token #0):</strong><br>
+                                    <code>${tokenURI0}</code><br><br>
+                                    <span style="color: orange;">⚠️ 无法访问元数据 URL（HTTP ${response.status}）</span><br>
+                                    <small>请检查 URL 是否正确，或点击"Test Metadata JSON"按钮进行详细测试</small>
+                                `;
+                            }
+                        } catch (fetchError) {
+                            statusDiv.innerHTML = `
+                                <strong>Token URI (Token #0):</strong><br>
+                                <code>${tokenURI0}</code><br><br>
+                                <span style="color: orange;">⚠️ 无法获取元数据: ${fetchError.message}</span><br>
+                                <small>请点击"Test Metadata JSON"按钮进行详细测试</small>
+                            `;
+                        }
+                    }
+                } catch (e) {
+                    // 如果 Token 0 不存在，尝试其他方法
+                    statusDiv.innerHTML = `
+                        <strong>Base URI Status:</strong><br>
+                        <code>Not set or Token #0 doesn't exist</code><br><br>
+                        <small>请先 mint 一个 Token，然后设置 Base URI</small>
+                    `;
+                }
+
+            } catch (e) {
+                console.error("Get Base URI Error:", e);
+                statusDiv.innerHTML = `❌ Error: ${e.message}`;
+            }
+        });
+
+        // 如果合约地址输入框为空，尝试使用部署的合约地址
+        document.getElementById('setURIContractAddress').addEventListener('focus', () => {
+            const deployAddr = document.getElementById('contractAddress').value.trim();
+            if (deployAddr && !document.getElementById('setURIContractAddress').value.trim()) {
+                document.getElementById('setURIContractAddress').value = deployAddr;
+                document.getElementById('setURIContractAddress').dispatchEvent(new Event('input'));
+            }
+        });
+    </script>
+</body>
+</html>
