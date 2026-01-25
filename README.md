@@ -15,6 +15,9 @@
 ```bash
 cd /Users/ppg/Desktop/kyp/ghostlink
 ./mvnw spring-boot:run
+
+
+cd /Users/ppg/Desktop/kyp/ghostlink/web && npm run dev
 ```
 
 应用将在 `http://localhost:8080` 启动。

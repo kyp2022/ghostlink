@@ -31,8 +31,11 @@ function App() {
         const state = urlParams.get('state');
 
         if (code && window.opener) {
+            let authType = 'GITHUB_AUTH_CODE';
+            if (state === 'twitter') authType = 'TWITTER_AUTH_CODE';
+
             window.opener.postMessage({
-                type: state === 'twitter' ? 'TWITTER_AUTH_CODE' : 'GITHUB_AUTH_CODE',
+                type: authType,
                 code: code
             }, window.location.origin);
             window.close();
@@ -142,6 +145,8 @@ function App() {
             .catch(() => setTwitterStatus('error'));
     };
 
+
+
     const onGithubConnect = async () => {
         let currentAccount = account;
         if (!currentAccount) {
@@ -240,6 +245,7 @@ function App() {
         switch (activeTab) {
             case 'solutions':
                 return <SolutionsPage
+                    key={account || 'no-wallet'}
                     initialVerificationStatus={verificationStatus}
                     initialUserData={userData}
                     initialZkProof={zkProof}

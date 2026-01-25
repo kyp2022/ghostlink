@@ -3,15 +3,21 @@ import { motion } from 'framer-motion';
 import { Github, Twitter, Plus, Check, ShieldCheck, Car } from 'lucide-react';
 import { useContract } from '../hooks/useContract';
 import { ProgressModal } from '../components/ProgressModal';
+import AlipayUpload from '../components/AlipayUpload';
+import CryptoPortfolio from '../components/CryptoPortfolio';
 
 export const SolutionsPage = ({
     initialVerificationStatus, initialUserData, initialZkProof, onGithubConnect,
     twitterStatus, twitterUser, twitterProof, onTwitterConnect,
+    coinbaseStatus, coinbaseData,
     walletAccount, walletSigner
 }) => {
     const [activeTab, setActiveTab] = useState('identity');
     const account = walletAccount;
     const signer = walletSigner;
+
+    // Debug: Log wallet props
+    console.log('[SolutionsPage] Wallet props received:', { walletAccount, walletSigner: !!walletSigner });
 
     const {
         mintCredential,
@@ -113,35 +119,64 @@ export const SolutionsPage = ({
 
     const tabContent = {
         defi: {
-            title: "Enable under-collateralized loans.",
-            desc: "Import off-chain credit history from PayPal or Stripe to prove solvency without revealing transactions.",
+            title: "Asset-Pass: Prove Solvency.",
+            desc: "Verify your real-world assets (Alipay) or on-chain holdings (Any Wallet) to unlock under-collateralized DeFi loans.",
             mockup: (
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 h-full flex flex-col">
-                    <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
-                        <div className="font-bold">Aave Loan Market</div>
-                        <div className="bg-gray-100 px-3 py-1 rounded-full text-xs">Wallet Connected</div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-accent">
-                                    <ShieldCheck size={16} />
-                                </div>
-                                <div>
-                                    <div className="text-sm font-bold text-gray-900">GhostLink Score</div>
-                                    <div className="text-xs text-gray-500">Source: PayPal</div>
-                                </div>
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 h-full flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                <ShieldCheck size={20} className="text-white" />
                             </div>
-                            <div className="text-lg font-bold text-accent">780</div>
+                            <div>
+                                <div className="font-bold text-gray-900">Asset-Pass</div>
+                                <div className="text-xs text-gray-500">Multi-Source Verification</div>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Max LTV</span>
-                                <span className="font-medium text-green-600">85% (Boosted)</span>
+                        <div className="px-2 py-1 bg-green-100 rounded-full text-[10px] font-medium text-green-700">
+                            Production Ready
+                        </div>
+                    </div>
+
+                    {/* Asset Cards */}
+                    <div className="space-y-3 flex-1">
+                        {/* On-chain Portfolio */}
+                        <div className="rounded-xl p-4 border border-gray-200 bg-gray-50 hover:border-gray-300 transition-all">
+                            <CryptoPortfolio
+                                walletAccount={account}
+                                walletSigner={signer}
+                                onVerificationComplete={(data) => {
+                                    console.log('Portfolio Verified:', data);
+                                }}
+                            />
+                        </div>
+
+                        {/* Divider */}
+                        <div className="relative py-2">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2">
-                                <div className="w-[85%] bg-green-500 h-2 rounded-full"></div>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="px-2 bg-white text-gray-400">OR</span>
                             </div>
+                        </div>
+
+                        {/* Alipay */}
+                        <div className="rounded-xl p-4 border border-gray-200 bg-gray-50 hover:border-gray-300 transition-all">
+                            <AlipayUpload
+                                onVerificationComplete={(data) => {
+                                    console.log('Alipay Verified:', data);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                            <span><span className="text-gray-600 font-medium">2</span> verification sources</span>
+                            <span>Powered by <span className="text-indigo-500">ZK Proofs</span></span>
                         </div>
                     </div>
                 </div>
@@ -205,8 +240,8 @@ export const SolutionsPage = ({
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${initialVerificationStatus === 'success'
-                                            ? 'bg-gradient-to-br from-green-400 to-emerald-500'
-                                            : 'bg-gray-900'
+                                        ? 'bg-gradient-to-br from-green-400 to-emerald-500'
+                                        : 'bg-gray-900'
                                         }`}>
                                         <Github size={20} className="text-white" />
                                     </div>
@@ -260,8 +295,8 @@ export const SolutionsPage = ({
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${twitterStatus === 'success'
-                                            ? 'bg-gradient-to-br from-green-400 to-emerald-500'
-                                            : 'bg-sky-500'
+                                        ? 'bg-gradient-to-br from-green-400 to-emerald-500'
+                                        : 'bg-sky-500'
                                         }`}>
                                         <Twitter size={20} className="text-white" />
                                     </div>
