@@ -16,6 +16,7 @@ export const SolutionsPage = ({
     const {
         mintCredential,
         isMinting,
+        mintStatus,
         progressSteps,
         currentProgressStep,
         showProgressModal,
@@ -173,76 +174,140 @@ export const SolutionsPage = ({
             title: "One Person, One ID.",
             desc: "Link multiple Web2 accounts (Twitter, GitHub, Email) to create a robust, private on-chain identity.",
             mockup: (
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 h-full flex flex-col">
-                    <div className="font-bold mb-6">My Identity Orb</div>
-                    <div className="space-y-3">
-                        {/* GitHub Item */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                                <Github size={18} />
-                                <span className="text-sm">GitHub</span>
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 h-full flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                                <ShieldCheck size={20} className="text-white" />
                             </div>
-                            {initialVerificationStatus === 'success' ? (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
-                                    <Check size={10} /> Verified
-                                </span>
-                            ) : (
-                                <button
-                                    onClick={onGithubConnect}
-                                    disabled={initialVerificationStatus === 'loading'}
-                                    className="text-xs px-3 py-1.5 rounded transition-colors bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {initialVerificationStatus === 'loading' ? 'Verifying...' : 'Connect'}
-                                </button>
-                            )}
-                        </div>
-
-                        {initialVerificationStatus === 'success' && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                className="text-xs bg-green-50 p-2 rounded border border-green-100 text-green-800"
-                            >
-                                <p><strong>User:</strong> {initialUserData?.login}</p>
-                                <p className="text-[10px] text-green-600 mt-1">✓ Credential minting in progress...</p>
-                            </motion.div>
-                        )}
-
-                        {/* Twitter Item */}
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                                <Twitter size={18} />
-                                <span className="text-sm">X (Twitter)</span>
+                            <div>
+                                <div className="font-bold text-gray-900">Identity Passport</div>
+                                <div className="text-xs text-gray-500">Powered by ZK Proofs</div>
                             </div>
-                            {twitterStatus === 'success' ? (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
-                                    <Check size={10} /> Verified
-                                </span>
-                            ) : (
-                                <button
-                                    onClick={onTwitterConnect}
-                                    disabled={twitterStatus === 'loading'}
-                                    className="text-xs px-3 py-1.5 rounded transition-colors bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {twitterStatus === 'loading' ? 'Verifying...' : 'Connect'}
-                                </button>
-                            )}
                         </div>
-                        {twitterStatus === 'success' && (
-                            <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                className="text-xs bg-green-50 p-2 rounded border border-green-100 text-green-800"
-                            >
-                                <p><strong>User:</strong> {twitterUser?.username || 'Verified'}</p>
-                                <p className="text-[10px] text-green-600 mt-1">✓ Credential minting in progress...</p>
-                            </motion.div>
-                        )}
+                        <div className="px-2 py-1 bg-gray-100 rounded-full text-[10px] font-medium text-gray-600">
+                            {(initialVerificationStatus === 'success' ? 1 : 0) + (twitterStatus === 'success' ? 1 : 0)}/2 Verified
+                        </div>
+                    </div>
 
-                        <div className="flex items-center justify-between p-3 border border-dashed border-gray-300 rounded-lg text-gray-400">
-                            <div className="flex items-center gap-3">
+                    {/* Credential Cards */}
+                    <div className="space-y-3 flex-1">
+                        {/* GitHub Card */}
+                        <motion.div
+                            initial={false}
+                            animate={{
+                                borderColor: initialVerificationStatus === 'success' ? '#22c55e' : '#e5e7eb',
+                                backgroundColor: initialVerificationStatus === 'success' ? '#f0fdf4' : '#f9fafb'
+                            }}
+                            className="rounded-xl p-4 border-2 transition-all"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${initialVerificationStatus === 'success'
+                                            ? 'bg-gradient-to-br from-green-400 to-emerald-500'
+                                            : 'bg-gray-900'
+                                        }`}>
+                                        <Github size={20} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-gray-900">GitHub</div>
+                                        {initialVerificationStatus === 'success' && initialUserData?.login && (
+                                            <div className="text-xs text-gray-500">@{initialUserData.login}</div>
+                                        )}
+                                        {initialVerificationStatus !== 'success' && (
+                                            <div className="text-xs text-gray-500">Developer Identity</div>
+                                        )}
+                                    </div>
+                                </div>
+                                {initialVerificationStatus === 'success' ? (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="flex items-center gap-1.5 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+                                    >
+                                        <Check size={12} />
+                                        <span>Verified</span>
+                                    </motion.div>
+                                ) : (
+                                    <button
+                                        onClick={onGithubConnect}
+                                        disabled={initialVerificationStatus === 'loading'}
+                                        className="px-4 py-2 rounded-lg text-xs font-medium transition-all bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {initialVerificationStatus === 'loading' ? (
+                                            <>
+                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <span>Verifying...</span>
+                                            </>
+                                        ) : (
+                                            <span>Connect</span>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Twitter Card */}
+                        <motion.div
+                            initial={false}
+                            animate={{
+                                borderColor: twitterStatus === 'success' ? '#22c55e' : '#e5e7eb',
+                                backgroundColor: twitterStatus === 'success' ? '#f0fdf4' : '#f9fafb'
+                            }}
+                            className="rounded-xl p-4 border-2 transition-all"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${twitterStatus === 'success'
+                                            ? 'bg-gradient-to-br from-green-400 to-emerald-500'
+                                            : 'bg-sky-500'
+                                        }`}>
+                                        <Twitter size={20} className="text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="font-semibold text-gray-900">X (Twitter)</div>
+                                        {twitterStatus === 'success' && twitterUser?.username && (
+                                            <div className="text-xs text-gray-500">@{twitterUser.username}</div>
+                                        )}
+                                        {twitterStatus !== 'success' && (
+                                            <div className="text-xs text-gray-500">Social Identity</div>
+                                        )}
+                                    </div>
+                                </div>
+                                {twitterStatus === 'success' ? (
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="flex items-center gap-1.5 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
+                                    >
+                                        <Check size={12} />
+                                        <span>Verified</span>
+                                    </motion.div>
+                                ) : (
+                                    <button
+                                        onClick={onTwitterConnect}
+                                        disabled={twitterStatus === 'loading'}
+                                        className="px-4 py-2 rounded-lg text-xs font-medium transition-all bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {twitterStatus === 'loading' ? (
+                                            <>
+                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <span>Verifying...</span>
+                                            </>
+                                        ) : (
+                                            <span>Connect</span>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Add More Card */}
+                        <div className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-gray-300 hover:text-gray-500 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-2">
                                 <Plus size={18} />
-                                <span className="text-sm">Add Source</span>
+                                <span className="text-sm font-medium">Add More Sources</span>
                             </div>
                         </div>
                     </div>
@@ -259,6 +324,7 @@ export const SolutionsPage = ({
                 title={progressTitle}
                 steps={progressSteps}
                 currentStep={currentProgressStep}
+                mintStatus={mintStatus}
             />
             <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
                 <div className="text-center max-w-2xl mx-auto mb-16">
@@ -274,8 +340,8 @@ export const SolutionsPage = ({
                                 key={key}
                                 onClick={() => setActiveTab(key)}
                                 className={`p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${activeTab === key
-                                        ? 'bg-white border-gray-200 shadow-sm'
-                                        : 'bg-transparent border-transparent hover:bg-white/50'
+                                    ? 'bg-white border-gray-200 shadow-sm'
+                                    : 'bg-transparent border-transparent hover:bg-white/50'
                                     }`}
                             >
                                 <h3 className={`font-semibold text-lg mb-1 ${activeTab === key ? 'text-accent' : 'text-text'}`}>
