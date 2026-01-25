@@ -5,6 +5,7 @@ export const Navbar = ({ activeTab, setActiveTab, account, connectWallet, discon
     const tabs = [
         { id: 'home', label: 'Home' },
         { id: 'solutions', label: 'Solutions' },
+        { id: 'explorer', label: 'Explorer' },
         { id: 'developers', label: 'Developers' },
         { id: 'company', label: 'Company' },
     ];
@@ -28,8 +29,8 @@ export const Navbar = ({ activeTab, setActiveTab, account, connectWallet, discon
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300 ${activeTab === tab.id
-                                    ? 'bg-white text-black shadow-sm'
-                                    : 'text-text-muted hover:text-black'
+                                ? 'bg-white text-black shadow-sm'
+                                : 'text-text-muted hover:text-black'
                                 }`}
                         >
                             {tab.label}

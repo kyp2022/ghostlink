@@ -9,8 +9,7 @@ import CryptoPortfolio from '../components/CryptoPortfolio';
 export const SolutionsPage = ({
     initialVerificationStatus, initialUserData, initialZkProof, onGithubConnect,
     twitterStatus, twitterUser, twitterProof, onTwitterConnect,
-    coinbaseStatus, coinbaseData,
-    walletAccount, walletSigner
+    walletAccount, walletSigner, onConnectWallet
 }) => {
     const [activeTab, setActiveTab] = useState('identity');
     const account = walletAccount;
@@ -146,6 +145,7 @@ export const SolutionsPage = ({
                             <CryptoPortfolio
                                 walletAccount={account}
                                 walletSigner={signer}
+                                onConnectWallet={onConnectWallet}
                                 onVerificationComplete={(data) => {
                                     console.log('Portfolio Verified:', data);
                                 }}

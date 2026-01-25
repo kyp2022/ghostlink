@@ -5,6 +5,7 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/HomePage';
 import { SolutionsPage } from './pages/SolutionsPage';
+import { ExplorerPage } from './pages/ExplorerPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { CompanyPage } from './pages/CompanyPage';
 import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI, API_BASE_URL } from './config/constants';
@@ -245,7 +246,6 @@ function App() {
         switch (activeTab) {
             case 'solutions':
                 return <SolutionsPage
-                    key={account || 'no-wallet'}
                     initialVerificationStatus={verificationStatus}
                     initialUserData={userData}
                     initialZkProof={zkProof}
@@ -256,7 +256,9 @@ function App() {
                     onTwitterConnect={onTwitterConnect}
                     walletAccount={account}
                     walletSigner={signer}
+                    onConnectWallet={connectWallet}
                 />;
+            case 'explorer': return <ExplorerPage walletSigner={signer} />;
             case 'developers': return <DevelopersPage />;
             case 'company': return <CompanyPage />;
             default: return <HomePage />;

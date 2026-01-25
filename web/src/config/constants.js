@@ -7,7 +7,8 @@ export const REDIRECT_URI = window.location.origin + window.location.pathname;
 
 // Contract Configuration
 export const CONTRACT_ADDRESS = "0x79983eA479BfeD6d597A0e7420E13ae7Ac0c0445";
-export const RPC_URL = "https://sepolia.infura.io/v3/YOUR_INFURA_KEY";
+// Using Alchemy's free public Sepolia RPC (supports CORS)
+export const RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/demo";
 export const CHAIN_ID = 11155111; // Sepolia
 
 // Contract ABI
