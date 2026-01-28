@@ -55,8 +55,6 @@ export const useContract = (signer, account) => {
             ));
 
             const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-            const currentAddress = await signer.getAddress();
-            const mintRecipient = ethers.utils.getAddress(currentAddress);
 
             // Prepare seal
             let seal;
@@ -106,6 +104,12 @@ export const useContract = (signer, account) => {
                 console.warn('Nullifier check failed (non-critical):', nullifierError.message);
             }
 
+            // Prepare credential type (default to 0 if not provided)
+            const credType = credentialType !== undefined ? credentialType : 0;
+            if (credType < 0 || credType > 3) {
+                throw new Error('Invalid credential type. Must be 0-3 (0: GitHub, 1: Alipay, 2: Twitter, 3: Wallet)');
+            }
+
             // Step 3: Submit transaction
             setCurrentProgressStep(2);
             setProgressSteps(prev => prev.map((s, i) =>
@@ -113,9 +117,9 @@ export const useContract = (signer, account) => {
             ));
             setMintStatus({ type: 'pending', message: 'Waiting for wallet confirmation...' });
 
-            // Simulate transaction
+            // Simulate transaction (new interface: seal, nullifier, credType)
             try {
-                await contract.callStatic.mint(seal, mintRecipient, nullifier);
+                await contract.callStatic.mint(seal, nullifier, credType);
             } catch (simError) {
                 const errorMsg = simError.reason || simError.message || 'Transaction simulation failed';
                 throw new Error(`Transaction will fail: ${errorMsg}`);
@@ -124,13 +128,13 @@ export const useContract = (signer, account) => {
             // Estimate gas
             let gasEstimate;
             try {
-                gasEstimate = await contract.estimateGas.mint(seal, mintRecipient, nullifier);
+                gasEstimate = await contract.estimateGas.mint(seal, nullifier, credType);
             } catch {
                 gasEstimate = ethers.BigNumber.from('500000');
             }
 
-            // Execute transaction
-            const tx = await contract.mint(seal, mintRecipient, nullifier, {
+            // Execute transaction (new interface: seal, nullifier, credType)
+            const tx = await contract.mint(seal, nullifier, credType, {
                 gasLimit: gasEstimate.mul(120).div(100)
             });
 

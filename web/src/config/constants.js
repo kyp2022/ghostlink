@@ -11,19 +11,40 @@ export const CONTRACT_ADDRESS = "0x79983eA479BfeD6d597A0e7420E13ae7Ac0c0445";
 export const RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/demo";
 export const CHAIN_ID = 11155111; // Sepolia
 
-// Contract ABI
+// Contract ABI - Updated for GhostLinkSBT v2.0
 export const CONTRACT_ABI = [
-    "function mint(bytes calldata seal, address recipient, bytes32 nullifier) external",
+    // Core minting function
+    "function mint(bytes calldata seal, bytes32 nullifier, uint8 credType) external returns (uint256)",
+    
+    // Query functions
+    "function getCredentials(address user) external view returns (tuple(uint8 credType, uint256 mintedAt, bytes32 nullifier)[])",
+    "function hasCredentialType(address user, uint8 credType) external view returns (bool)",
+    "function getCredential(uint256 tokenId) external view returns (tuple(uint8 credType, uint256 mintedAt, bytes32 nullifier))",
+    "function getUserTokenIds(address user) external view returns (uint256[])",
+    
+    // View functions
     "function imageId() external view returns (bytes32)",
     "function verifier() external view returns (address)",
     "function nullifiers(bytes32) external view returns (bool)",
+    "function credentials(uint256) external view returns (uint8 credType, uint256 mintedAt, bytes32 nullifier)",
+    "function tokenURI(uint256 tokenId) external view returns (string)",
     "function name() external view returns (string)",
     "function symbol() external view returns (string)",
     "function totalSupply() external view returns (uint256)",
     "function balanceOf(address owner) external view returns (uint256)",
     "function ownerOf(uint256 tokenId) external view returns (address)",
-    "event Minted(address indexed recipient, uint256 indexed tokenId, bytes32 nullifier)"
+    
+    // Events
+    "event Minted(address indexed recipient, uint256 indexed tokenId, bytes32 indexed nullifier, uint8 credType)"
 ];
+
+// Credential type enum (matches contract)
+export const CREDENTIAL_TYPE = {
+    GITHUB: 0,
+    ALIPAY: 1,
+    TWITTER: 2,
+    WALLET: 3
+};
 
 // API Configuration
 export const API_BASE_URL = "http://localhost:8080";

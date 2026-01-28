@@ -14,7 +14,6 @@ import java.util.Map;
 @Service
 public class GithubAuthService {
 
-    // TODO: 请替换为您在 GitHub 注册的 OAuth App 的 Client ID 和 Secret
     private static final String CLIENT_ID = "Iv23li88rvwnNxTsjlfc";
     private static final String CLIENT_SECRET = "addde702bf5e40b829d8ea079a29c402188446d0";
     
