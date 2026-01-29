@@ -146,6 +146,12 @@ export const SolutionsPage = ({
                                 walletAccount={account}
                                 walletSigner={signer}
                                 onConnectWallet={onConnectWallet}
+                                mintCredential={mintCredential}
+                                setShowProgressModal={setShowProgressModal}
+                                setProgressSteps={setProgressSteps}
+                                setCurrentProgressStep={setCurrentProgressStep}
+                                setProgressTitle={setProgressTitle}
+                                defaultProgressSteps={defaultProgressSteps}
                                 onVerificationComplete={(data) => {
                                     console.log('Portfolio Verified:', data);
                                 }}
@@ -165,6 +171,13 @@ export const SolutionsPage = ({
                         {/* Alipay */}
                         <div className="rounded-xl p-4 border border-gray-200 bg-gray-50 hover:border-gray-300 transition-all">
                             <AlipayUpload
+                                walletAccount={account}
+                                mintCredential={mintCredential}
+                                setShowProgressModal={setShowProgressModal}
+                                setProgressSteps={setProgressSteps}
+                                setCurrentProgressStep={setCurrentProgressStep}
+                                setProgressTitle={setProgressTitle}
+                                defaultProgressSteps={defaultProgressSteps}
                                 onVerificationComplete={(data) => {
                                     console.log('Alipay Verified:', data);
                                 }}

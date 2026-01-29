@@ -1,14 +1,18 @@
 import { motion } from 'framer-motion';
-import { Check, X, ArrowDown, ExternalLink, Sparkles, Trophy } from 'lucide-react';
+import { Check, X, ArrowDown, ExternalLink, Sparkles, Trophy, AlertCircle } from 'lucide-react';
 
 export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mintStatus }) => {
     if (!isOpen) return null;
 
     const isCompleted = currentStep >= steps.length;
     const isSuccess = isCompleted && mintStatus?.type === 'success';
-    const isError = mintStatus?.type === 'error';
+    const isError = mintStatus?.type === 'error' || (steps[currentStep]?.description?.startsWith('Failed')); // Heuristic for error if mintStatus not full populated
+
+    // Allow closing if completed OR if error
+    const canClose = isCompleted || isError;
 
     const stepStatus = (stepIndex) => {
+        if (isError && stepIndex === currentStep) return 'error';
         if (currentStep >= steps.length) return 'completed';
         if (stepIndex < currentStep) return 'completed';
         if (stepIndex === currentStep) return 'active';
@@ -18,6 +22,9 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
     const getStepIcon = (status) => {
         if (status === 'completed') {
             return <Check size={20} className="text-green-600" />;
+        }
+        if (status === 'error') {
+            return <X size={20} className="text-red-600" />;
         }
         if (status === 'active') {
             return <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>;
@@ -49,9 +56,19 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                                 <Trophy size={20} className="text-white" />
                             </motion.div>
                         )}
+                        {isError && (
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center"
+                            >
+                                <AlertCircle size={20} className="text-red-600" />
+                            </motion.div>
+                        )}
                         <h3 className="text-xl font-bold tracking-tight">{title || 'Progress'}</h3>
                     </div>
-                    {isCompleted && (
+                    {/* Always show close button if completed or error */}
+                    {canClose && (
                         <button
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
@@ -89,14 +106,15 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                     </motion.div>
                 )}
 
-                {/* Error State */}
-                {isError && (
+                {/* Error State Message - Optional if step shows it, but good for summary */}
+                {isError && mintStatus?.message && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-6 p-4 bg-red-50 rounded-2xl border border-red-100"
                     >
-                        <p className="text-sm text-red-700">{mintStatus?.message || 'Transaction failed'}</p>
+                        <p className="text-sm text-red-700 font-medium">Process Failed</p>
+                        <p className="text-xs text-red-600 mt-1">{mintStatus.message}</p>
                     </motion.div>
                 )}
 
@@ -115,10 +133,12 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                             >
                                 <div
                                     className={`flex items-start gap-3 px-4 py-3 rounded-xl border transition-all duration-300 ${status === 'active'
-                                        ? 'border-accent bg-blue-50/60 shadow-sm'
-                                        : status === 'completed'
-                                            ? 'border-green-200 bg-green-50/40'
-                                            : 'border-gray-100 bg-gray-50/30'
+                                            ? 'border-accent bg-blue-50/60 shadow-sm'
+                                            : status === 'completed'
+                                                ? 'border-green-200 bg-green-50/40'
+                                                : status === 'error'
+                                                    ? 'border-red-200 bg-red-50/60'
+                                                    : 'border-gray-100 bg-gray-50/30'
                                         }`}
                                 >
                                     <div className="flex flex-col items-center w-6">
@@ -131,20 +151,24 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className={`text-sm font-medium ${status === 'active'
-                                            ? 'text-accent'
-                                            : status === 'completed'
-                                                ? 'text-green-700'
-                                                : 'text-gray-500'
+                                                ? 'text-accent'
+                                                : status === 'completed'
+                                                    ? 'text-green-700'
+                                                    : status === 'error'
+                                                        ? 'text-red-700'
+                                                        : 'text-gray-500'
                                             }`}>
                                             {step.title}
                                         </div>
                                         {step.description && (
-                                            <div className="text-xs text-gray-500 mt-1">
+                                            <div className={`text-xs mt-1 ${status === 'error' ? 'text-red-600' : 'text-gray-500'}`}>
                                                 {step.description}
                                             </div>
                                         )}
-                                        {step.details && (status === 'active' || status === 'completed') && (
-                                            <div className={`text-[11px] mt-2 font-mono break-all px-2 py-1 rounded ${status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                        {step.details && (status === 'active' || status === 'completed' || status === 'error') && (
+                                            <div className={`text-[11px] mt-2 font-mono break-all px-2 py-1 rounded ${status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                    status === 'error' ? 'bg-red-100 text-red-700' :
+                                                        'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {step.details}
                                             </div>
@@ -157,7 +181,7 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                 </div>
 
                 {/* Footer */}
-                {isCompleted && (
+                {canClose && (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -165,7 +189,10 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                     >
                         <button
                             onClick={onClose}
-                            className="w-full bg-gradient-to-r from-gray-900 to-black text-white py-3 rounded-xl font-medium hover:opacity-90 transition-all shadow-lg shadow-black/10"
+                            className={`w-full py-3 rounded-xl font-medium transition-all shadow-lg ${isError
+                                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200'
+                                    : 'bg-gradient-to-r from-gray-900 to-black text-white hover:opacity-90 shadow-black/10'
+                                }`}
                         >
                             {isSuccess ? 'Done' : 'Close'}
                         </button>

@@ -5,8 +5,8 @@ export const TWITTER_CLIENT_ID = "Y2ZMMWgzOGNNYjdISDhVZ1BHNjc6MTpjaQ";
 // The redirect URI must match what you configured in GitHub App settings
 export const REDIRECT_URI = window.location.origin + window.location.pathname;
 
-// Contract Configuration
-export const CONTRACT_ADDRESS = "0x79983eA479BfeD6d597A0e7420E13ae7Ac0c0445";
+// Contract Configuration0x9C635808bE88E725892FB6Fbe2C99BA988C30D91
+export const CONTRACT_ADDRESS = "0x621BDc0Be6E3083776b5D6bd3D20d4dfE0455Ff7";
 // Using Alchemy's free public Sepolia RPC (supports CORS)
 export const RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/demo";
 export const CHAIN_ID = 11155111; // Sepolia
@@ -15,13 +15,13 @@ export const CHAIN_ID = 11155111; // Sepolia
 export const CONTRACT_ABI = [
     // Core minting function
     "function mint(bytes calldata seal, bytes32 nullifier, uint8 credType) external returns (uint256)",
-    
+
     // Query functions
     "function getCredentials(address user) external view returns (tuple(uint8 credType, uint256 mintedAt, bytes32 nullifier)[])",
     "function hasCredentialType(address user, uint8 credType) external view returns (bool)",
     "function getCredential(uint256 tokenId) external view returns (tuple(uint8 credType, uint256 mintedAt, bytes32 nullifier))",
     "function getUserTokenIds(address user) external view returns (uint256[])",
-    
+
     // View functions
     "function imageId() external view returns (bytes32)",
     "function verifier() external view returns (address)",
@@ -33,7 +33,7 @@ export const CONTRACT_ABI = [
     "function totalSupply() external view returns (uint256)",
     "function balanceOf(address owner) external view returns (uint256)",
     "function ownerOf(uint256 tokenId) external view returns (address)",
-    
+
     // Events
     "event Minted(address indexed recipient, uint256 indexed tokenId, bytes32 indexed nullifier, uint8 credType)"
 ];

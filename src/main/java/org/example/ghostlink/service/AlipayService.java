@@ -1,12 +1,19 @@
 package org.example.ghostlink.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.example.ghostlink.model.ZkProof;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +22,12 @@ import java.util.regex.Pattern;
 
 @Service
 public class AlipayService {
+
+    // ZK 服务地址 - 符合 RISC Zero 规范
+    private static final String ZK_SERVICE_URL = "http://127.0.0.1:3000/api/v1/prove";
+    
+    // 默认资产门槛（元）
+    private static final String DEFAULT_THRESHOLD = "10000";
 
     /**
      * Verifies the Alipay Asset Proof PDF and extracts the asset balance and ID number.
@@ -36,9 +49,32 @@ public class AlipayService {
             // 3. Logic: Extract asset amount and ID number
             Map<String, String> results = new HashMap<>();
             results.put("balance", extractBalance(text));
-            results.put("idNumber", extractIdNumber(text));
+            String idNumber = extractIdNumber(text);
+            results.put("idNumber", idNumber);
+            results.put("id_number_hash", keccak256Hash(idNumber));
             return results;
         }
+    }
+
+    /**
+     * 验证并生成零知识证明
+     * 
+     * @param file PDF文件
+     * @param recipient 接收地址
+     * @param threshold 资产门槛（可选，默认10000）
+     * @return ZK证明对象
+     */
+    public ZkProof verifyAndGenerateProof(MultipartFile file, String recipient, String threshold) throws IOException {
+        // 1. 验证并提取数据
+        Map<String, String> extractedData = verifyAndExtractBalance(file);
+        String balance = extractedData.get("balance");
+        String idNumber = extractedData.get("idNumber");
+        
+        // 2. 对身份证号进行 keccak256 哈希
+        String idNumberHash = keccak256Hash(idNumber);
+        
+        // 3. 调用 ZK 服务生成证明
+        return callZkService(balance, idNumberHash, threshold != null ? threshold : DEFAULT_THRESHOLD, recipient);
     }
 
     /**
@@ -88,6 +124,7 @@ public class AlipayService {
         
         throw new IllegalArgumentException("Could not find 'Total Assets' in the uploaded document.");
     }
+    
     /**
      * Extracts the ID number using Regex.
      * Matches text between "身份证号码" and the following comma/punctuation.
@@ -101,5 +138,113 @@ public class AlipayService {
             return matcher.group(1);
         }
         return "Not Found";
+    }
+    
+    /**
+     * 计算 keccak256 哈希值
+     * 
+     * @param input 输入字符串
+     * @return 0x开头的十六进制哈希值
+     */
+    private String keccak256Hash(String input) {
+        try {
+            // 使用 SHA-3 (Keccak-256)
+            MessageDigest digest = MessageDigest.getInstance("SHA3-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            
+            // 转换为十六进制字符串
+            BigInteger number = new BigInteger(1, hash);
+            StringBuilder hexString = new StringBuilder(number.toString(16));
+            
+            // 补齐到64位
+            while (hexString.length() < 64) {
+                hexString.insert(0, '0');
+            }
+            
+            return "0x" + hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to calculate keccak256 hash", e);
+        }
+    }
+    
+    /**
+     * 调用 ZK 服务生成证明
+     * 按照 risc_zero_spec.md 规范构造请求
+     */
+    private ZkProof callZkService(String balance, String idNumberHash, String threshold, String recipient) {
+        try {
+            // 增加超时时间设置，因为ZK证明生成可能需要较长时间（如10分钟）
+            org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(60000); // 连接超时 60秒
+            factory.setReadTimeout(600000);   // 读取超时 600秒 (10分钟)
+            
+            RestTemplate restTemplate = new RestTemplate(factory);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // 按照规范构造 data 对象
+            Map<String, Object> data = new HashMap<>();
+            data.put("balance", balance);  // String
+            data.put("id_number_hash", idNumberHash);  // String (keccak256 hash)
+            data.put("threshold", threshold);  // String
+            
+            // 构造符合规范的请求体
+            Map<String, Object> request = new HashMap<>();
+            request.put("credential_type", "alipay");
+            request.put("data", data);
+            request.put("recipient", recipient != null ? recipient : "0x0000000000000000000000000000000000000000");
+            
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            
+            ObjectMapper objectMapper = new ObjectMapper();
+            System.out.println("开始调用ZK服务 (Alipay)，这可能需要几分钟...");
+            System.out.println("请求数据: " + objectMapper.writeValueAsString(request));
+            
+            ResponseEntity<Map> response = restTemplate.postForEntity(ZK_SERVICE_URL, entity, Map.class);
+            Map<String, Object> responseBody = response.getBody();
+            
+            // 打印完整的响应体到控制台
+            System.out.println("ZK服务响应: " + objectMapper.writeValueAsString(responseBody));
+            
+            if (responseBody != null && "success".equals(responseBody.get("status"))) {
+                // 解析真实接口返回的数据
+                String receiptHex = (String) responseBody.get("receipt_hex");
+                String journalHex = (String) responseBody.get("journal_hex");
+                String imageIdHex = (String) responseBody.get("image_id_hex");
+                String nullifierHex = (String) responseBody.get("nullifier_hex");
+                
+                // 确保添加0x前缀（如果接口返回的没有）
+                String receipt = receiptHex != null && !receiptHex.startsWith("0x") ? "0x" + receiptHex : receiptHex;
+                String journal = journalHex != null && !journalHex.startsWith("0x") ? "0x" + journalHex : journalHex;
+                String imageId = imageIdHex != null && !imageIdHex.startsWith("0x") ? "0x" + imageIdHex : imageIdHex;
+                String nullifier = nullifierHex != null && !nullifierHex.startsWith("0x") ? "0x" + nullifierHex : nullifierHex;
+                
+                return new ZkProof(
+                        "zk-alipay-" + System.currentTimeMillis(),
+                        true,
+                        System.currentTimeMillis(),
+                        receipt,
+                        journal,
+                        imageId,
+                        nullifier
+                );
+            } else {
+                // 处理错误响应
+                String errorCode = (String) responseBody.get("error_code");
+                String errorMessage = (String) responseBody.get("message");
+                System.out.println("ZK服务返回错误 - Code: " + errorCode + ", Message: " + errorMessage);
+            }
+        } catch (Exception e) {
+            System.out.println("调用ZK服务异常: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        // 如果调用失败，返回验证失败的对象
+        return new ZkProof(
+                "zk-fail-" + System.currentTimeMillis(),
+                false,
+                System.currentTimeMillis(),
+                null, null, null, null
+        );
     }
 }

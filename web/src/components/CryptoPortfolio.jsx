@@ -1,15 +1,30 @@
 import React, { useState } from 'react';
 import { CheckCircle, Loader, AlertCircle, Info } from 'lucide-react';
 import { ethers } from 'ethers';
+import { API_BASE_URL, CREDENTIAL_TYPE } from '../config/constants';
 
 // Import wallet image
 import walletIcon from '../../image/qianbao.png';
 
-const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, onConnectWallet }) => {
-    const [status, setStatus] = useState('idle'); // idle, verifying, success, error
+const CryptoPortfolio = ({
+    walletAccount,
+    walletSigner,
+    onVerificationComplete,
+    onConnectWallet,
+    mintCredential,
+    setShowProgressModal,
+    setProgressSteps,
+    setCurrentProgressStep,
+    setProgressTitle,
+    defaultProgressSteps
+}) => {
+    // status: idle, verifying, success (verified locally), generating_proof, minted, error
+    const [status, setStatus] = useState('idle');
     const [balance, setBalance] = useState('0.00');
     const [txCount, setTxCount] = useState(0);
     const [error, setError] = useState('');
+    const [signature, setSignature] = useState(null);
+    const [message, setMessage] = useState('');
 
     const REQUIRED_TX_COUNT = 10;
 
@@ -26,11 +41,13 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
 
         try {
             // 1. Request Ownership Signature
-            const message = `GhostLink Asset-Pass Verification\n\nI confirm ownership of this wallet.\n\nAddress: ${walletAccount}\nTimestamp: ${Date.now()}`;
+            const msg = `GhostLink Asset-Pass Verification\n\nI confirm ownership of this wallet.\n\nAddress: ${walletAccount}\nTimestamp: ${Date.now()}`;
+            setMessage(msg);
 
             console.log('Requesting signature...');
-            const signature = await walletSigner.signMessage(message);
+            const sig = await walletSigner.signMessage(msg);
             console.log('Signature obtained');
+            setSignature(sig);
 
             // 2. Get provider and fetch data
             const provider = walletSigner.provider;
@@ -47,8 +64,8 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
             console.log('Transaction count:', transactionCount);
             setTxCount(transactionCount);
 
-            // 5. Complete
-            setStatus('success');
+            // 5. Local Verification Complete
+            setStatus('success'); // Ready to mint
 
             if (onVerificationComplete) {
                 onVerificationComplete({
@@ -58,9 +75,10 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
                     transaction_count: transactionCount,
                     has_10_plus_tx: transactionCount >= REQUIRED_TX_COUNT,
                     address: walletAccount,
-                    signature: signature
+                    signature: sig
                 });
             }
+
         } catch (err) {
             console.error('Verification error:', err);
             setStatus('error');
@@ -72,14 +90,104 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
         }
     };
 
+    const handleMint = async () => {
+        console.log('=== CryptoPortfolio: Starting minting process ===');
+        setStatus('generating_proof');
+        setError('');
+
+        try {
+            // Initialize progress modal
+            if (setProgressTitle && setProgressSteps && setCurrentProgressStep && setShowProgressModal) {
+                setProgressTitle('Wallet · Proof → Mint');
+                setProgressSteps(defaultProgressSteps || [
+                    { title: 'Generate ZK Proof', description: 'Prover is running… this may take a few minutes.' },
+                    { title: 'Prepare Transaction', description: 'Preparing contract parameters…' },
+                    { title: 'Confirm in Wallet', description: 'Please confirm in your wallet.' },
+                    { title: 'Await Confirmation', description: 'Waiting for on-chain confirmation…' },
+                    { title: 'Completed', description: 'Done.' }
+                ]);
+                setCurrentProgressStep(0);
+                setShowProgressModal(true);
+            }
+
+            console.log('Calling direct ZK proof API...');
+
+            // Re-fetch balance to ensure freshness (optional, but using state is fine)
+            // Using direct ZK service URL as requested
+            const zkResponse = await fetch('http://127.0.0.1:3000/api/v1/prove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credential_type: 'wallet',
+                    data: {
+                        address: walletAccount,
+                        balance_wei: ethers.utils.parseEther(balance).toString(),
+                        transaction_count: txCount,
+                        chain_id: 11155111, // Sepolia
+                        signature: signature,
+                        message: message
+                    },
+                    recipient: walletAccount
+                })
+            });
+
+            const zkData = await zkResponse.json();
+            console.log('ZK proof response:', zkData);
+
+            if (!zkResponse.ok || zkData.status === 'error') {
+                throw new Error(zkData.message || 'ZK proof generation failed');
+            }
+
+            // Parse ZK proof
+            const zkProof = {
+                proofId: zkData.proofId || `zk-wallet-${Date.now()}`,
+                receipt: zkData.receipt_hex || zkData.receipt,
+                journal: zkData.journal_hex || zkData.journal,
+                imageId: zkData.image_id_hex || zkData.imageId,
+                nullifier: zkData.nullifier_hex || zkData.nullifier,
+                timestamp: zkData.timestamp || Date.now(),
+                verified: true
+            };
+
+            console.log('Parsed ZK proof:', zkProof);
+
+            // Trigger minting
+            if (mintCredential) {
+                // Small delay to ensure progress modal is visible
+                await new Promise(r => setTimeout(r, 500));
+                const success = await mintCredential(zkProof, CREDENTIAL_TYPE.WALLET, true);
+                if (success) {
+                    setStatus('minted');
+                } else {
+                    setStatus('error'); // Minting specific error state if needed
+                    setError('Minting failed');
+                }
+            }
+
+        } catch (err) {
+            console.error('Minting error:', err);
+            setStatus('error');
+            setError(err.message || 'Proof generation failed');
+
+            // Update progress modal with error
+            if (setProgressSteps && setCurrentProgressStep) {
+                setProgressSteps(prev => prev.map((s, i) =>
+                    i === 0 ? { ...s, description: `Failed: ${err.message}` } : s
+                ));
+                // Ensure error state is reflected in modal
+                setCurrentProgressStep(5); // Arbitrary large index to potentially show completion/error state
+            }
+        }
+    };
+
     const handleConnect = () => {
         if (onConnectWallet) {
             onConnectWallet();
         }
     };
 
-    // Render verified state
-    if (status === 'success') {
+    // Render verified state with Mint button
+    if (status === 'success' || status === 'generating_proof' || status === 'minted') {
         return (
             <div className="space-y-3">
                 {/* Main info row */}
@@ -115,13 +223,31 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-mono font-medium text-gray-900">{txCount} TX</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${txCount >= REQUIRED_TX_COUNT
-                                ? 'bg-indigo-100 text-indigo-700'
-                                : 'bg-gray-100 text-gray-600'
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'bg-gray-100 text-gray-600'
                             }`}>
                             {txCount >= REQUIRED_TX_COUNT ? '≥10' : '<10'}
                         </span>
                     </div>
                 </div>
+
+                {/* Mint Button */}
+                {status !== 'minted' && (
+                    <button
+                        onClick={handleMint}
+                        disabled={status === 'generating_proof'}
+                        className="w-full py-2 rounded-xl text-sm font-semibold transition-all bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {status === 'generating_proof' ? (
+                            <>
+                                <Loader className="w-4 h-4 animate-spin" />
+                                <span>Generating Proof...</span>
+                            </>
+                        ) : (
+                            <span>Mint Asset Credential</span>
+                        )}
+                    </button>
+                )}
             </div>
         );
     }
