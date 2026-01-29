@@ -57,7 +57,7 @@ const GlassPrismHero = () => {
     );
 };
 
-export const HomePage = () => {
+export const HomePage = ({ onConnectWallet, onViewDemo }) => {
     return (
         <div className="space-y-24 pb-20">
             {/* Hero Section */}
@@ -95,10 +95,16 @@ export const HomePage = () => {
                         transition={{ delay: 0.3 }}
                         className="flex items-center gap-4"
                     >
-                        <button className="px-8 py-4 bg-text text-white rounded-xl font-medium hover:bg-black/80 transition-all shadow-lg shadow-black/10">
+                        <button
+                            onClick={onConnectWallet}
+                            className="px-8 py-4 bg-text text-white rounded-xl font-medium hover:bg-black/80 transition-all shadow-lg shadow-black/10"
+                        >
                             Connect Wallet
                         </button>
-                        <button className="px-8 py-4 bg-white border border-gray-200 text-text rounded-xl font-medium hover:bg-gray-50 transition-all">
+                        <button
+                            onClick={onViewDemo}
+                            className="px-8 py-4 bg-white border border-gray-200 text-text rounded-xl font-medium hover:bg-gray-50 transition-all"
+                        >
                             View Demo
                         </button>
                     </motion.div>

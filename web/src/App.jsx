@@ -11,7 +11,17 @@ import { CompanyPage } from './pages/CompanyPage';
 import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI, API_BASE_URL } from './config/constants';
 
 function App() {
-    const [activeTab, setActiveTab] = useState('home');
+    // Persist activeTab across refreshes
+    const [activeTab, setActiveTab] = useState(() => {
+        const saved = localStorage.getItem('ghostlink_active_tab');
+        return saved || 'home';
+    });
+
+    // Save to localStorage whenever activeTab changes
+    useEffect(() => {
+        localStorage.setItem('ghostlink_active_tab', activeTab);
+    }, [activeTab]);
+
     const [verificationStatus, setVerificationStatus] = useState('idle');
     const [userData, setUserData] = useState(null);
     const [zkProof, setZkProof] = useState(null);
@@ -261,7 +271,10 @@ function App() {
             case 'explorer': return <ExplorerPage walletSigner={signer} />;
             case 'developers': return <DevelopersPage />;
             case 'company': return <CompanyPage />;
-            default: return <HomePage />;
+            default: return <HomePage
+                onConnectWallet={connectWallet}
+                onViewDemo={() => setActiveTab('solutions')}
+            />;
         }
     };
 

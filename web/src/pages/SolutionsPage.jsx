@@ -11,7 +11,7 @@ export const SolutionsPage = ({
     twitterStatus, twitterUser, twitterProof, onTwitterConnect,
     walletAccount, walletSigner, onConnectWallet
 }) => {
-    const [activeTab, setActiveTab] = useState('identity');
+    const [activeTab, setActiveTab] = useState('defi');
     const account = walletAccount;
     const signer = walletSigner;
 

@@ -207,9 +207,12 @@ const CryptoPortfolio = ({
                         <div className="text-right">
                             <div className="text-base font-bold text-gray-900 font-mono">{balance} ETH</div>
                         </div>
-                        <div className="flex items-center gap-1 bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-medium">
+                        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium ${status === 'minted'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-indigo-100 text-indigo-700'
+                            }`}>
                             <CheckCircle size={12} />
-                            <span>Verified</span>
+                            <span>{status === 'minted' ? 'Minted' : 'Verified'}</span>
                         </div>
                     </div>
                 </div>

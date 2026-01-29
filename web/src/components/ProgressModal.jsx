@@ -37,11 +37,11 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 border border-gray-100 shadow-2xl"
+                className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 border border-gray-100 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
@@ -133,12 +133,12 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                             >
                                 <div
                                     className={`flex items-start gap-3 px-4 py-3 rounded-xl border transition-all duration-300 ${status === 'active'
-                                            ? 'border-accent bg-blue-50/60 shadow-sm'
-                                            : status === 'completed'
-                                                ? 'border-green-200 bg-green-50/40'
-                                                : status === 'error'
-                                                    ? 'border-red-200 bg-red-50/60'
-                                                    : 'border-gray-100 bg-gray-50/30'
+                                        ? 'border-accent bg-blue-50/60 shadow-sm'
+                                        : status === 'completed'
+                                            ? 'border-green-200 bg-green-50/40'
+                                            : status === 'error'
+                                                ? 'border-red-200 bg-red-50/60'
+                                                : 'border-gray-100 bg-gray-50/30'
                                         }`}
                                 >
                                     <div className="flex flex-col items-center w-6">
@@ -151,12 +151,12 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className={`text-sm font-medium ${status === 'active'
-                                                ? 'text-accent'
-                                                : status === 'completed'
-                                                    ? 'text-green-700'
-                                                    : status === 'error'
-                                                        ? 'text-red-700'
-                                                        : 'text-gray-500'
+                                            ? 'text-accent'
+                                            : status === 'completed'
+                                                ? 'text-green-700'
+                                                : status === 'error'
+                                                    ? 'text-red-700'
+                                                    : 'text-gray-500'
                                             }`}>
                                             {step.title}
                                         </div>
@@ -167,8 +167,8 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                                         )}
                                         {step.details && (status === 'active' || status === 'completed' || status === 'error') && (
                                             <div className={`text-[11px] mt-2 font-mono break-all px-2 py-1 rounded ${status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                    status === 'error' ? 'bg-red-100 text-red-700' :
-                                                        'bg-gray-100 text-gray-600'
+                                                status === 'error' ? 'bg-red-100 text-red-700' :
+                                                    'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 {step.details}
                                             </div>
@@ -190,8 +190,8 @@ export const ProgressModal = ({ isOpen, onClose, title, steps, currentStep, mint
                         <button
                             onClick={onClose}
                             className={`w-full py-3 rounded-xl font-medium transition-all shadow-lg ${isError
-                                    ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200'
-                                    : 'bg-gradient-to-r from-gray-900 to-black text-white hover:opacity-90 shadow-black/10'
+                                ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200'
+                                : 'bg-gradient-to-r from-gray-900 to-black text-white hover:opacity-90 shadow-black/10'
                                 }`}
                         >
                             {isSuccess ? 'Done' : 'Close'}

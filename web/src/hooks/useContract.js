@@ -179,7 +179,8 @@ export const useContract = (signer, account) => {
             setProgressSteps(prev => prev.map((s, i) =>
                 i === currentProgressStep ? { ...s, description: `Failed: ${errorMessage}` } : s
             ));
-            setCurrentProgressStep(TOTAL_STEPS);
+            // Don't advance to TOTAL_STEPS - stay at the failed step
+            // setCurrentProgressStep(TOTAL_STEPS); // REMOVED
             return false;
         } finally {
             setIsMinting(false);
