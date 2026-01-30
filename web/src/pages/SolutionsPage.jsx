@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Github, Twitter, Check, Lock, Users, Zap } from 'lucide-react';
 import { EthereumIcon, UberIcon } from '../components/ui/Icons';
 import CrystallineCube from '../components/ui/CrystallineCube';
-import ScannerDropzone from '../components/ui/ScannerDropzone';
+
 import { useContract } from '../hooks/useContract';
 import { ProgressModal } from '../components/ProgressModal';
 import AlipayUpload from '../components/AlipayUpload';
