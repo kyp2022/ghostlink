@@ -8,6 +8,8 @@ target/
 .vscode/
 *.swp
 *.swo
+.agent/
+.cursor/
 
 # OS
 .DS_Store

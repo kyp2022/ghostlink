@@ -284,7 +284,7 @@ function App() {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 account={account}
-                connectWallet={connectWallet}
+                onConnectWallet={connectWallet}
                 disconnectWallet={disconnectWallet}
                 isConnecting={isConnecting}
             />

@@ -336,71 +336,71 @@ export const ExplorerPage = ({ walletSigner }) => {
     const filteredTxs = getFilteredTransactions();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-24 pb-16">
+        <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pt-24 pb-16">
             <div className="max-w-7xl mx-auto px-6">
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                        GhostLink <span className="text-indigo-600">Explorer</span>
+                    <h1 className="text-4xl font-bold text-white mb-3">
+                        GhostLink <span className="hologram-text">Explorer</span>
                     </h1>
-                    <p className="text-gray-500">Real-time blockchain explorer for SBT credentials</p>
+                    <p className="text-slate-400">Real-time blockchain explorer for SBT credentials</p>
                 </motion.div>
 
                 {/* Stats Cards - Restored */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                        className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+                        className="bg-slate-800/50 rounded-2xl p-5 border border-cyan-500/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                                <Award className="w-5 h-5 text-indigo-600" />
+                            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                                <Award className="w-5 h-5 text-cyan-400" />
                             </div>
                             <div>
-                                <div className="text-xs text-gray-500">Total Minted</div>
-                                <div className="text-xl font-bold text-gray-900">
-                                    {loading ? <Loader className="w-5 h-5 animate-spin text-gray-400" /> : stats.totalSupply}
+                                <div className="text-xs text-slate-500">Total Minted</div>
+                                <div className="text-xl font-bold text-white">
+                                    {loading ? <Loader className="w-5 h-5 animate-spin text-cyan-400" /> : stats.totalSupply}
                                 </div>
                             </div>
                         </div>
                     </motion.div>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                        className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+                        className="bg-slate-800/50 rounded-2xl p-5 border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-green-600" />
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                <Activity className="w-5 h-5 text-emerald-400" />
                             </div>
                             <div>
-                                <div className="text-xs text-gray-500">Transactions</div>
-                                <div className="text-xl font-bold text-gray-900">
-                                    {loading ? <Loader className="w-5 h-5 animate-spin text-gray-400" /> : stats.recentMints.length}
+                                <div className="text-xs text-slate-500">Transactions</div>
+                                <div className="text-xl font-bold text-white">
+                                    {loading ? <Loader className="w-5 h-5 animate-spin text-emerald-400" /> : stats.recentMints.length}
                                 </div>
                             </div>
                         </div>
                     </motion.div>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                        className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+                        className="bg-slate-800/50 rounded-2xl p-5 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                                <Clock className="w-5 h-5 text-purple-600" />
+                            <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                <Clock className="w-5 h-5 text-purple-400" />
                             </div>
                             <div>
-                                <div className="text-xs text-gray-500">Network</div>
-                                <div className="text-xl font-bold text-gray-900">Sepolia</div>
+                                <div className="text-xs text-slate-500">Network</div>
+                                <div className="text-xl font-bold text-white">Sepolia</div>
                             </div>
                         </div>
                     </motion.div>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-                        className="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+                        className="bg-slate-800/50 rounded-2xl p-5 border border-orange-500/20 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                                <Wallet className="w-5 h-5 text-orange-600" />
+                            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                                <Wallet className="w-5 h-5 text-orange-400" />
                             </div>
                             <div>
-                                <div className="text-xs text-gray-500">Contract</div>
+                                <div className="text-xs text-slate-500">Contract</div>
                                 <a href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`} target="_blank" rel="noopener noreferrer"
-                                    className="text-sm font-mono text-indigo-600 hover:text-indigo-700">
+                                    className="text-sm font-mono text-cyan-400 hover:text-cyan-300">
                                     {formatAddress(CONTRACT_ADDRESS)}
                                 </a>
                             </div>
@@ -413,14 +413,14 @@ export const ExplorerPage = ({ walletSigner }) => {
                     {/* Live Toggle */}
                     <button
                         onClick={() => isLive ? stopLiveUpdates() : startLiveUpdates()}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${isLive
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all cursor-pointer ${isLive
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                            : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-cyan-500/30'
                             }`}
                     >
                         {isLive ? (
                             <>
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
                                 Live
                             </>
                         ) : (
@@ -435,9 +435,9 @@ export const ExplorerPage = ({ walletSigner }) => {
                     <div className="relative">
                         <button
                             onClick={() => setShowNotifications(!showNotifications)}
-                            className="relative p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all border border-gray-200"
+                            className="relative p-2 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 transition-all border border-slate-700 cursor-pointer"
                         >
-                            <Bell className="w-5 h-5 text-gray-600" />
+                            <Bell className="w-5 h-5 text-slate-400" />
                             {notifications.length > 0 && (
                                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                                     {notifications.length}
@@ -451,24 +451,24 @@ export const ExplorerPage = ({ walletSigner }) => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 10 }}
-                                    className="absolute right-0 top-12 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden"
+                                    className="absolute right-0 top-12 w-72 bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-xl border border-cyan-500/20 z-50 overflow-hidden"
                                 >
-                                    <div className="p-3 border-b border-gray-100 flex items-center justify-between">
-                                        <span className="font-semibold text-gray-900">Notifications</span>
+                                    <div className="p-3 border-b border-slate-700/50 flex items-center justify-between">
+                                        <span className="font-semibold text-white">Notifications</span>
                                         {notifications.length > 0 && (
-                                            <button onClick={() => setNotifications([])} className="text-xs text-gray-500 hover:text-gray-700">
+                                            <button onClick={() => setNotifications([])} className="text-xs text-slate-500 hover:text-cyan-400 cursor-pointer">
                                                 Clear all
                                             </button>
                                         )}
                                     </div>
                                     <div className="max-h-64 overflow-y-auto">
                                         {notifications.length === 0 ? (
-                                            <div className="p-4 text-center text-gray-500 text-sm">No notifications</div>
+                                            <div className="p-4 text-center text-slate-500 text-sm">No notifications</div>
                                         ) : (
                                             notifications.map(n => (
-                                                <div key={n.id} className="p-3 border-b border-gray-50 hover:bg-gray-50">
-                                                    <div className="text-sm text-gray-900">{n.message}</div>
-                                                    <div className="text-xs text-gray-500 mt-1">{n.time}</div>
+                                                <div key={n.id} className="p-3 border-b border-slate-700/50 hover:bg-slate-800/50">
+                                                    <div className="text-sm text-white">{n.message}</div>
+                                                    <div className="text-xs text-slate-500 mt-1">{n.time}</div>
                                                 </div>
                                             ))
                                         )}
@@ -478,8 +478,8 @@ export const ExplorerPage = ({ walletSigner }) => {
                         </AnimatePresence>
                     </div>
 
-                    <button onClick={fetchStats} disabled={loading} className="p-2 hover:bg-gray-100 rounded-xl transition-all border border-gray-200">
-                        <RefreshCw className={`w-5 h-5 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
+                    <button onClick={fetchStats} disabled={loading} className="p-2 hover:bg-slate-800/50 rounded-xl transition-all border border-slate-700 cursor-pointer">
+                        <RefreshCw className={`w-5 h-5 text-slate-400 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
 
@@ -487,9 +487,9 @@ export const ExplorerPage = ({ walletSigner }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Trend Chart */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-indigo-600" />
+                        className="bg-slate-800/50 rounded-2xl p-6 border border-cyan-500/20 shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-cyan-400" />
                             Minting Trend
                         </h3>
                         {stats.chartData.length > 0 ? (
@@ -508,15 +508,15 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 </AreaChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-48 flex items-center justify-center text-gray-400">No data available</div>
+                            <div className="h-48 flex items-center justify-center text-slate-500">No data available</div>
                         )}
                     </motion.div>
 
                     {/* Holder Distribution */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                        className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <Award className="w-4 h-4 text-green-600" />
+                        className="bg-slate-800/50 rounded-2xl p-6 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]">
+                        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                            <Award className="w-4 h-4 text-purple-400" />
                             Top Holders
                         </h3>
                         {stats.holderDistribution.length > 0 ? (
@@ -534,37 +534,37 @@ export const ExplorerPage = ({ walletSigner }) => {
                                     {stats.holderDistribution.map((h, i) => (
                                         <div key={i} className="flex items-center gap-2 text-sm">
                                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
-                                            <span className="font-mono text-gray-600">{h.name}</span>
-                                            <span className="text-gray-900 font-medium ml-auto">{h.value}</span>
+                                            <span className="font-mono text-slate-400">{h.name}</span>
+                                            <span className="text-white font-medium ml-auto">{h.value}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-40 flex items-center justify-center text-gray-400">No data available</div>
+                            <div className="h-40 flex items-center justify-center text-slate-500">No data available</div>
                         )}
                     </motion.div>
                 </div>
 
                 {/* Search + Controls Toolbar */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                    className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm mb-6 flex flex-wrap gap-4 items-center justify-between">
+                    className="bg-slate-800/50 rounded-2xl p-4 border border-cyan-500/20 shadow-[0_0_20px_rgba(0,255,255,0.1)] mb-6 flex flex-wrap gap-4 items-center justify-between">
 
                     {/* Search Bar */}
                     <div className="flex-1 min-w-[300px] relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             placeholder="Search by Wallet Address or Token ID..."
-                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                         />
                         {searchResult && (
                             <button
                                 onClick={() => { setSearchQuery(''); setSearchResult(null); fetchStats(); }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-cyan-400 cursor-pointer"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -573,17 +573,17 @@ export const ExplorerPage = ({ walletSigner }) => {
 
                     {/* Filters & Sort */}
                     <div className="flex items-center gap-3">
-                        <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
+                        <div className="h-8 w-px bg-slate-700 hidden md:block"></div>
 
                         {/* Time Filter Pills */}
-                        <div className="flex bg-gray-100 p-1 rounded-lg">
+                        <div className="flex bg-slate-900/50 p-1 rounded-lg border border-slate-700">
                             {['all', 'today', 'week', 'month'].map((range) => (
                                 <button
                                     key={range}
                                     onClick={() => setFilters(f => ({ ...f, timeRange: range }))}
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filters.timeRange === range
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${filters.timeRange === range
+                                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                        : 'text-slate-500 hover:text-white'
                                         }`}
                                 >
                                     {range.charAt(0).toUpperCase() + range.slice(1)}
@@ -596,17 +596,17 @@ export const ExplorerPage = ({ walletSigner }) => {
                             <select
                                 value={filters.sortBy}
                                 onChange={(e) => setFilters(f => ({ ...f, sortBy: e.target.value }))}
-                                className="appearance-none pl-3 pr-8 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                                className="appearance-none pl-3 pr-8 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm font-medium text-slate-300 hover:border-cyan-500/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 cursor-pointer"
                             >
                                 <option value="newest">Newest First</option>
                                 <option value="oldest">Oldest First</option>
                                 <option value="tokenId">Token ID</option>
                             </select>
-                            <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                            <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
                         </div>
 
                         <button onClick={handleSearch} disabled={searching}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm">
+                            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white rounded-lg text-sm font-medium transition-all shadow-[0_0_20px_rgba(0,255,255,0.3)] cursor-pointer">
                             {searching ? <Loader className="w-4 h-4 animate-spin" /> : 'Search'}
                         </button>
                     </div>
@@ -614,25 +614,25 @@ export const ExplorerPage = ({ walletSigner }) => {
 
                 {/* Main Content Area - Switches based on Search Result */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                    className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    className="bg-slate-800/50 rounded-2xl border border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)] overflow-hidden">
 
                     {/* Header */}
-                    <div className="p-5 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
-                        <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <div className="p-5 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/50">
+                        <h2 className="font-semibold text-white flex items-center gap-2">
                             {searchResult ? (
                                 <>
-                                    <Search className="w-4 h-4 text-indigo-600" />
+                                    <Search className="w-4 h-4 text-cyan-400" />
                                     Search Results
                                 </>
                             ) : (
                                 <>
-                                    <Activity className="w-4 h-4 text-green-600" />
+                                    <Activity className="w-4 h-4 text-emerald-400" />
                                     Latest Transactions
                                 </>
                             )}
                         </h2>
                         {!searchResult && (
-                            <span className="text-xs text-gray-500 font-medium px-2 py-1 bg-gray-100 rounded-md">
+                            <span className="text-xs text-slate-500 font-medium px-2 py-1 bg-slate-800 border border-slate-700 rounded-md">
                                 {filteredTxs.length} items
                             </span>
                         )}
@@ -737,21 +737,21 @@ export const ExplorerPage = ({ walletSigner }) => {
                         /* Standard View - Transaction Table */
                         loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
-                                <Loader className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-                                <p className="text-gray-500 font-medium">Loading blockchain data...</p>
+                                <Loader className="w-10 h-10 text-cyan-400 animate-spin mb-4" />
+                                <p className="text-slate-400 font-medium">Loading blockchain data...</p>
                             </div>
                         ) : filteredTxs.length === 0 ? (
                             <div className="text-center py-20">
-                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Search className="w-8 h-8 text-gray-400" />
+                                <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Search className="w-8 h-8 text-slate-500" />
                                 </div>
-                                <h3 className="text-gray-900 font-medium mb-1">No transactions found</h3>
-                                <p className="text-gray-500 text-sm">Try adjusting your filters or search query.</p>
+                                <h3 className="text-white font-medium mb-1">No transactions found</h3>
+                                <p className="text-slate-500 text-sm">Try adjusting your filters or search query.</p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-100">
+                                    <thead className="bg-slate-900/50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-700/50">
                                         <tr>
                                             <th className="px-6 py-4 text-left font-medium">Tx Hash</th>
                                             <th className="px-6 py-4 text-left font-medium">Method</th>
@@ -762,62 +762,62 @@ export const ExplorerPage = ({ walletSigner }) => {
                                             <th className="px-6 py-4 text-right font-medium">Fee</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-50">
+                                    <tbody className="divide-y divide-slate-700/50">
                                         {filteredTxs.map((tx, i) => (
                                             <motion.tr
                                                 key={tx.txHash}
-                                                initial={tx.isNew ? { backgroundColor: '#f0f9ff' } : { opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0, backgroundColor: '#ffffff' }}
+                                                initial={tx.isNew ? { backgroundColor: 'rgba(0,255,255,0.1)' } : { opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0, backgroundColor: 'transparent' }}
                                                 transition={{ duration: 0.3, delay: i * 0.05 }}
-                                                className="hover:bg-gray-50 transition-colors group"
+                                                className="hover:bg-slate-700/30 transition-colors group"
                                             >
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="p-1.5 bg-gray-100 text-gray-500 rounded-lg group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                                        <div className="p-1.5 bg-slate-700/50 text-slate-400 rounded-lg group-hover:bg-cyan-500/20 group-hover:text-cyan-400 transition-colors">
                                                             <FileText className="w-4 h-4" />
                                                         </div>
                                                         <a href={`https://sepolia.etherscan.io/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer"
-                                                            className="text-indigo-600 hover:text-indigo-700 font-mono font-medium">
+                                                            className="text-cyan-400 hover:text-cyan-300 font-mono font-medium">
                                                             {formatHash(tx.txHash)}
                                                         </a>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="px-2.5 py-1 bg-gray-100 border border-gray-200 text-gray-600 rounded-md text-xs font-semibold uppercase">
+                                                    <span className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-md text-xs font-semibold uppercase">
                                                         Mint
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <a href={`https://sepolia.etherscan.io/block/${tx.blockNumber}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
+                                                    <a href={`https://sepolia.etherscan.io/block/${tx.blockNumber}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300">
                                                         {tx.blockNumber}
                                                     </a>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                                                <td className="px-6 py-4 whitespace-nowrap text-slate-400">
                                                     <span title={new Date(tx.timestamp * 1000).toLocaleString()}>
                                                         {formatAge(tx.timestamp)}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500"></div>
+                                                        <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-500"></div>
                                                         <a href={`https://sepolia.etherscan.io/address/${tx.from}`} target="_blank" rel="noopener noreferrer"
-                                                            className="text-indigo-600 hover:text-indigo-700 font-mono">
+                                                            className="text-cyan-400 hover:text-cyan-300 font-mono">
                                                             {formatAddress(tx.from)}
                                                         </a>
-                                                        <button onClick={() => copyText(tx.from)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity">
+                                                        <button onClick={() => copyText(tx.from)} className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-cyan-400 transition-opacity cursor-pointer">
                                                             <Copy className="w-3 h-3" />
                                                         </button>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-semibold">
                                                         <Award className="w-3 h-3" />
                                                         SBT #{tx.tokenId}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-xs text-gray-500 font-mono">
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-xs text-slate-400 font-mono">
                                                     {tx.txFee ? (
-                                                        <span className="px-2 py-1 bg-gray-50 rounded border border-gray-100">
+                                                        <span className="px-2 py-1 bg-slate-700/50 rounded border border-slate-600/50">
                                                             {parseFloat(tx.txFee).toFixed(6)} ETH
                                                         </span>
                                                     ) : '-'}

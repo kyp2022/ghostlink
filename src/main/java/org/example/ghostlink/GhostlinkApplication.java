@@ -16,7 +16,7 @@ public class GhostlinkApplication {
 			@Override
 			public void addCorsMappings(org.springframework.web.servlet.config.annotation.CorsRegistry registry) {
 				registry.addMapping("/**")
-						.allowedOrigins("http://localhost:5174", "http://localhost:3000") // Allow frontend dev servers
+						.allowedOriginPatterns("*") // Allow all origins
 						.allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
 						.allowedHeaders("*")
 						.allowCredentials(true);

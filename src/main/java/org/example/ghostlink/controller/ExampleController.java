@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/v1")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class ExampleController {
 
     // 示例数据存储（实际应用中应使用数据库）

@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/assets")
-@CrossOrigin(origins = "http://localhost:5174")
+@CrossOrigin(originPatterns = "*")
 public class AlipayController {
 
     @Autowired
