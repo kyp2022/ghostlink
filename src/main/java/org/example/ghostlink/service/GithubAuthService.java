@@ -21,7 +21,7 @@ public class GithubAuthService {
     private static final String GITHUB_USER_API = "https://api.github.com/user";
     
     // ZK 服务地址 - 符合 RISC Zero 规范
-    private static final String ZK_SERVICE_URL = "http://127.0.0.1:3000/api/v1/prove";
+    private static final String ZK_SERVICE_URL = "http://localhost:8081/api/v1/receipt-data";
 
     /**
      * 处理 OAuth 回调逻辑：Code -> Token -> User -> ZK Proof

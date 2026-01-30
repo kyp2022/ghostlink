@@ -1,0 +1,16 @@
+{
+    "name": "GhostLink GitHub Credential",
+    "description": "Verified GitHub identity via GhostLink ZK Proof",
+    "image": "ipfs://REPLACE_WITH_YOUR_IMAGE_CID/github.png",
+    "external_url": "https://github.com/kyp2022",
+    "attributes": [
+        {
+            "trait_type": "Credential Type",
+            "value": "GitHub"
+        },
+        {
+            "trait_type": "Verification System",
+            "value": "RISC Zero"
+        }
+    ]
+}

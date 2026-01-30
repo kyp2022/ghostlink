@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GhostLink SBT | 合约工具箱</title>
+    <!-- Ethers.js 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #a855f7;
+            --accent: #22d3ee;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --warning: #f59e0b;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a 50%, #020617);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        h1,
+        h2,
+        h3,
+        .brand {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .brand {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            font-weight: 300;
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--accent);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        small {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Wallet Section */
+        .wallet-bar {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--glass-border);
+        }
+
+        .address-tag {
+            font-family: monospace;
+            color: var(--accent);
+            background: rgba(34, 211, 238, 0.1);
+            padding: 4px 12px;
+            border-radius: 8px;
+        }
+
+        /* Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .type-option {
+            position: relative;
+        }
+
+        .type-option input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .type-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .type-option input:checked+.type-box {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            padding: 6px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Status & Logs */
+        .status-msg {
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .status-info {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        pre {
+            background: #020617;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            color: #d1d5db;
+            margin-top: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">GhostLink SBT 百宝箱</div>
+            <div class="subtitle">链上身份凭证管理系统 (RISC Zero 驱动)</div>
+        </header>
+
+        <!-- 1. 钱包工具箱 -->
+        <section class="card">
+            <h2>🔌 钱包工具箱</h2>
+            <div id="walletConnected" class="hidden">
+                <div class="wallet-bar">
+                    <div>
+                        <span class="address-tag" id="mainAddress">0x...</span>
+                        <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 4px;" id="mainBalance">0.00
+                            ETH</div>
+                    </div>
+                    <button class="btn btn-secondary" style="padding: 8px 16px;"
+                        onclick="disconnectWallet()">断开连接</button>
+                </div>
+            </div>
+            <div id="walletDisconnected">
+                <button class="btn btn-primary" onclick="connectWallet()">连接 MetaMask 钱包</button>
+            </div>
+            <div id="walletStatus"></div>
+        </section>
+
+        <!-- 导航选项卡 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('query')">🔍 查询站</button>
+            <button class="tab-btn" onclick="switchTab('mint')">🎯 铸造凭证</button>
+            <button class="tab-btn" onclick="switchTab('admin')">⚙️ 管理后台</button>
+            <button class="tab-btn" onclick="switchTab('deploy')">📦 合约部署</button>
+        </div>
+
+        <!-- 2. 查询工具箱 -->
+        <div id="tab-query" class="tab-content">
+            <section class="card">
+                <h2>🔍 查询站</h2>
+                <div class="form-group">
+                    <label>目标合约地址</label>
+                    <input type="text" id="targetContract" placeholder="0x...">
+                </div>
+                <div class="form-group">
+                    <label>查询用户地址</label>
+                    <input type="text" id="queryUser" placeholder="0x...">
+                </div>
+                <div class="grid-3">
+                    <button class="btn btn-secondary" onclick="runQuery('getCredentials')">所有凭证</button>
+                    <button class="btn btn-secondary" onclick="runQuery('getUserTokenIds')">Token IDs</button>
+                    <button class="btn btn-secondary" onclick="runQuery('contractInfo')">合约元数据</button>
+                    <button class="btn btn-secondary" onclick="runQuery('totalSupply')">总供应量</button>
+                    <button class="btn btn-secondary" onclick="runQuery('hasCred')">持有检查</button>
+                    <button class="btn btn-secondary" onclick="runQuery('owner')">查看所有者</button>
+                </div>
+
+                <div id="queryResult"></div>
+
+                <div style="margin-top: 24px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                    <h3>🛠 辅助工具</h3>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>哈希计算 (calculateJournalHash)</label>
+                        <div class="grid-2">
+                            <input type="text" id="calcUser" placeholder="用户地址">
+                            <input type="text" id="calcNullifier" placeholder="Nullifier (bytes32)">
+                        </div>
+                        <select id="calcType" style="margin-top: 10px;">
+                            <option value="0">GitHub (0)</option>
+                            <option value="1">Alipay (1)</option>
+                            <option value="2">Twitter (2)</option>
+                            <option value="3">Wallet (3)</option>
+                        </select>
+                        <button class="btn btn-success" style="margin-top: 10px; width: 100%;"
+                            onclick="calcHash()">本地预计算 Journal Hash</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 3. 铸造工具箱 -->
+        <div id="tab-mint" class="tab-content hidden">
+            <section class="card">
+                <h2>🎯 铸造凭证 (Mint)</h2>
+                <div class="form-group">
+                    <label>合约地址</label>
+                    <input type="text" id="mintContract" placeholder="0x...">
+                </div>
+                <div class="form-group">
+                    <label>凭证类型</label>
+                    <div class="grid-2">
+                        <label class="type-option"><input type="radio" name="mType" value="0" checked>
+                            <div class="type-box"><span>GitHub</span><small>ID: 0</small></div>
+                        </label>
+                        <label class="type-option"><input type="radio" name="mType" value="1">
+                            <div class="type-box"><span>Alipay</span><small>ID: 1</small></div>
+                        </label>
+                        <label class="type-option"><input type="radio" name="mType" value="2">
+                            <div class="type-box"><span>Twitter</span><small>ID: 2</small></div>
+                        </label>
+                        <label class="type-option"><input type="radio" name="mType" value="3">
+                            <div class="type-box"><span>Wallet</span><small>ID: 3</small></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nullifier (唯一标识)</label>
+                    <input type="text" id="mintNullifier" placeholder="0x...">
+                </div>
+                <div class="form-group">
+                    <label>ZK Seal (证明收据)</label>
+                    <textarea id="mintSeal" style="height: 100px;" placeholder="粘贴由 Prover 生成的十六进制证明数据..."></textarea>
+                </div>
+                <button class="btn btn-primary" id="mintMainBtn" onclick="executeMint()">立刻铸造凭证</button>
+                <div id="mintStatus"></div>
+            </section>
+        </div>
+
+        <!-- 4. 管理工具箱 (Owner Only) -->
+        <div id="tab-admin" class="tab-content hidden">
+            <section class="card">
+                <h2 style="color: var(--warning);">⚙️ 管理后台 (仅限所有者)</h2>
+                <div class="form-group">
+                    <label>管理合约地址</label>
+                    <input type="text" id="adminContract" placeholder="0x...">
+                </div>
+
+                <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px;">
+                    <label>更新 Image ID</label>
+                    <div class="grid-2">
+                        <input type="text" id="newImageId" placeholder="新的 Image ID (bytes32)">
+                        <button class="btn btn-warning" onclick="adminCall('setImageId')">确认更换</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px;">
+                    <label>更换 Verifier (验证者合约)</label>
+                    <div class="grid-2">
+                        <input type="text" id="newVerifier" placeholder="0x...">
+                        <button class="btn btn-warning" onclick="adminCall('setVerifier')">确认迁移</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px;">
+                    <label>设置基础 URI (Base URI)</label>
+                    <div class="grid-2">
+                        <input type="text" id="newBaseURI" placeholder="ipfs://...">
+                        <button class="btn btn-warning" onclick="adminCall('setBaseTokenURI')">保存设置</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px;">
+                    <label>所有权转让 (Transfer Ownership)</label>
+                    <div class="grid-2">
+                        <input type="text" id="newOwner" placeholder="新所有者地址 0x...">
+                        <button class="btn btn-danger" onclick="adminCall('transferOwnership')">转让合约控制权</button>
+                    </div>
+                </div>
+
+                <div id="adminStatus"></div>
+            </section>
+        </div>
+
+        <!-- 5. 部署工具箱 -->
+        <div id="tab-deploy" class="tab-content hidden">
+            <section class="card">
+                <h2>📦 合约初始化部署</h2>
+                <div class="grid-2">
+                    <div class="form-group"><label>Verifier 地址</label><input type="text" id="dVerifier"
+                            value="0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187"></div>
+                    <div class="form-group"><label>Image ID</label><input type="text" id="dImage"
+                            value="0x0000000000000000000000000000000000000000000000000000000000000000"></div>
+                </div>
+                <div class="form-group"><label>Base URI</label><input type="text" id="dBase"
+                        value="ipfs://QmGhostLink/"></div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Token 名称</label><input type="text" id="dName" value="GhostLink SBT">
+                    </div>
+                    <div class="form-group"><label>符号 Symbol</label><input type="text" id="dSymbol" value="GHOST"></div>
+                </div>
+                <button class="btn btn-primary" id="deployMainBtn" onclick="executeDeploy()">部署全新 SBT 合约</button>
+                <div id="deployStatus"></div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        let provider, signer, ABI, BYTECODE;
+
+        async function init() {
+            try {
+                const res = await fetch('./GhostLinkSBT.json');
+                const data = await res.json();
+                ABI = data.abi;
+                BYTECODE = data.bytecode.object || data.bytecode;
+            } catch (e) {
+                console.error("加载文件失败:", e);
+                showS('walletStatus', '失败: 找不到 GhostLinkSBT.json', 'error');
+            }
+        }
+        window.onload = init;
+
+        // --- 钱包 ---
+        async function connectWallet() {
+            if (!window.ethereum) return showS('walletStatus', '请安装 MetaMask', 'error');
+            try {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                const a = await signer.getAddress();
+                const b = await provider.getBalance(a);
+                document.getElementById('mainAddress').innerText = a;
+                document.getElementById('mainBalance').innerText = `${parseFloat(ethers.utils.formatEther(b)).toFixed(4)} ETH`;
+                document.getElementById('walletDisconnected').classList.add('hidden');
+                document.getElementById('walletConnected').classList.remove('hidden');
+                document.getElementById('queryUser').value = a;
+                document.getElementById('calcUser').value = a;
+            } catch (e) { showS('walletStatus', e.message, 'error'); }
+        }
+
+        function disconnectWallet() {
+            signer = null;
+            document.getElementById('walletDisconnected').classList.remove('hidden');
+            document.getElementById('walletConnected').classList.add('hidden');
+        }
+
+        // --- 逻辑控制 ---
+        function switchTab(t) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`tab-${t}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function showS(id, msg, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerHTML = `<div class="status-msg status-${type}">${msg}</div>`;
+        }
+
+        function loading(id, start, text) {
+            const btn = document.getElementById(id);
+            if (start) {
+                btn.disabled = true;
+                btn.innerHTML = `<div class="loading-spinner"></div> <span>操作中...</span>`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = text;
+            }
+        }
+
+        function parseE(e) {
+            return e.reason || (e.data && e.data.message) || e.message || "未知错误";
+        }
+
+        // --- 查询站 ---
+        async function runQuery(type) {
+            const addr = document.getElementById('targetContract').value.trim();
+            if (!ethers.utils.isAddress(addr)) return showS('queryResult', '请输入有效的合约地址', 'error');
+            const resEl = document.getElementById('queryResult');
+            resEl.innerHTML = '<div class="loading-spinner" style="margin: 20px auto;"></div>';
+
+            try {
+                const contract = new ethers.Contract(addr, ABI, provider || signer);
+                let data;
+                if (type === 'getCredentials') data = await contract.getCredentials(document.getElementById('queryUser').value.trim());
+                else if (type === 'getUserTokenIds') data = await contract.getUserTokenIds(document.getElementById('queryUser').value.trim());
+                else if (type === 'totalSupply') data = await contract.totalSupply();
+                else if (type === 'owner') data = await contract.owner();
+                else if (type === 'contractInfo') {
+                    const [n, s, img, ver] = await Promise.all([contract.name(), contract.symbol(), contract.imageId(), contract.verifier()]);
+                    data = { 名称: n, 符号: s, "镜像ID": img, "验证合约": ver };
+                } else if (type === 'hasCred') {
+                    const u = document.getElementById('queryUser').value.trim();
+                    const types = [0, 1, 2, 3];
+                    const results = await Promise.all(types.map(t => contract.hasCredentialType(u, t)));
+                    data = { "GitHub (0)": results[0], "Alipay (1)": results[1], "Twitter (2)": results[2], "Wallet (3)": results[3] };
+                }
+
+                resEl.innerHTML = `<pre>${JSON.stringify(data, (k, v) => typeof v === 'bigint' ? v.toString() : v, 2)}</pre>`;
+            } catch (e) { showS('queryResult', parseE(e), 'error'); }
+        }
+
+        async function calcHash() {
+            const addr = document.getElementById('targetContract').value.trim();
+            if (!ethers.utils.isAddress(addr)) return showS('queryResult', '请在上方输入合约地址以调用 calculateJournalHash', 'error');
+            try {
+                const contract = new ethers.Contract(addr, ABI, provider || signer);
+                const hash = await contract.calculateJournalHash(
+                    document.getElementById('calcUser').value.trim(),
+                    document.getElementById('calcNullifier').value.trim(),
+                    parseInt(document.getElementById('calcType').value)
+                );
+                showS('queryResult', `预计算哈希结果:<br><strong>${hash}</strong>`, 'success');
+            } catch (e) { showS('queryResult', parseE(e), 'error'); }
+        }
+
+        // --- 铸造 ---
+        async function executeMint() {
+            const addr = document.getElementById('mintContract').value.trim();
+            if (!signer) return showS('mintStatus', '请先连接钱包', 'error');
+            loading('mintMainBtn', true);
+            try {
+                const contract = new ethers.Contract(addr, ABI, signer);
+                const args = [
+                    document.getElementById('mintSeal').value.trim(),
+                    document.getElementById('mintNullifier').value.trim(),
+                    parseInt(document.querySelector('input[name="mType"]:checked').value)
+                ];
+                showS('mintStatus', '正在模拟交易...', 'info');
+                await contract.callStatic.mint(...args);
+                showS('mintStatus', '模拟通过，正在发送交易...', 'info');
+                const tx = await contract.mint(...args);
+                showS('mintStatus', `等待链上确认... <br>Hash: ${tx.hash}`, 'info');
+                await tx.wait();
+                showS('mintStatus', '✅ 凭证铸造成功！', 'success');
+            } catch (e) { showS('mintStatus', parseE(e), 'error'); }
+            finally { loading('mintMainBtn', false, '立刻铸造凭证'); }
+        }
+
+        // --- 管理 ---
+        async function adminCall(method) {
+            const addr = document.getElementById('adminContract').value.trim();
+            if (!signer) return showS('adminStatus', '请先连接钱包', 'error');
+            try {
+                const contract = new ethers.Contract(addr, ABI, signer);
+                let val;
+                if (method === 'setImageId') val = document.getElementById('newImageId').value.trim();
+                else if (method === 'setVerifier') val = document.getElementById('newVerifier').value.trim();
+                else if (method === 'setBaseTokenURI') val = document.getElementById('newBaseURI').value.trim();
+                else if (method === 'transferOwnership') val = document.getElementById('newOwner').value.trim();
+
+                const tx = await contract[method](val);
+                showS('adminStatus', `交易已发送: ${tx.hash}`, 'info');
+                await tx.wait();
+                showS('adminStatus', '✅ 管理操作执行成功！', 'success');
+            } catch (e) { showS('adminStatus', parseE(e), 'error'); }
+        }
+
+        // --- 部署 ---
+        async function executeDeploy() {
+            if (!signer) return showS('deployStatus', '请先连接钱包', 'error');
+            loading('deployMainBtn', true);
+            try {
+                const factory = new ethers.ContractFactory(ABI, BYTECODE, signer);
+                const args = [
+                    document.getElementById('dVerifier').value.trim(),
+                    document.getElementById('dImage').value.trim(),
+                    document.getElementById('dBase').value.trim(),
+                    document.getElementById('dName').value.trim(),
+                    document.getElementById('dSymbol').value.trim()
+                ];
+                const c = await factory.deploy(...args);
+                showS('deployStatus', `部署交易已发出: ${c.deployTransaction.hash}`, 'info');
+                await c.deployed();
+                showS('deployStatus', `✅ 合约部署成功！<br>地址: <strong>${c.address}</strong>`, 'success');
+                document.getElementById('targetContract').value = c.address;
+                document.getElementById('mintContract').value = c.address;
+                document.getElementById('adminContract').value = c.address;
+                document.getElementById('queryContractAddress')?.setAttribute('value', c.address); // 老代码兼容
+            } catch (e) { showS('deployStatus', parseE(e), 'error'); }
+            finally { loading('deployMainBtn', false, '部署全新 SBT 合约'); }
+        }
+    </script>
+</body>
+
+</html>

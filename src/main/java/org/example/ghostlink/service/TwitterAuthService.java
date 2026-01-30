@@ -23,7 +23,7 @@ public class TwitterAuthService {
     private static final String TWITTER_USER_API = "https://api.twitter.com/2/users/me?user.fields=created_at,public_metrics";
     
     // ZK 服务地址 - 符合 RISC Zero 规范
-    private static final String ZK_SERVICE_URL = "http://127.0.0.1:3000/api/v1/prove";
+    private static final String ZK_SERVICE_URL = "http://localhost:8081/api/v1/receipt-data";
 
     public AuthResponse authenticateWithCode(String code, String redirectUri, String codeVerifier, String recipient) {
         String accessToken = exchangeCodeForToken(code, redirectUri, codeVerifier);

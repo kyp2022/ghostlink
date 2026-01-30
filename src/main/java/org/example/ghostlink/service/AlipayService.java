@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 public class AlipayService {
 
     // ZK 服务地址 - 符合 RISC Zero 规范
-    private static final String ZK_SERVICE_URL = "http://127.0.0.1:3000/api/v1/prove";
+    private static final String ZK_SERVICE_URL = "http://localhost:8081/api/v1/receipt-data";
     
     // 默认资产门槛（元）
     private static final String DEFAULT_THRESHOLD = "10000";

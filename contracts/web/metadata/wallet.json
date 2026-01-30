@@ -1,0 +1,16 @@
+{
+    "name": "GhostLink Wallet Credential",
+    "description": "Verified Wallet ownership via GhostLink ZK Proof",
+    "image": "https://purple-cheerful-amphibian-24.mypinata.cloud/ipfs/bafkreifldzc6bozr5gx6yx6tpxkx2jam6dzyuho5biry2taniiuhnsfc2m",
+    "external_url": "https://github.com/kyp2022",
+    "attributes": [
+        {
+            "trait_type": "Credential Type",
+            "value": "Wallet"
+        },
+        {
+            "trait_type": "Verification System",
+            "value": "RISC Zero"
+        }
+    ]
+}
