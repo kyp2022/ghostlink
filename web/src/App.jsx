@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from './hooks/useWallet';
+import { useTheme } from './contexts/ThemeContext';
+import { LayoutShell } from './components/layout/LayoutShell';
 import { Navbar } from './components/layout/Navbar';
+import { SideNavbar } from './components/layout/SideNavbar';
 import { Footer } from './components/layout/Footer';
+import { LensFlareTransition } from './components/ui/LensFlareTransition';
 import { HomePage } from './pages/HomePage';
 import { SolutionsPage } from './pages/SolutionsPage';
 import { ExplorerPage } from './pages/ExplorerPage';
@@ -11,6 +15,10 @@ import { CompanyPage } from './pages/CompanyPage';
 import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI, API_BASE_URL } from './config/constants';
 
 function App() {
+    // Theme context for bifurcated layout
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
+
     // Persist activeTab across refreshes
     const [activeTab, setActiveTab] = useState(() => {
         const saved = localStorage.getItem('ghostlink_active_tab');
@@ -278,31 +286,44 @@ function App() {
         }
     };
 
+    // Bifurcated Layout Rendering
     return (
-        <div className="min-h-screen bg-bg">
-            <Navbar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                account={account}
-                onConnectWallet={connectWallet}
-                disconnectWallet={disconnectWallet}
-                isConnecting={isConnecting}
-            />
+        <LayoutShell
+            topNavbar={
+                <Navbar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    account={account}
+                    onConnectWallet={connectWallet}
+                    disconnectWallet={disconnectWallet}
+                    isConnecting={isConnecting}
+                />
+            }
+            sideNavbar={
+                <SideNavbar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    account={account}
+                    onConnectWallet={connectWallet}
+                />
+            }
+            footer={<Footer />}
+        >
+            {/* Only show lens flare in dark mode */}
+            {!isLight && <LensFlareTransition />}
 
             <AnimatePresence mode="wait">
-                <motion.main
+                <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, y: isLight ? 0 : 10, x: isLight ? 20 : 0 }}
+                    animate={{ opacity: 1, y: 0, x: 0 }}
+                    exit={{ opacity: 0, y: isLight ? 0 : -10, x: isLight ? -20 : 0 }}
+                    transition={{ duration: isLight ? 0.2 : 0.3 }}
                 >
                     {renderContent()}
-                </motion.main>
+                </motion.div>
             </AnimatePresence>
-
-            <Footer />
-        </div>
+        </LayoutShell>
     );
 }
 

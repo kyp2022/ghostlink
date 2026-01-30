@@ -170,8 +170,8 @@ const CryptoPortfolio = ({
                             <EthereumIcon size={24} className={isMinted ? 'text-emerald-400' : 'text-cyan-400'} />
                         </div>
                         <div>
-                            <div className="font-bold text-white text-sm tracking-tight">On-Chain Assets</div>
-                            <div className="text-xs text-slate-400 font-medium">
+                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">On-Chain Assets</div>
+                            <div className="text-xs text-theme-text-muted font-medium">
                                 {walletAccount?.slice(0, 6)}...{walletAccount?.slice(-4)}
                             </div>
                         </div>
@@ -194,16 +194,16 @@ const CryptoPortfolio = ({
                 </div>
 
                 {/* TX count info */}
-                <div className="flex items-center justify-between py-2 px-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                    <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <Info size={14} className="text-slate-400" />
+                <div className="flex items-center justify-between py-2 px-3 bg-surface-elevated-2 rounded-lg border border-theme-border-medium">
+                    <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-theme-text-muted uppercase">
+                        <Info size={14} className="text-theme-text-muted" />
                         <span>Transaction History</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{txCount} TX</span>
+                        <span className="text-sm font-bold text-theme-text-primary">{txCount} TX</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${txCount >= REQUIRED_TX_COUNT
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-slate-700 text-slate-400'
+                            : 'bg-surface-elevated-3 text-theme-text-muted border border-theme-border-medium'
                             }`}>
                             {txCount >= REQUIRED_TX_COUNT ? '10+' : '<10'}
                         </span>
@@ -226,7 +226,7 @@ const CryptoPortfolio = ({
                         {status === 'generating_proof' ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Generating Proof...</span>
+                                <span className="text-white">Generating Proof...</span>
                             </>
                         ) : (
                             <>
@@ -245,12 +245,12 @@ const CryptoPortfolio = ({
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center 
-                              bg-slate-800 border border-slate-700">
-                    <EthereumIcon size={24} className="text-slate-400" />
+                              bg-surface-elevated-2 border border-theme-border-medium">
+                    <EthereumIcon size={24} className="text-theme-text-muted" />
                 </div>
                 <div>
-                    <div className="font-bold text-white text-sm tracking-tight">On-Chain Assets</div>
-                    <div className="text-xs text-slate-400 font-medium tracking-wider uppercase">
+                    <div className="font-bold text-theme-text-primary text-sm tracking-tight">On-Chain Assets</div>
+                    <div className="text-xs text-theme-text-muted font-medium tracking-wider uppercase">
                         {walletAccount ? 'Ready to Verify' : 'Connect Wallet'}
                     </div>
                 </div>

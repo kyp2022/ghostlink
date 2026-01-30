@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, Zap, Ghost } from 'lucide-react';
+import { Menu, X, Zap, Ghost, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { theme, toggleTheme } = useTheme();
 
     const navItems = [
         { key: 'home', label: 'HOME' },
@@ -21,20 +23,20 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
     return (
         <nav className="sticky top-0 z-50 px-4 py-4">
             <div className="max-w-7xl mx-auto">
-                <div className="bg-[#050505]/80 backdrop-blur-xl border border-white/10 rounded-2xl 
-                              shadow-lg px-6 py-4">
+                <div className="bg-surface-base/80 backdrop-blur-xl border border-theme-border-medium rounded-2xl 
+                              shadow-theme-glow px-6 py-4">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
                         <div
                             className="flex items-center gap-3 cursor-pointer group"
                             onClick={() => setActiveTab('home')}
                         >
-                            <div className="w-10 h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-xl 
-                                          flex items-center justify-center transition-all group-hover:border-cyan-400/50 group-hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]">
-                                <Ghost className="w-5 h-5 text-cyan-400" />
+                            <div className="w-10 h-10 bg-theme-accent-primary/10 border border-theme-accent-primary/20 rounded-xl 
+                                          flex items-center justify-center transition-all group-hover:border-theme-accent-primary/50 group-hover:shadow-theme-glow">
+                                <Ghost className="w-5 h-5 text-theme-accent-primary" />
                             </div>
-                            <span className="font-bold text-lg text-white tracking-wide font-display">
-                                GHOST<span className="text-cyan-400">LINK</span>
+                            <span className="font-bold text-lg text-theme-text-primary tracking-wide font-display">
+                                GHOST<span className="text-theme-accent-primary">LINK</span>
                             </span>
                         </div>
 
@@ -46,8 +48,8 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                                     onClick={() => setActiveTab(item.key)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer font-sans
                                               ${activeTab === item.key
-                                            ? 'text-cyan-400 bg-cyan-950/30'
-                                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                            ? 'text-theme-accent-primary bg-theme-accent-primary/10'
+                                            : 'text-theme-text-muted hover:text-theme-text-primary hover:bg-surface-1'
                                         }`}
                                 >
                                     {item.label}
@@ -55,8 +57,25 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                             ))}
                         </div>
 
-                        {/* Connect Wallet / Account */}
-                        <div className="hidden md:block">
+                        {/* Theme Toggle \u0026 Connect Wallet */}
+                        <div className="hidden md:flex items-center gap-3">
+                            {/* Theme Toggle Button */}
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2.5 rounded-lg bg-surface-1 border border-theme-border-medium 
+                                         hover:bg-surface-2 hover:border-theme-accent-primary/30
+                                         transition-all cursor-pointer group"
+                                aria-label="Toggle theme"
+                                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                            >
+                                {theme === 'dark' ? (
+                                    <Sun size={18} className="text-theme-accent-primary group-hover:rotate-45 transition-transform duration-300" />
+                                ) : (
+                                    <Moon size={18} className="text-theme-accent-primary group-hover:-rotate-12 transition-transform duration-300" />
+                                )}
+                            </button>
+
+                            {/* Wallet */}
                             {account ? (
                                 <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 
                                               rounded-xl text-sm text-emerald-400 font-mono">
@@ -67,11 +86,12 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                                 <button
                                     onClick={onConnectWallet}
                                     className="flex items-center gap-2 px-5 py-2.5 
-                                             bg-white/5 border border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10
-                                             text-white rounded-xl text-sm font-semibold
+                                             bg-surface-1 border border-theme-border-medium 
+                                             hover:border-theme-accent-primary/30 hover:bg-theme-accent-primary/10
+                                             text-theme-text-primary rounded-xl text-sm font-semibold
                                              transition-all cursor-pointer group"
                                 >
-                                    <Zap size={16} className="text-slate-400 group-hover:text-cyan-400 transition-colors" />
+                                    <Zap size={16} className="text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" />
                                     <span>Connect Wallet</span>
                                 </button>
                             )}
@@ -79,7 +99,7 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
 
                         {/* Mobile Menu Button */}
                         <button
-                            className="md:hidden p-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                            className="md:hidden p-2 text-theme-text-muted hover:text-theme-text-primary transition-colors cursor-pointer"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         >
                             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -92,7 +112,7 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="md:hidden mt-4 pt-4 border-t border-white/5"
+                            className="md:hidden mt-4 pt-4 border-t border-theme-border-medium"
                         >
                             <div className="flex flex-col gap-2">
                                 {navItems.map(item => (
@@ -104,8 +124,8 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                                         }}
                                         className={`px-4 py-3 rounded-lg text-sm font-medium text-left transition-all cursor-pointer
                                                   ${activeTab === item.key
-                                                ? 'bg-cyan-500/10 text-cyan-400'
-                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                ? 'bg-theme-accent-primary/10 text-theme-accent-primary'
+                                                : 'text-theme-text-muted hover:text-theme-text-primary hover:bg-surface-2'
                                             }`}
                                     >
                                         {item.label}
@@ -113,10 +133,10 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                                 ))}
 
                                 {/* Mobile Connect */}
-                                <div className="pt-2 mt-2 border-t border-white/5">
+                                <div className="pt-2 mt-2 border-t border-theme-border-medium">
                                     {account ? (
                                         <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 
-                                                      rounded-lg text-sm font-mono text-emerald-400 text-center">
+                                                      rounded-lg text-sm font-mono text-emerald-500 dark:text-emerald-400 text-center">
                                             {formatAddress(account)}
                                         </div>
                                     ) : (
@@ -126,9 +146,9 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                                                 setMobileMenuOpen(false);
                                             }}
                                             className="w-full flex items-center justify-center gap-2 px-4 py-3 
-                                                     bg-white/5 border border-white/10
-                                                     text-white rounded-lg text-sm font-semibold font-medium
-                                                     cursor-pointer"
+                                                     bg-surface-2 border border-theme-border-medium
+                                                     text-theme-text-primary rounded-lg text-sm font-semibold font-medium
+                                                     cursor-pointer hover:border-theme-accent-primary/30"
                                         >
                                             <Zap size={16} />
                                             Connect Wallet

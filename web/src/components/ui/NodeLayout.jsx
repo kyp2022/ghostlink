@@ -29,19 +29,19 @@ export const NodeLayout = ({ sourceIcon, sourceLabel, children }) => {
                 transition={{ duration: 0.5 }}
                 className="relative z-10 flex flex-col items-center gap-3"
             >
-                <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-cyan-500/30 
-                              flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.1)]
+                <div className="w-20 h-20 rounded-2xl bg-surface-elevated-1 border border-theme-accent-primary/30 
+                              flex items-center justify-center shadow-theme-glow
                               backdrop-blur-xl">
                     {sourceIcon}
                 </div>
                 <div className="text-center">
-                    <div className="text-xs font-mono text-cyan-400 mb-1">SOURCE</div>
-                    <div className="font-bold text-white text-sm tracking-wide">{sourceLabel}</div>
+                    <div className="text-xs font-mono text-theme-accent-secondary mb-1">SOURCE</div>
+                    <div className="font-bold text-theme-text-primary text-sm tracking-wide">{sourceLabel}</div>
                 </div>
             </motion.div>
 
             {/* Mobile Arrow */}
-            <ArrowRight className="md:hidden text-slate-600 rotate-90 my-2" />
+            <ArrowRight className="md:hidden text-theme-text-muted rotate-90 my-2" />
 
             {/* Node 2: ZK Core */}
             <motion.div
@@ -51,16 +51,16 @@ export const NodeLayout = ({ sourceIcon, sourceLabel, children }) => {
                 className="relative z-10 flex flex-col items-center"
             >
                 <div className="relative">
-                    <div className="absolute inset-0 bg-cyan-500/10 blur-xl rounded-full" />
+                    <div className="absolute inset-0 bg-theme-accent-primary/10 blur-xl rounded-full" />
                     <ZKAnimation state="idle" />
                 </div>
-                <div className="text-xs font-mono text-purple-400 mt-[-10px] bg-slate-900/80 px-2 rounded">
+                <div className="text-xs font-mono text-theme-accent-secondary mt-[-10px] bg-surface-elevated-2/80 px-2 rounded">
                     ZK_CIRCUIT
                 </div>
             </motion.div>
 
             {/* Mobile Arrow */}
-            <ArrowRight className="md:hidden text-slate-600 rotate-90 my-2" />
+            <ArrowRight className="md:hidden text-theme-text-muted rotate-90 my-2" />
 
             {/* Node 3: Interactive Interface */}
             <motion.div

@@ -22,8 +22,8 @@ const ScannerDropzone = ({ onFileSelect, label = "DROP_FILE_FOR_ZK_SCAN" }) => {
                 relative h-32 rounded-xl border-2 border-dashed transition-all duration-500 overflow-hidden
                 flex flex-col items-center justify-center gap-3
                 ${isHovered
-                    ? 'border-cyan-400 bg-cyan-400/5 shadow-[0_0_30px_rgba(0,240,255,0.2)]'
-                    : 'border-white/10 bg-white/2 hover:border-white/20'
+                    ? 'border-theme-accent-primary bg-theme-accent-primary/5 shadow-theme-glow'
+                    : 'border-theme-border-medium bg-surface-elevated-1 hover:border-theme-accent-primary/30'
                 }
             `}>
                 {/* Horizontal Scan-line */}
@@ -34,7 +34,7 @@ const ScannerDropzone = ({ onFileSelect, label = "DROP_FILE_FOR_ZK_SCAN" }) => {
                             animate={{ top: ['0%', '100%', '0%'] }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                            className="absolute left-0 right-0 h-[2px] bg-cyan-400/50 shadow-[0_0_10px_#00F0FF] z-10"
+                            className="absolute left-0 right-0 h-[2px] bg-theme-accent-primary/50 shadow-[0_0_10px_#00F0FF] z-10"
                         />
                     )}
                 </AnimatePresence>
@@ -42,12 +42,12 @@ const ScannerDropzone = ({ onFileSelect, label = "DROP_FILE_FOR_ZK_SCAN" }) => {
                 {/* Intense Hover Glow Layer */}
                 <motion.div
                     animate={{ opacity: isHovered ? 1 : 0 }}
-                    className="absolute inset-0 bg-gradient-to-t from-cyan-500/10 to-transparent pointer-events-none"
+                    className="absolute inset-0 bg-gradient-to-t from-theme-accent-primary/10 to-transparent pointer-events-none"
                 />
 
                 <div className={`
                     transition-all duration-500 
-                    ${isHovered ? 'scale-110 text-cyan-400' : 'text-slate-400'}
+                    ${isHovered ? 'scale-110 text-theme-accent-primary' : 'text-theme-text-muted'}
                 `}>
                     <Upload size={24} strokeWidth={1.5} />
                 </div>
@@ -55,11 +55,11 @@ const ScannerDropzone = ({ onFileSelect, label = "DROP_FILE_FOR_ZK_SCAN" }) => {
                 <div className="text-center">
                     <div className={`
                         font-mono text-[10px] tracking-[0.2em] transition-colors duration-500
-                        ${isHovered ? 'text-cyan-400' : 'text-slate-500'}
+                        ${isHovered ? 'text-theme-accent-primary' : 'text-theme-text-muted'}
                     `}>
                         {label}
                     </div>
-                    <div className="font-mono text-[8px] text-slate-600 mt-1 uppercase tracking-widest">
+                    <div className="font-mono text-[8px] text-theme-text-muted mt-1 uppercase tracking-widest">
                         Supported: .pdf (Encrypted)
                     </div>
                 </div>

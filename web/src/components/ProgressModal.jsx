@@ -19,14 +19,14 @@ const StepIndicator = ({ step, index, isActive, isCompleted, isError }) => {
         completed: 'bg-emerald-500 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.6)]',
         active: 'bg-cyan-500/20 border-cyan-400 shadow-[0_0_20px_rgba(0,255,255,0.4)] animate-pulse',
         error: 'bg-red-500/20 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)]',
-        pending: 'bg-slate-800/50 border-slate-600'
+        pending: 'bg-surface-elevated-1 border-theme-border-medium'
     };
 
     const textStyles = {
         completed: 'text-emerald-400',
         active: 'text-cyan-300',
         error: 'text-red-400',
-        pending: 'text-slate-500'
+        pending: 'text-theme-text-muted'
     };
 
     return (
@@ -44,7 +44,7 @@ const StepIndicator = ({ step, index, isActive, isCompleted, isError }) => {
                 {status === 'completed' && <Check size={16} className="text-white" />}
                 {status === 'active' && <Loader2 size={16} className="text-cyan-300 animate-spin" />}
                 {status === 'error' && <X size={16} className="text-red-400" />}
-                {status === 'pending' && <span className="text-xs font-mono text-slate-400">{index + 1}</span>}
+                {status === 'pending' && <span className="text-xs font-mono text-theme-text-muted">{index + 1}</span>}
             </div>
 
             {/* Step content */}
@@ -53,7 +53,7 @@ const StepIndicator = ({ step, index, isActive, isCompleted, isError }) => {
                     {step.description || `Step ${index + 1}`}
                 </p>
                 {step.details && (
-                    <p className="text-xs text-slate-500 mt-1 truncate font-mono">
+                    <p className="text-xs text-theme-text-muted mt-1 truncate font-mono">
                         {step.details}
                     </p>
                 )}
@@ -85,7 +85,7 @@ export const ProgressModal = ({
                 >
                     {/* Backdrop with blur */}
                     <div
-                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        className="absolute inset-0 bg-surface-base/80 dark:bg-black/80 backdrop-blur-md"
                         onClick={showCloseButton ? onClose : undefined}
                     />
 
@@ -95,27 +95,27 @@ export const ProgressModal = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         className="relative w-full max-w-md max-h-[85vh] overflow-y-auto
-                                   bg-[#050505]/95 backdrop-blur-xl
-                                   border border-white/10 rounded-2xl
-                                   shadow-[0_0_60px_rgba(0,0,0,0.5),inset_0_0_20px_rgba(255,255,255,0.05)]"
+                                   bg-surface-elevated-2/95 backdrop-blur-xl
+                                   border border-theme-border-medium rounded-2xl
+                                   shadow-theme-strong"
                     >
                         {/* Glowing top border */}
-                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-theme-accent-primary to-transparent" />
 
                         {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-700/50">
+                        <div className="flex items-center justify-between p-6 border-b border-theme-border-medium">
                             <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
-                                <h2 className="text-lg font-semibold text-white font-mono tracking-wide">
+                                <div className="w-2 h-2 bg-theme-accent-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
+                                <h2 className="text-lg font-semibold text-theme-text-primary font-mono tracking-wide">
                                     {title}
                                 </h2>
                             </div>
                             {showCloseButton && (
                                 <button
                                     onClick={onClose}
-                                    className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 
-                                             flex items-center justify-center text-slate-400 
-                                             hover:text-white hover:border-cyan-500/50 
+                                    className="w-8 h-8 rounded-lg bg-surface-elevated-1 border border-theme-border-medium 
+                                             flex items-center justify-center text-theme-text-muted 
+                                             hover:text-theme-text-primary hover:border-theme-accent-primary/50 
                                              transition-all duration-200 cursor-pointer"
                                 >
                                     <X size={16} />
@@ -129,7 +129,7 @@ export const ProgressModal = ({
                             {!isCompleted && !isError && (
                                 <div className="mb-8">
                                     <ZKAnimation state={currentStep > 0 ? 'proving' : 'idle'} />
-                                    <p className="text-center text-cyan-400 text-sm font-mono mt-4 animate-pulse">
+                                    <p className="text-center text-theme-accent-primary text-sm font-mono mt-4 animate-pulse">
                                         ZK_PROOF::GENERATING...
                                     </p>
                                 </div>
@@ -143,11 +143,11 @@ export const ProgressModal = ({
                                     className="mb-6 text-center"
                                 >
                                     <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full 
-                                                    flex items-center justify-center border-2 border-emerald-400
+                                                    flex items-center justify-center border-2 border-emerald-500 dark:border-emerald-400
                                                     shadow-[0_0_30px_rgba(16,185,129,0.5)]">
-                                        <Check size={32} className="text-emerald-400" />
+                                        <Check size={32} className="text-emerald-500 dark:text-emerald-400" />
                                     </div>
-                                    <p className="text-emerald-400 font-mono mt-4 text-sm">
+                                    <p className="text-emerald-500 dark:text-emerald-400 font-mono mt-4 text-sm">
                                         MINT::SUCCESS
                                     </p>
                                     {mintStatus.txHash && (
@@ -155,7 +155,7 @@ export const ProgressModal = ({
                                             href={`https://sepolia.etherscan.io/tx/${mintStatus.txHash}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-xs text-cyan-400 hover:text-cyan-300 mt-2 block font-mono underline"
+                                            className="text-xs text-theme-accent-primary hover:text-theme-accent-secondary mt-2 block font-mono underline"
                                         >
                                             View on Etherscan →
                                         </a>
@@ -173,9 +173,9 @@ export const ProgressModal = ({
                                     <div className="w-16 h-16 mx-auto bg-red-500/20 rounded-full 
                                                     flex items-center justify-center border-2 border-red-500
                                                     shadow-[0_0_30px_rgba(239,68,68,0.5)]">
-                                        <AlertCircle size={32} className="text-red-400" />
+                                        <AlertCircle size={32} className="text-red-500 dark:text-red-400" />
                                     </div>
-                                    <p className="text-red-400 font-mono mt-4 text-sm">
+                                    <p className="text-red-500 dark:text-red-400 font-mono mt-4 text-sm">
                                         ERROR::{mintStatus.message || 'UNKNOWN'}
                                     </p>
                                 </motion.div>
@@ -202,9 +202,9 @@ export const ProgressModal = ({
                                 <button
                                     onClick={onClose}
                                     className="w-full py-3 rounded-xl font-medium text-sm
-                                             bg-gradient-to-r from-cyan-500 to-purple-500
-                                             text-white shadow-[0_0_20px_rgba(0,255,255,0.3)]
-                                             hover:shadow-[0_0_30px_rgba(0,255,255,0.5)]
+                                             bg-gradient-to-r from-theme-accent-primary to-theme-accent-secondary
+                                             text-white shadow-theme-glow
+                                             hover:shadow-theme-strong
                                              transition-all duration-300 cursor-pointer font-mono"
                                 >
                                     {isCompleted ? 'CLOSE' : 'DISMISS'}

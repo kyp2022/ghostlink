@@ -6,7 +6,7 @@ export const TWITTER_CLIENT_ID = "Y2ZMMWgzOGNNYjdISDhVZ1BHNjc6MTpjaQ";
 export const REDIRECT_URI = window.location.origin + window.location.pathname;
 
 // Contract Configuration0x9C635808bE88E725892FB6Fbe2C99BA988C30D91
-export const CONTRACT_ADDRESS = "0x621BDc0Be6E3083776b5D6bd3D20d4dfE0455Ff7";
+export const CONTRACT_ADDRESS = "0x9f71f4e79889Cf8Ba6bC1aC06aA84cDfAD76A570";
 // Using Alchemy's free public Sepolia RPC (supports CORS)
 export const RPC_URL = "https://eth-sepolia.g.alchemy.com/v2/demo";
 export const CHAIN_ID = 11155111; // Sepolia

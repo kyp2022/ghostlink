@@ -190,8 +190,8 @@ const AlipayUpload = ({
                             <AlipayIcon size={24} className={isMinted ? 'text-emerald-400' : 'text-blue-400'} />
                         </div>
                         <div>
-                            <div className="font-bold text-white text-sm tracking-tight">Alipay Assets</div>
-                            <div className="text-xs text-slate-400 font-medium tracking-wider">
+                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">Alipay Assets</div>
+                            <div className="text-xs text-theme-text-muted font-medium tracking-wider">
                                 {result?.asset_amount || '0.00'} CNY
                             </div>
                         </div>
@@ -253,8 +253,8 @@ const AlipayUpload = ({
                         <AlipayIcon size={24} className="text-blue-400" />
                     </div>
                     <div>
-                        <div className="font-bold text-white text-sm tracking-tight">Alipay Assets</div>
-                        <div className="text-xs text-slate-400 font-medium tracking-wider uppercase">Upload PDF Statement</div>
+                        <div className="font-bold text-theme-text-primary text-sm tracking-tight">Alipay Assets</div>
+                        <div className="text-xs text-theme-text-muted font-medium tracking-wider uppercase">Upload PDF Statement</div>
                     </div>
                 </div>
             </div>
@@ -268,7 +268,7 @@ const AlipayUpload = ({
                           transition-all duration-300
                           ${file
                         ? 'border-blue-500/50 bg-blue-500/5'
-                        : 'border-slate-600 hover:border-cyan-500/50 bg-slate-800/30 hover:bg-slate-800/50'
+                        : 'border-theme-border-medium hover:border-theme-accent-primary/50 bg-surface-elevated-2 hover:bg-surface-elevated-3'
                     }`}
             >
                 <input
@@ -284,22 +284,22 @@ const AlipayUpload = ({
                         <div className="flex items-center gap-3">
                             <FileText size={24} className="text-blue-400" />
                             <div className="text-left">
-                                <p className="text-xs text-white font-bold tracking-tight truncate max-w-[180px]">{file.name}</p>
-                                <p className="text-xs text-slate-400 font-medium">{(file.size / 1024).toFixed(1)} KB</p>
+                                <p className="text-xs text-theme-text-primary font-bold tracking-tight truncate max-w-[180px]">{file.name}</p>
+                                <p className="text-xs text-theme-text-muted font-medium">{(file.size / 1024).toFixed(1)} KB</p>
                             </div>
                         </div>
                         <button
                             onClick={(e) => { e.stopPropagation(); clearFile(); }}
-                            className="p-1 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors cursor-pointer"
+                            className="p-1 rounded-lg bg-surface-elevated-3 hover:bg-theme-border-medium transition-colors cursor-pointer"
                         >
-                            <X size={16} className="text-slate-400" />
+                            <X size={16} className="text-theme-text-muted" />
                         </button>
                     </div>
                 ) : (
                     <>
-                        <Upload size={24} className="text-slate-400 mx-auto mb-2" />
-                        <p className="text-xs font-bold text-slate-400 tracking-wider uppercase">Drop PDF Here</p>
-                        <p className="text-xs text-slate-400 font-medium mt-1">or click to browse</p>
+                        <Upload size={24} className="text-theme-text-muted mx-auto mb-2" />
+                        <p className="text-xs font-bold text-theme-text-muted tracking-wider uppercase">Drop PDF Here</p>
+                        <p className="text-xs text-theme-text-muted font-medium mt-1">or click to browse</p>
                     </>
                 )}
             </div>

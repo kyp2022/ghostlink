@@ -3,9 +3,100 @@
 @tailwind utilities;
 
 /* ==========================================
-   GhostLink Cyberpunk Theme - Enhanced Luminosity
+   GhostLink Dual-Theme System - Semantic Tokens
    ========================================== */
 
+/* Dark Mode (Cyber-Underground) - OLED Optimized
+   "Shadow Protocol" */
+:root.dark {
+  /* Surfaces - Layered Depth */
+  --surface-base: #050505;
+  --surface-elevated-1: #12141C;
+  --surface-elevated-2: #1A1D2E;
+  --surface-elevated-3: #22263A;
+
+  /* Text - WCAG AAA Compliant */
+  --text-primary: #E2E8F0;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-dim: #64748B;
+
+  /* Accents - Neon Cyber */
+  --accent-primary: #00FFFF;
+  --accent-secondary: #A855F7;
+  --accent-glow: rgba(0, 255, 255, 0.4);
+
+  /* Borders - Glowing/Subtle */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-medium: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(0, 255, 255, 0.3);
+
+  /* Shadows - Glows */
+  --shadow-glow: 0 0 30px rgba(0, 255, 255, 0.2);
+  --shadow-strong: 0 0 40px rgba(0, 255, 255, 0.3);
+
+  /* Scrollbar */
+  --scrollbar-thumb: #00F0FF;
+  --scrollbar-glow: 0 0 10px #00F0FF;
+
+  /* Background Pattern */
+  --bg-pattern: none;
+}
+
+/* Light Mode (Clinical Tech) - Professional Trust
+   "Daylight Blueprint" */
+:root.light {
+  /* Surfaces - Airy Whites & Technical Grids */
+  --surface-base: #F8FAFC;
+  /* Slate-50 */
+  --surface-elevated-1: #FFFFFF;
+  --surface-elevated-2: #F1F5F9;
+  /* Slate-100 */
+  --surface-elevated-3: #E2E8F0;
+  /* Slate-200 */
+
+  /* Text - High Readability & Precision */
+  --text-primary: #0F172A;
+  /* Slate-900 */
+  --text-secondary: #334155;
+  /* Slate-700 */
+  --text-muted: #64748B;
+  /* Slate-500 */
+  --text-dim: #94A3B8;
+  /* Slate-400 */
+
+  /* Accents - Architecture Firm Style */
+  --accent-primary: #0F172A;
+  /* Deep Slate Blue (Primary Brand) */
+  --accent-secondary: #F59E0B;
+  /* Signal Orange (Action) */
+  --accent-glow: rgba(15, 23, 42, 0.1);
+
+  /* Borders - Visible Structure (Blueprints) */
+  --border-subtle: #E2E8F0;
+  /* Slate-200 */
+  --border-medium: #CBD5E1;
+  /* Slate-300 */
+  --border-strong: #0F172A;
+  /* Slate-900 */
+
+  /* Shadows - Sharp, Physical Layers (No Glows) */
+  --shadow-glow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  /* shadow-md equivalent */
+  --shadow-strong: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* shadow-xl equivalent */
+
+  /* Scrollbar */
+  --scrollbar-thumb: #94A3B8;
+  --scrollbar-glow: none;
+
+  /* Background Pattern - Technical Grid */
+  --bg-pattern:
+    linear-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.1) 1px, transparent 1px);
+}
+
+/* Legacy Variables (Backward Compatibility) */
 :root {
   /* Neon Colors */
   --neon-cyan: #00FFFF;
@@ -14,38 +105,23 @@
   --neon-green: #22C55E;
   --neon-blue: #3B82F6;
 
-  /* Layered Dark Surfaces (Enhanced Luminosity) */
+  /* Legacy Dark Surfaces */
   --bg-base: #050505;
-  /* Deep Charcoal Base */
   --bg-elevated-1: #12141C;
-  /* Cards & Primary Elevated Surfaces */
   --bg-elevated-2: #1A1D2E;
-  /* Secondary Cards & Panels */
   --bg-elevated-3: #22263A;
-  /* Tertiary/Hover States */
-
-  /* Legacy Support */
   --bg-dark: #020617;
   --bg-darker: #000000;
   --surface-dark: #0F172A;
   --surface-light: #1E293B;
 
-  /* WCAG 2.1 Compliant Text Colors */
-  --text-primary: #E2E8F0;
-  /* Primary body text (14.5:1 on base) */
-  --text-secondary: #CBD5E1;
-  /* Secondary text (11:1 on base) */
-  --text-muted: #94A3B8;
-  /* Muted text (7:1 on base) */
-  --text-dim: #64748B;
-  /* Minimum contrast (4.5:1 on base) */
-
-  /* Legacy Support */
+  /* Legacy Text Colors */
   --text-primary-legacy: #F8FAFC;
 }
 
+
 body {
-  background-color: var(--bg-base);
+  background-color: var(--surface-base);
   color: var(--text-primary);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -54,12 +130,25 @@ body {
   line-height: 1.6;
   letter-spacing: 0.01em;
   scrollbar-gutter: stable;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Custom Cyber-Scrollbar */
+/* Light Mode Background Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--bg-pattern);
+  background-size: 20px 20px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Custom Scrollbar - Theme Aware */
 ::-webkit-scrollbar {
-  width: 3px;
-  height: 3px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -67,21 +156,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00F0FF;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #00F0FF;
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+  box-shadow: var(--scrollbar-glow);
 }
 
 /* For Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #00F0FF transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(0, 255, 255, 0.2);
-  color: #00FFFF;
+  background: var(--accent-glow);
+  color: var(--accent-primary);
 }
 
 /* ==========================================
@@ -204,4 +293,177 @@ h6,
   animation: typewriter-blink 1s step-end infinite;
   margin-left: 2px;
   color: var(--neon-cyan);
+}
+
+/* ==========================================
+   Light Mode Bifurcated Architecture
+   "Transparent Data Foundry" Utilities
+   ========================================== */
+
+/* Blueprint Grid Background */
+.bg-blueprint-grid {
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Physical Shadow Layers - No Glows, Sharp Definition */
+.shadow-physical-1 {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-physical-2 {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-physical-3 {
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-physical-4 {
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.06),
+    0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Acrylic Panel Effect - Light Mode */
+.panel-acrylic {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Paper Card Effect - Light Mode */
+.card-paper {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-paper:hover {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Technical Border - Visible Structure */
+.border-technical {
+  border: 1px solid #CBD5E1;
+}
+
+.border-technical-strong {
+  border: 1px solid #0F172A;
+}
+
+/* Light Mode Data Grid Styles */
+.grid-financial {
+  /* For Bloomberg-style data density */
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.grid-financial th {
+  background: #F1F5F9;
+  border-bottom: 2px solid #0F172A;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.grid-financial td {
+  border-bottom: 1px solid #E2E8F0;
+  padding: 10px 16px;
+}
+
+.grid-financial tr:nth-child(even) {
+  background: #F8FAFC;
+}
+
+.grid-financial tr:hover {
+  background: #F1F5F9;
+}
+
+/* Workbench Layout - Solutions Page Light Mode */
+.layout-workbench {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  min-height: calc(100vh - 200px);
+}
+
+.layout-workbench .control-panel {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.layout-workbench .canvas-area {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animation: Crisp Slide-In for Light Mode */
+@keyframes slide-in-crisp {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in-crisp 0.3s ease-out forwards;
+}
+
+/* Light Mode Status Indicators */
+.status-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-light.success {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+}
+
+.status-light.pending {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+
+.status-light.error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
 }

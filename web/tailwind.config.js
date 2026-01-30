@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
@@ -12,6 +13,29 @@ export default {
                 'display': ['JetBrains Mono', 'monospace'], // Per user request for headers
             },
             colors: {
+                // Semantic Theme Tokens
+                'surface': {
+                    base: 'var(--surface-base)',
+                    1: 'var(--surface-elevated-1)',
+                    2: 'var(--surface-elevated-2)',
+                    3: 'var(--surface-elevated-3)',
+                },
+                'theme-text': {
+                    primary: 'var(--text-primary)',
+                    secondary: 'var(--text-secondary)',
+                    muted: 'var(--text-muted)',
+                    dim: 'var(--text-dim)',
+                },
+                'theme-accent': {
+                    primary: 'var(--accent-primary)',
+                    secondary: 'var(--accent-secondary)',
+                },
+                'theme-border': {
+                    subtle: 'var(--border-subtle)',
+                    medium: 'var(--border-medium)',
+                    strong: 'var(--border-strong)',
+                },
+                // Legacy Neon Colors
                 'neon-cyan': '#00FFFF',
                 'neon-purple': '#A855F7',
                 'neon-magenta': '#FF00FF',
@@ -43,6 +67,10 @@ export default {
                     '50%': { backgroundPosition: '100% 50%' },
                     '100%': { backgroundPosition: '0% 50%' },
                 },
+            },
+            boxShadow: {
+                'theme-glow': 'var(--shadow-glow)',
+                'theme-strong': 'var(--shadow-strong)',
             },
         },
     },
