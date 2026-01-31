@@ -12,7 +12,8 @@ import { SolutionsPage } from './pages/SolutionsPage';
 import { ExplorerPage } from './pages/ExplorerPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { CompanyPage } from './pages/CompanyPage';
-import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI, API_BASE_URL } from './config/constants';
+import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI } from './config/constants';
+import { ENDPOINTS } from './config/endpoints';
 
 function App() {
     // Theme context for bifurcated layout
@@ -65,6 +66,9 @@ function App() {
         const handleMessage = (event) => {
             if (event.origin !== window.location.origin) return;
 
+            // Prevent strict mode double-firing
+            if (verificationStatus === 'loading' || twitterStatus === 'loading') return;
+
             if (event.data.type === 'GITHUB_AUTH_CODE') {
                 handleGithubCallback(event.data.code);
             } else if (event.data.type === 'TWITTER_AUTH_CODE') {
@@ -74,7 +78,7 @@ function App() {
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, []);
+    }, [verificationStatus, twitterStatus]); // Add deps to ensure latest state is checked
 
     const handleGithubCallback = async (code) => {
         setActiveTab('solutions');
@@ -99,10 +103,14 @@ function App() {
             return;
         }
 
-        fetch(`${API_BASE_URL}/api/v1/auth/github/callback`, {
+        fetch(ENDPOINTS.AUTH.GITHUB_CALLBACK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, recipient })
+            body: JSON.stringify({
+                code,
+                recipient,
+                redirectUri: REDIRECT_URI // Send redirect_uri to backend
+            })
         })
             .then(res => res.json())
             .then(data => {
@@ -146,7 +154,7 @@ function App() {
             return;
         }
 
-        fetch(`${API_BASE_URL}/api/v1/auth/twitter/callback`, {
+        fetch(ENDPOINTS.AUTH.TWITTER_CALLBACK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

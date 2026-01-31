@@ -27,8 +27,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> githubCallback(@RequestBody Map<String, String> payload) {
         String code = payload.get("code");
         String recipient = payload.get("recipient"); // 获取前端传递的 recipient
+        String redirectUri = payload.get("redirectUri");
         
-        AuthResponse response = githubAuthService.authenticateWithCode(code, recipient);
+        AuthResponse response = githubAuthService.authenticateWithCode(code, recipient, redirectUri);
         if (response.getError() != null) return ResponseEntity.status(401).body(response);
         return ResponseEntity.ok(response);
     }

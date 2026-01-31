@@ -8,7 +8,9 @@ import org.example.ghostlink.model.ZkProof;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -23,8 +25,8 @@ import java.util.regex.Pattern;
 @Service
 public class AlipayService {
 
-    // ZK 服务地址 - 符合 RISC Zero 规范
-    private static final String ZK_SERVICE_URL = "http://localhost:8081/api/v1/receipt-data";
+    @Autowired
+    private ZkProofService zkProofService;
     
     // 默认资产门槛（元）
     private static final String DEFAULT_THRESHOLD = "10000";
@@ -173,15 +175,6 @@ public class AlipayService {
      */
     private ZkProof callZkService(String balance, String idNumberHash, String threshold, String recipient) {
         try {
-            // 增加超时时间设置，因为ZK证明生成可能需要较长时间（如10分钟）
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(60000); // 连接超时 60秒
-            factory.setReadTimeout(600000);   // 读取超时 600秒 (10分钟)
-            
-            RestTemplate restTemplate = new RestTemplate(factory);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            
             // 按照规范构造 data 对象
             Map<String, Object> data = new HashMap<>();
             data.put("balance", balance);  // String
@@ -193,15 +186,13 @@ public class AlipayService {
             request.put("credential_type", "alipay");
             request.put("data", data);
             request.put("recipient", recipient != null ? recipient : "0x0000000000000000000000000000000000000000");
-            
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-            
+
             ObjectMapper objectMapper = new ObjectMapper();
-            System.out.println("开始调用ZK服务 (Alipay)，这可能需要几分钟...");
+            System.out.println("开始调用ZK服务 (Alipay，本地调用)...");
             System.out.println("请求数据: " + objectMapper.writeValueAsString(request));
             
-            ResponseEntity<Map> response = restTemplate.postForEntity(ZK_SERVICE_URL, entity, Map.class);
-            Map<String, Object> responseBody = response.getBody();
+            // 直接调用本地服务生成证明 (Refactored to avoid self-HTTP call)
+            Map<String, String> responseBody = zkProofService.generateMockProof(request);
             
             // 打印完整的响应体到控制台
             System.out.println("ZK服务响应: " + objectMapper.writeValueAsString(responseBody));

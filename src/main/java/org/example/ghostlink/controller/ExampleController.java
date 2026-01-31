@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import org.example.ghostlink.service.ZkProofService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -19,6 +21,9 @@ public class ExampleController {
 
     // 示例数据存储（实际应用中应使用数据库）
     private static List<Map<String, Object>> sampleData = new ArrayList<>();
+
+    @Autowired
+    private ZkProofService zkProofService;
 
     static {
         Map<String, Object> item1 = new HashMap<>();
@@ -122,31 +127,12 @@ public class ExampleController {
     /**
      * 返回固定格式但内容每次请求都不同的数据
      */
-    @GetMapping("/receipt-data")
-    public ResponseEntity<Map<String, String>> getReceiptData() {
-        Map<String, String> response = new HashMap<>();
-        
-        // 设置状态
-        response.put("status", "success");
-        
-        // 生成固定长度的随机十六进制字符串
-        response.put("receipt_hex", generateRandomHexString(224)); // 对应112字节
-        response.put("journal_hex", generateRandomHexString(98));  // 对应49字节
-        response.put("image_id_hex", generateRandomHexString(64)); // 对应32字节
-        response.put("nullifier_hex", generateRandomHexString(64)); // 对应32字节
-        
-        return ResponseEntity.ok(response);
-    }
-    
     /**
-     * 生成指定长度的随机十六进制字符串
+     * 返回固定格式但内容每次请求都不同的数据
      */
-    private String generateRandomHexString(int length) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            int randomNum = random.nextInt(16);
-            sb.append(Integer.toHexString(randomNum));
-        }
-        return sb.toString();
+    @PostMapping("/receipt-data")
+    public ResponseEntity<Map<String, String>> getReceiptData(@RequestBody(required = false) Map<String, Object> requestData) {
+        Map<String, String> response = zkProofService.generateMockProof(requestData);
+        return ResponseEntity.ok(response);
     }
 }

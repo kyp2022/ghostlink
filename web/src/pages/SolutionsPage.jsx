@@ -85,6 +85,13 @@ export const SolutionsPage = ({
                 i === 0 ? { ...s, description: 'Proof ready', details: `Proof ID: ${(isTwitter ? twitterProof : initialZkProof).proofId || 'N/A'}` } : s
             ));
             setCurrentProgressStep(1);
+
+            // Auto-trigger minting
+            if (isTwitter) {
+                mintCredential(twitterProof, 2, false); // 2 = Twitter
+            } else {
+                mintCredential(initialZkProof, 0, false); // 0 = Github
+            }
         }
     }, [initialVerificationStatus, initialZkProof, twitterStatus, twitterProof]);
 

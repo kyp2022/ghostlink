@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, CheckCircle, Loader2, AlertCircle, Info, Zap } from 'lucide-react';
 import { ethers } from 'ethers';
-import { CREDENTIAL_TYPE } from '../config/constants';
+import { CREDENTIAL_TYPE, CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/constants';
+import { ENDPOINTS } from '../config/endpoints';
 import { EthereumIcon } from './ui/Icons';
 
 // Wallet icon with glow
@@ -46,7 +47,7 @@ const CryptoPortfolio = ({
 
         try {
             // 1. Request signature
-            const msg = `GhostLink Verification\nAddress: ${walletAccount}\nTimestamp: ${Date.now()}`;
+            const msg = `GhostLink Verification\nAddress: ${walletAccount} \nTimestamp: ${Date.now()} `;
             setMessage(msg);
 
             const sig = await walletSigner.signMessage(msg);
@@ -103,7 +104,7 @@ const CryptoPortfolio = ({
             }
 
             // Call ZK proof API
-            const zkResponse = await fetch('http://127.0.0.1:3000/api/v1/prove', {
+            const zkResponse = await fetch(ENDPOINTS.PROOF.RECEIPT_DATA, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -127,7 +128,7 @@ const CryptoPortfolio = ({
             }
 
             const zkProof = {
-                proofId: zkData.proofId || `zk-wallet-${Date.now()}`,
+                proofId: zkData.proofId || `zk - wallet - ${Date.now()} `,
                 receipt: zkData.receipt_hex || zkData.receipt,
                 journal: zkData.journal_hex || zkData.journal,
                 imageId: zkData.image_id_hex || zkData.imageId,
@@ -164,9 +165,9 @@ const CryptoPortfolio = ({
                 {/* Header with status */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center 
-                                       bg-gradient-to-br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30' : 'from-cyan-500/20 to-purple-500/20 border-cyan-500/30'} 
-                                       border shadow-[0_0_20px_rgba(${isMinted ? '16,185,129' : '0,255,255'},0.2)]`}>
+                        <div className={`w - 10 h - 10 rounded - xl flex - shrink - 0 flex items - center justify - center
+bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30' : 'from-cyan-500/20 to-purple-500/20 border-cyan-500/30'} 
+                                       border shadow - [0_0_20px_rgba(${isMinted ? '16,185,129' : '0,255,255'}, 0.2)]`}>
                             <EthereumIcon size={24} className={isMinted ? 'text-emerald-400' : 'text-cyan-400'} />
                         </div>
                         <div>
@@ -178,15 +179,15 @@ const CryptoPortfolio = ({
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right">
-                            <div className={`text-base font-bold tracking-tight ${isMinted ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                            <div className={`text - base font - bold tracking - tight ${isMinted ? 'text-emerald-400' : 'text-cyan-400'} `}>
                                 {balance} ETH
                             </div>
                         </div>
-                        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider
+                        <div className={`flex items - center gap - 1 px - 3 py - 1.5 rounded - lg text - xs font - bold tracking - wider
                                        ${isMinted
                                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                                 : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.3)]'
-                            }`}>
+                            } `}>
                             <CheckCircle size={14} />
                             <span>{isMinted ? 'MINTED' : 'VERIFIED'}</span>
                         </div>
@@ -201,10 +202,10 @@ const CryptoPortfolio = ({
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-theme-text-primary">{txCount} TX</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${txCount >= REQUIRED_TX_COUNT
+                        <span className={`text - xs px - 2 py - 0.5 rounded - full font - bold ${txCount >= REQUIRED_TX_COUNT
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                             : 'bg-surface-elevated-3 text-theme-text-muted border border-theme-border-medium'
-                            }`}>
+                            } `}>
                             {txCount >= REQUIRED_TX_COUNT ? '10+' : '<10'}
                         </span>
                     </div>

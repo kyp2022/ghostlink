@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+
+set timeout 20
+set host "118.31.238.137"
+set user "root"
+set password "Aa123456"
+
+spawn ssh-copy-id -o StrictHostKeyChecking=no $user@$host
+
+expect {
+    "password:" {
+        send "$password\r"
+        exp_continue
+    }
+    "Already explicitly authorized" {
+        send_user "\nKey already installed.\n"
+        exit 0
+    }
+    "Number of key(s) added" {
+        send_user "\nKey added successfully.\n"
+        exit 0
+    }
+    timeout {
+        send_user "\nTimeout waiting for response.\n"
+        exit 1
+    }
+    eof {
+        exit 0
+    }
+}

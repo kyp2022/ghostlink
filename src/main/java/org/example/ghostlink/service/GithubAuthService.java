@@ -7,6 +7,7 @@ import org.example.ghostlink.model.ZkProof;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,15 +21,16 @@ public class GithubAuthService {
     private static final String GITHUB_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token";
     private static final String GITHUB_USER_API = "https://api.github.com/user";
     
-    // ZK 服务地址 - 符合 RISC Zero 规范
-    private static final String ZK_SERVICE_URL = "http://localhost:8081/api/v1/receipt-data";
+
+    @Autowired
+    private ZkProofService zkProofService;
 
     /**
      * 处理 OAuth 回调逻辑：Code -> Token -> User -> ZK Proof
      */
-    public AuthResponse authenticateWithCode(String code, String recipient) {
+    public AuthResponse authenticateWithCode(String code, String recipient, String redirectUri) {
         // 1. 用 Code 换取 Access Token
-        String accessToken = exchangeCodeForToken(code);
+        String accessToken = exchangeCodeForToken(code, redirectUri);
         if (accessToken == null) {
             return new AuthResponse("Failed to retrieve access token from GitHub");
         }
@@ -61,7 +63,7 @@ public class GithubAuthService {
         }
     }
 
-    private String exchangeCodeForToken(String code) {
+    private String exchangeCodeForToken(String code, String redirectUri) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -71,6 +73,9 @@ public class GithubAuthService {
         body.put("client_id", CLIENT_ID);
         body.put("client_secret", CLIENT_SECRET);
         body.put("code", code);
+        if (redirectUri != null && !redirectUri.isEmpty()) {
+             body.put("redirect_uri", redirectUri);
+        }
 
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
 
@@ -80,7 +85,11 @@ public class GithubAuthService {
             if (responseBody != null && responseBody.containsKey("access_token")) {
                 return (String) responseBody.get("access_token");
             }
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println("GitHub Token Exchange Failed: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            e.printStackTrace();
         } catch (Exception e) {
+            System.err.println("GitHub Token Exchange Exception: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -112,14 +121,7 @@ public class GithubAuthService {
      */
     private ZkProof callZkService(Map<String, Object> githubUserData, String recipient) {
         try {
-            // 增加超时时间设置，因为ZK证明生成可能需要较长时间（如10分钟）
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(60000); // 连接超时 60秒
-            factory.setReadTimeout(600000);   // 读取超时 600秒 (10分钟)
-            
-            RestTemplate restTemplate = new RestTemplate(factory);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            ObjectMapper objectMapper = new ObjectMapper();
             
             // 按照规范构造 data 对象
             Map<String, Object> data = new HashMap<>();
@@ -134,17 +136,15 @@ public class GithubAuthService {
             request.put("credential_type", "github");
             request.put("data", data);
             request.put("recipient", recipient != null ? recipient : "0x0000000000000000000000000000000000000000");
-            
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-            
-            ObjectMapper objectMapper = new ObjectMapper();
-            System.out.println("开始调用ZK服务 (GitHub)，这可能需要几分钟...");
+
+            // 直接调用本地服务生成证明 (Refactored to avoid self-HTTP call)
+            System.out.println("开始调用ZK服务 (GitHub，本地调用)...");
             System.out.println("请求数据: " + objectMapper.writeValueAsString(request));
             
-            ResponseEntity<Map> response = restTemplate.postForEntity(ZK_SERVICE_URL, entity, Map.class);
-            Map<String, Object> responseBody = response.getBody();
+            // 调用本地 Service
+            Map<String, String> responseBody = zkProofService.generateMockProof(request);
             
-            // 打印完整的响应体到控制台
+            // 打印响应 (Keeping existing logging structure)
             System.out.println("ZK服务响应: " + objectMapper.writeValueAsString(responseBody));
             
             if (responseBody != null && "success".equals(responseBody.get("status"))) {

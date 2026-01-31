@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileText, CheckCircle, Loader2, AlertCircle, Zap, X } from 'lucide-react';
-import { API_BASE_URL, CREDENTIAL_TYPE } from '../config/constants';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader, Shield, Lock } from 'lucide-react';
+import { CREDENTIAL_TYPE } from '../config/constants';
+import { ENDPOINTS } from '../config/endpoints';
 import { AlipayIcon } from './ui/Icons';
 
 
@@ -61,7 +62,7 @@ const AlipayUpload = ({
             formData.append('file', file);
             // Don't send recipient - just verify
 
-            const response = await fetch(`${API_BASE_URL}/api/assets/upload/alipay`, {
+            const response = await fetch(ENDPOINTS.ASSETS.UPLOAD_ALIPAY, {
                 method: 'POST',
                 body: formData
             });
@@ -125,7 +126,7 @@ const AlipayUpload = ({
                 recipient: walletAccount
             };
 
-            const zkResponse = await fetch('http://127.0.0.1:3000/api/v1/prove', {
+            const zkResponse = await fetch(ENDPOINTS.PROOF.RECEIPT_DATA, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
