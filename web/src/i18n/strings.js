@@ -167,6 +167,8 @@ const STRINGS = {
             descDone: 'Done',
             uploadFailed: 'Upload failed',
             proofFailed: 'Failed to generate proof',
+            idNumberLabel: 'ID Number',
+            idNumberNotAvailable: 'Not available',
         },
         errors: {
             configGithubClientId: 'Configuration error: please set your GitHub Client ID.',
@@ -342,6 +344,8 @@ const STRINGS = {
             descDone: '流程完成',
             uploadFailed: '上传失败',
             proofFailed: '生成证明失败',
+            idNumberLabel: '身份证号',
+            idNumberNotAvailable: '暂未获取',
         },
         errors: {
             configGithubClientId: '配置缺失：请先设置 GitHub Client ID。',

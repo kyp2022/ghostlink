@@ -1,12 +1,27 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Shield, Lock, X } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Shield, Lock, Zap, X } from 'lucide-react';
 import { CREDENTIAL_TYPE } from '../config/constants';
 import { ENDPOINTS } from '../config/endpoints';
 import { AlipayIcon } from './ui/Icons';
 import { useI18n } from '../contexts/I18nContext';
 
 
+
+const maskIdNumber = (value) => {
+    if (!value) return null;
+    const asString = String(value).trim();
+    if (!asString || asString === 'Not Found') return null;
+
+    const clean = asString.replace(/\s+/g, '');
+    if (clean.length <= 7) return `${clean.slice(0, 1)}****${clean.slice(-1) || ''}`;
+
+    const prefix = clean.slice(0, 3);
+    const suffix = clean.slice(-4);
+    const maskLength = clean.length - prefix.length - suffix.length;
+    const maskedMiddle = maskLength > 0 ? '*'.repeat(maskLength) : '*';
+    return `${prefix}${maskedMiddle}${suffix}`;
+};
 
 const AlipayUpload = ({
     walletAccount,
@@ -98,6 +113,10 @@ const AlipayUpload = ({
             setError(t('alipay.connectFirst'));
             return;
         }
+        if (!result) {
+            setError(t('alipay.selectFileFirst'));
+            return;
+        }
 
         setStatus('generating_proof');
         setError('');
@@ -157,14 +176,16 @@ const AlipayUpload = ({
                 if (success) {
                     setStatus('minted');
                 } else {
-                    setStatus('error');
                     setError(t('alipay.mintFailed'));
+                    // 保持在已验证视图中，方便用户重试
+                    setStatus('success');
                 }
             }
         } catch (err) {
             console.error('Mint error:', err);
-            setStatus('error');
             setError(err.message || t('alipay.proofFailed'));
+            // 若已拿到验证结果，保持在已验证视图中，方便用户修正后重试
+            setStatus(result ? 'success' : 'error');
         }
     };
 
@@ -220,7 +241,7 @@ const AlipayUpload = ({
                 {status !== 'minted' && (
                     <button
                         onClick={handleMint}
-                        disabled={status === 'generating_proof' || !walletAccount}
+                        disabled={!result || status === 'generating_proof'}
                         className="w-full py-3 rounded-xl text-sm font-bold tracking-widest uppercase
                                  bg-gradient-to-r from-cyan-500 to-purple-500 text-white
                                  shadow-[0_0_30px_rgba(59,130,246,0.3)]
@@ -242,6 +263,22 @@ const AlipayUpload = ({
                         )}
                     </button>
                 )}
+
+                {/* Error message (verified/mint flow) */}
+                {error && (
+                    <div className="flex items-center gap-2 text-red-400 text-xs font-medium">
+                        <AlertCircle size={14} />
+                        <span className="break-words">{error}</span>
+                    </div>
+                )}
+                <div className="pt-2">
+                    <div className="text-[12px] font-mono uppercase tracking-widest text-theme-text-muted">
+                        {t('alipay.idNumberLabel')}
+                    </div>
+                    <div className="text-sm font-mono font-semibold text-theme-text-primary">
+                        {maskIdNumber(result?.id_number) || t('alipay.idNumberNotAvailable')}
+                    </div>
+                </div>
             </div>
         );
     }
