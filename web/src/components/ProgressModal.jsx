@@ -1,5 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../contexts/I18nContext';
 import ZKAnimation from './ui/ZKAnimation';
 
 
@@ -65,7 +67,7 @@ const StepIndicator = ({ step, index, isActive, isCompleted, isError }) => {
 export const ProgressModal = ({
     isOpen,
     onClose,
-    title = 'Processing',
+    title = null,
     steps = [],
     currentStep = 0,
     mintStatus = null
@@ -73,6 +75,9 @@ export const ProgressModal = ({
     const isCompleted = mintStatus?.type === 'success';
     const isError = mintStatus?.type === 'error';
     const showCloseButton = isCompleted || isError;
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
+    const { t } = useI18n();
 
     return (
         <AnimatePresence>
@@ -84,21 +89,24 @@ export const ProgressModal = ({
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                 >
                     {/* Backdrop with blur */}
-                    <div
-                        className="absolute inset-0 bg-surface-base/80 dark:bg-black/80 backdrop-blur-md"
-                        onClick={showCloseButton ? onClose : undefined}
-                    />
+                <div
+                    className={`absolute inset-0 ${isLight ? 'bg-slate-900/30' : 'bg-surface-base/80 dark:bg-black/80'} backdrop-blur-md`}
+                    onClick={showCloseButton ? onClose : undefined}
+                />
 
                     {/* Modal */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="relative w-full max-w-md max-h-[85vh] overflow-y-auto
-                                   bg-surface-elevated-2/95 backdrop-blur-xl
+                className={`relative w-full max-w-md max-h-[85vh] overflow-y-auto
                                    border border-theme-border-medium rounded-2xl
-                                   shadow-theme-strong"
-                    >
+                                   shadow-theme-strong
+                                   ${isLight
+                        ? 'bg-white/100 backdrop-blur-none'
+                        : 'bg-surface-elevated-2/95 backdrop-blur-xl'
+                    }`}
+            >
                         {/* Glowing top border */}
                         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-theme-accent-primary to-transparent" />
 
@@ -107,7 +115,7 @@ export const ProgressModal = ({
                             <div className="flex items-center gap-3">
                                 <div className="w-2 h-2 bg-theme-accent-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(0,255,255,0.8)]" />
                                 <h2 className="text-lg font-semibold text-theme-text-primary font-mono tracking-wide">
-                                    {title}
+                                    {title || t('modal.processing')}
                                 </h2>
                             </div>
                             {showCloseButton && (
@@ -130,7 +138,7 @@ export const ProgressModal = ({
                                 <div className="mb-8">
                                     <ZKAnimation state={currentStep > 0 ? 'proving' : 'idle'} />
                                     <p className="text-center text-theme-accent-primary text-sm font-mono mt-4 animate-pulse">
-                                        ZK_PROOF::GENERATING...
+                                        {t('modal.zkGenerating')}
                                     </p>
                                 </div>
                             )}
@@ -148,7 +156,7 @@ export const ProgressModal = ({
                                         <Check size={32} className="text-emerald-500 dark:text-emerald-400" />
                                     </div>
                                     <p className="text-emerald-500 dark:text-emerald-400 font-mono mt-4 text-sm">
-                                        MINT::SUCCESS
+                                        {t('modal.mintSuccess')}
                                     </p>
                                     {mintStatus.txHash && (
                                         <a
@@ -157,7 +165,7 @@ export const ProgressModal = ({
                                             rel="noopener noreferrer"
                                             className="text-xs text-theme-accent-primary hover:text-theme-accent-secondary mt-2 block font-mono underline"
                                         >
-                                            View on Etherscan →
+                                            {t('modal.viewOnEtherscan')}
                                         </a>
                                     )}
                                 </motion.div>
@@ -176,7 +184,7 @@ export const ProgressModal = ({
                                         <AlertCircle size={32} className="text-red-500 dark:text-red-400" />
                                     </div>
                                     <p className="text-red-500 dark:text-red-400 font-mono mt-4 text-sm">
-                                        ERROR::{mintStatus.message || 'UNKNOWN'}
+                                        {t('modal.errorPrefix')}{mintStatus.message || 'UNKNOWN'}
                                     </p>
                                 </motion.div>
                             )}

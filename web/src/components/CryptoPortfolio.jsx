@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import { CREDENTIAL_TYPE, CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/constants';
 import { ENDPOINTS } from '../config/endpoints';
 import { EthereumIcon } from './ui/Icons';
+import { useI18n } from '../contexts/I18nContext';
 
 // Wallet icon with glow
 import walletIcon from '../assets/wallet.svg';
@@ -23,6 +24,7 @@ const CryptoPortfolio = ({
     defaultProgressSteps,
     onVerificationComplete
 }) => {
+    const { t } = useI18n();
     const [status, setStatus] = useState('idle'); // idle, verifying, success, generating_proof, minted, error
     const [balance, setBalance] = useState('0.00');
     const [txCount, setTxCount] = useState(0);
@@ -38,7 +40,7 @@ const CryptoPortfolio = ({
 
     const handleVerify = async () => {
         if (!walletSigner || !walletAccount) {
-            setError('Wallet not connected');
+            setError(t('portfolio.walletNotConnected'));
             return;
         }
 
@@ -80,7 +82,7 @@ const CryptoPortfolio = ({
         } catch (err) {
             console.error('Verification error:', err);
             setStatus('error');
-            setError(err.message || 'Verification failed');
+            setError(err.message || t('portfolio.verificationFailed'));
         }
     };
 
@@ -91,13 +93,13 @@ const CryptoPortfolio = ({
         try {
             // Initialize progress modal
             if (setProgressTitle && setProgressSteps && setCurrentProgressStep && setShowProgressModal) {
-                setProgressTitle('WALLET · ZK_PROOF → MINT');
+                setProgressTitle(t('portfolio.progressTitle'));
                 setProgressSteps([
-                    { title: 'Generate ZK Proof', description: 'ZK_PROVER::INITIALIZING...' },
-                    { title: 'Prepare Transaction', description: 'TX::PREPARING...' },
-                    { title: 'Confirm in Wallet', description: 'WALLET::AWAITING_CONFIRMATION...' },
-                    { title: 'Await Confirmation', description: 'CHAIN::PENDING...' },
-                    { title: 'Completed', description: 'STATUS::COMPLETE' }
+                    { title: t('progress.stepGenerate'), description: t('progress.descGenerate') },
+                    { title: t('progress.stepPrepare'), description: t('progress.descPrepare') },
+                    { title: t('progress.stepConfirm'), description: t('progress.descConfirm') },
+                    { title: t('progress.stepAwait'), description: t('progress.descAwait') },
+                    { title: t('progress.stepDone'), description: t('progress.descDone') }
                 ]);
                 setCurrentProgressStep(0);
                 setShowProgressModal(true);
@@ -165,13 +167,13 @@ const CryptoPortfolio = ({
                 {/* Header with status */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className={`w - 10 h - 10 rounded - xl flex - shrink - 0 flex items - center justify - center
-bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30' : 'from-cyan-500/20 to-purple-500/20 border-cyan-500/30'} 
-                                       border shadow - [0_0_20px_rgba(${isMinted ? '16,185,129' : '0,255,255'}, 0.2)]`}>
+                        <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center
+                                       bg-gradient-to-br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30' : 'from-cyan-500/20 to-purple-500/20 border-cyan-500/30'} 
+                                       border shadow-[0_0_20px_rgba(${isMinted ? '16,185,129' : '0,255,255'},0.2)]`}>
                             <EthereumIcon size={24} className={isMinted ? 'text-emerald-400' : 'text-cyan-400'} />
                         </div>
                         <div>
-                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">On-Chain Assets</div>
+                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">{t('portfolio.onChainAssets')}</div>
                             <div className="text-xs text-theme-text-muted font-medium">
                                 {walletAccount?.slice(0, 6)}...{walletAccount?.slice(-4)}
                             </div>
@@ -179,17 +181,17 @@ bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 bord
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right">
-                            <div className={`text - base font - bold tracking - tight ${isMinted ? 'text-emerald-400' : 'text-cyan-400'} `}>
+                            <div className={`text-base font-bold tracking-tight ${isMinted ? 'text-emerald-400' : 'text-cyan-400'}`}>
                                 {balance} ETH
                             </div>
                         </div>
-                        <div className={`flex items - center gap - 1 px - 3 py - 1.5 rounded - lg text - xs font - bold tracking - wider
+                        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider
                                        ${isMinted
                                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
                                 : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.3)]'
-                            } `}>
+                            }`}>
                             <CheckCircle size={14} />
-                            <span>{isMinted ? 'MINTED' : 'VERIFIED'}</span>
+                            <span>{isMinted ? t('portfolio.minted') : t('portfolio.verified')}</span>
                         </div>
                     </div>
                 </div>
@@ -198,14 +200,14 @@ bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 bord
                 <div className="flex items-center justify-between py-2 px-3 bg-surface-elevated-2 rounded-lg border border-theme-border-medium">
                     <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-theme-text-muted uppercase">
                         <Info size={14} className="text-theme-text-muted" />
-                        <span>Transaction History</span>
+                        <span>{t('portfolio.transactionHistory')}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-theme-text-primary">{txCount} TX</span>
-                        <span className={`text - xs px - 2 py - 0.5 rounded - full font - bold ${txCount >= REQUIRED_TX_COUNT
+                        <span className="text-sm font-bold text-theme-text-primary">{t('portfolio.txCount', { count: txCount })}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${txCount >= REQUIRED_TX_COUNT
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                             : 'bg-surface-elevated-3 text-theme-text-muted border border-theme-border-medium'
-                            } `}>
+                            }`}>
                             {txCount >= REQUIRED_TX_COUNT ? '10+' : '<10'}
                         </span>
                     </div>
@@ -227,12 +229,12 @@ bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 bord
                         {status === 'generating_proof' ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span className="text-white">Generating Proof...</span>
+                                <span className="text-white">{t('portfolio.generatingProof')}</span>
                             </>
                         ) : (
                             <>
                                 <Zap size={16} />
-                                <span>Mint Credential</span>
+                                <span>{t('portfolio.mint')}</span>
                             </>
                         )}
                     </button>
@@ -250,9 +252,9 @@ bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 bord
                     <EthereumIcon size={24} className="text-theme-text-muted" />
                 </div>
                 <div>
-                    <div className="font-bold text-theme-text-primary text-sm tracking-tight">On-Chain Assets</div>
+                    <div className="font-bold text-theme-text-primary text-sm tracking-tight">{t('portfolio.onChainAssets')}</div>
                     <div className="text-xs text-theme-text-muted font-medium tracking-wider uppercase">
-                        {walletAccount ? 'Ready to Verify' : 'Connect Wallet'}
+                        {walletAccount ? t('portfolio.readyToVerify') : t('wallet.connect')}
                     </div>
                 </div>
             </div>
@@ -268,7 +270,7 @@ bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 bord
                              flex items-center gap-2"
                 >
                     <Zap size={14} />
-                    Connect
+                    {t('common.connect')}
                 </button>
             ) : (
                 <button
@@ -284,15 +286,15 @@ bg - gradient - to - br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 bord
                     {status === 'verifying' ? (
                         <>
                             <Loader2 className="w-3 h-3 animate-spin" />
-                            <span>Signing...</span>
+                            <span>{t('portfolio.signing')}</span>
                         </>
                     ) : status === 'error' ? (
                         <>
                             <AlertCircle className="w-4 h-4" />
-                            <span>RETRY</span>
+                            <span>{t('portfolio.retry')}</span>
                         </>
                     ) : (
-                        <span>Verify</span>
+                        <span>{t('portfolio.verify')}</span>
                     )}
                 </button>
             )}

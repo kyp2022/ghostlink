@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader, Shield, Lock } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Shield, Lock, X } from 'lucide-react';
 import { CREDENTIAL_TYPE } from '../config/constants';
 import { ENDPOINTS } from '../config/endpoints';
 import { AlipayIcon } from './ui/Icons';
+import { useI18n } from '../contexts/I18nContext';
 
 
 
@@ -17,6 +18,7 @@ const AlipayUpload = ({
     defaultProgressSteps,
     onVerificationComplete
 }) => {
+    const { t } = useI18n();
     const [status, setStatus] = useState('idle'); // idle, uploading, success, generating_proof, minted, error
     const [file, setFile] = useState(null);
     const [result, setResult] = useState(null);
@@ -27,7 +29,7 @@ const AlipayUpload = ({
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
             if (selectedFile.type !== 'application/pdf') {
-                setError('Please upload a PDF file');
+                setError(t('alipay.uploadPdfOnly'));
                 return;
             }
             setFile(selectedFile);
@@ -40,7 +42,7 @@ const AlipayUpload = ({
         const droppedFile = e.dataTransfer.files?.[0];
         if (droppedFile) {
             if (droppedFile.type !== 'application/pdf') {
-                setError('Please upload a PDF file');
+                setError(t('alipay.uploadPdfOnly'));
                 return;
             }
             setFile(droppedFile);
@@ -50,7 +52,7 @@ const AlipayUpload = ({
 
     const handleVerify = async () => {
         if (!file) {
-            setError('Please select a file first');
+            setError(t('alipay.selectFileFirst'));
             return;
         }
 
@@ -87,13 +89,13 @@ const AlipayUpload = ({
         } catch (err) {
             console.error('Verification error:', err);
             setStatus('error');
-            setError(err.message || 'Upload failed');
+            setError(err.message || t('alipay.uploadFailed'));
         }
     };
 
     const handleMint = async () => {
         if (!walletAccount) {
-            setError('Please connect wallet first');
+            setError(t('alipay.connectFirst'));
             return;
         }
 
@@ -103,13 +105,13 @@ const AlipayUpload = ({
         try {
             // Initialize progress modal
             if (setProgressTitle && setProgressSteps && setCurrentProgressStep && setShowProgressModal) {
-                setProgressTitle('ALIPAY · ZK_PROOF → MINT');
+                setProgressTitle(t('alipay.progressTitle'));
                 setProgressSteps([
-                    { title: 'Generate ZK Proof', description: 'ZK_PROVER::INITIALIZING...' },
-                    { title: 'Prepare Transaction', description: 'TX::PREPARING...' },
-                    { title: 'Confirm in Wallet', description: 'WALLET::AWAITING_CONFIRMATION...' },
-                    { title: 'Await Confirmation', description: 'CHAIN::PENDING...' },
-                    { title: 'Completed', description: 'STATUS::COMPLETE' }
+                    { title: t('progress.stepGenerate'), description: t('progress.descGenerate') },
+                    { title: t('progress.stepPrepare'), description: t('progress.descPrepare') },
+                    { title: t('progress.stepConfirm'), description: t('progress.descConfirm') },
+                    { title: t('progress.stepAwait'), description: t('progress.descAwait') },
+                    { title: t('progress.stepDone'), description: t('progress.descDone') }
                 ]);
                 setCurrentProgressStep(0);
                 setShowProgressModal(true);
@@ -156,13 +158,13 @@ const AlipayUpload = ({
                     setStatus('minted');
                 } else {
                     setStatus('error');
-                    setError('Minting failed');
+                    setError(t('alipay.mintFailed'));
                 }
             }
         } catch (err) {
             console.error('Mint error:', err);
             setStatus('error');
-            setError(err.message || 'Failed to generate proof');
+            setError(err.message || t('alipay.proofFailed'));
         }
     };
 
@@ -191,7 +193,7 @@ const AlipayUpload = ({
                             <AlipayIcon size={24} className={isMinted ? 'text-emerald-400' : 'text-blue-400'} />
                         </div>
                         <div>
-                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">Alipay Assets</div>
+                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">{t('alipay.assets')}</div>
                             <div className="text-xs text-theme-text-muted font-medium tracking-wider">
                                 {result?.asset_amount || '0.00'} CNY
                             </div>
@@ -209,7 +211,7 @@ const AlipayUpload = ({
                                 : 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
                             }`}>
                             <CheckCircle size={10} />
-                            <span>{isMinted ? 'MINTED' : 'VERIFIED'}</span>
+                            <span>{isMinted ? t('alipay.minted') : t('alipay.verified')}</span>
                         </div>
                     </div>
                 </div>
@@ -230,12 +232,12 @@ const AlipayUpload = ({
                         {status === 'generating_proof' ? (
                             <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Generating Proof...</span>
+                                <span>{t('common.generatingProof')}</span>
                             </>
                         ) : (
                             <>
                                 <Zap size={16} />
-                                <span>Mint Credential</span>
+                                <span>{t('alipay.mint')}</span>
                             </>
                         )}
                     </button>
@@ -254,8 +256,8 @@ const AlipayUpload = ({
                         <AlipayIcon size={24} className="text-blue-400" />
                     </div>
                     <div>
-                        <div className="font-bold text-theme-text-primary text-sm tracking-tight">Alipay Assets</div>
-                        <div className="text-xs text-theme-text-muted font-medium tracking-wider uppercase">Upload PDF Statement</div>
+                        <div className="font-bold text-theme-text-primary text-sm tracking-tight">{t('alipay.assets')}</div>
+                        <div className="text-xs text-theme-text-muted font-medium tracking-wider">{t('alipay.uploadPdf')}</div>
                     </div>
                 </div>
             </div>
@@ -286,7 +288,7 @@ const AlipayUpload = ({
                             <FileText size={24} className="text-blue-400" />
                             <div className="text-left">
                                 <p className="text-xs text-theme-text-primary font-bold tracking-tight truncate max-w-[180px]">{file.name}</p>
-                                <p className="text-xs text-theme-text-muted font-medium">{(file.size / 1024).toFixed(1)} KB</p>
+                                <p className="text-xs text-theme-text-muted font-medium">{(file.size / 1024).toFixed(1)} {t('common.kilobytes')}</p>
                             </div>
                         </div>
                         <button
@@ -299,8 +301,8 @@ const AlipayUpload = ({
                 ) : (
                     <>
                         <Upload size={24} className="text-theme-text-muted mx-auto mb-2" />
-                        <p className="text-xs font-bold text-theme-text-muted tracking-wider uppercase">Drop PDF Here</p>
-                        <p className="text-xs text-theme-text-muted font-medium mt-1">or click to browse</p>
+                        <p className="text-xs font-bold text-theme-text-muted tracking-wider">{t('alipay.dropHere')}</p>
+                        <p className="text-xs text-theme-text-muted font-medium mt-1">{t('alipay.clickBrowse')}</p>
                     </>
                 )}
             </div>
@@ -328,10 +330,10 @@ const AlipayUpload = ({
                     {status === 'uploading' ? (
                         <>
                             <Loader2 className="w-3 h-3 animate-spin" />
-                            <span>Verifying...</span>
+                            <span>{t('alipay.verifying')}</span>
                         </>
                     ) : (
-                        <span>Verify Statement</span>
+                        <span>{t('alipay.verifyStatement')}</span>
                     )}
                 </button>
             )}

@@ -9,6 +9,7 @@ import { ProgressModal } from '../components/ProgressModal';
 import AlipayUpload from '../components/AlipayUpload';
 import CryptoPortfolio from '../components/CryptoPortfolio';
 import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../contexts/I18nContext';
 
 // Transition variants
 const particleExit = {
@@ -43,6 +44,7 @@ export const SolutionsPage = ({
 }) => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
+    const { t } = useI18n();
 
     const [activeTab, setActiveTab] = useState('defi');
     const account = walletAccount;
@@ -69,7 +71,7 @@ export const SolutionsPage = ({
         const githubLoading = initialVerificationStatus === 'loading';
         const twitterLoading = twitterStatus === 'loading';
         if (githubLoading || twitterLoading) {
-            ensureProgressInitialized(githubLoading ? 'GitHub · Proof → Mint' : 'X · Proof → Mint');
+            ensureProgressInitialized(githubLoading ? t('progress.githubProofToMint') : t('progress.twitterProofToMint'));
             setProgressSteps(defaultProgressSteps);
             setCurrentProgressStep(0);
             setShowProgressModal(true);
@@ -79,10 +81,10 @@ export const SolutionsPage = ({
     useEffect(() => {
         if ((initialVerificationStatus === 'success' && initialZkProof) || (twitterStatus === 'success' && twitterProof)) {
             const isTwitter = twitterStatus === 'success';
-            setProgressTitle(isTwitter ? 'X · Proof → Mint' : 'GitHub · Proof → Mint');
+            setProgressTitle(isTwitter ? t('progress.twitterProofToMint') : t('progress.githubProofToMint'));
             setProgressSteps(prev => (prev && prev.length > 0 ? prev : defaultProgressSteps));
             setProgressSteps(prev => prev.map((s, i) =>
-                i === 0 ? { ...s, description: 'Proof ready', details: `Proof ID: ${(isTwitter ? twitterProof : initialZkProof).proofId || 'N/A'}` } : s
+                i === 0 ? { ...s, description: t('progress.proofReady'), details: `Proof ID: ${(isTwitter ? twitterProof : initialZkProof).proofId || 'N/A'}` } : s
             ));
             setCurrentProgressStep(1);
 
@@ -97,22 +99,22 @@ export const SolutionsPage = ({
 
     const tabContent = {
         defi: {
-            title: "Asset-Pass",
-            desc: "Verify your real-world assets or on-chain holdings to unlock under-collateralized DeFi loans.",
+            title: t('solutions.tabs.defiTitle'),
+            desc: t('solutions.tabs.defiDesc'),
             mockup: (
                 <div className="flex flex-col md:flex-row items-center justify-between w-full h-full gap-8 p-6">
                     <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 4, repeat: Infinity }} className="flex flex-col items-center gap-4">
                         <div className="w-24 h-24 rounded-2xl bg-surface-elevated-1 dark:bg-cyan-500/10 border border-theme-border-medium dark:border-cyan-500/30 flex items-center justify-center shadow-theme-strong dark:shadow-[0_0_40px_rgba(0,240,255,0.1)]">
                             <EthereumIcon size={48} className="text-theme-accent-primary dark:text-cyan-400" />
                         </div>
-                        <div className="font-mono text-xs text-theme-accent-primary dark:text-cyan-400 tracking-[0.3em]">ETH_MAINNET</div>
+                        <div className="font-mono text-xs text-theme-accent-primary dark:text-cyan-400 tracking-[0.3em]">{t('solutions.labels.ethMainnet')}</div>
                     </motion.div>
                     <div className="relative"><CrystallineCube size={180} /></div>
                     <div className="flex-1 w-full max-w-md">
                         <motion.div className="bg-surface-1 border border-theme-border-strong rounded-2xl p-8 shadow-theme-strong relative overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent pointer-events-none" />
                             <div className="relative space-y-6 font-mono">
-                                <h4 className="text-xs font-bold text-theme-text-primary dark:text-white tracking-widest uppercase mb-2">Solvency_Pass_v1</h4>
+                                <h4 className="text-xs font-bold text-theme-text-primary dark:text-white tracking-widest mb-2">{t('solutions.labels.solvencyPass')}</h4>
                                 <div className="space-y-4">
                                     <CryptoPortfolio
                                         walletAccount={account}
@@ -122,7 +124,7 @@ export const SolutionsPage = ({
                                     />
                                     <div className="flex items-center gap-4">
                                         <div className="h-px flex-1 bg-theme-border-medium" />
-                                        <span className="text-xs text-theme-text-muted">OR</span>
+                                        <span className="text-xs text-theme-text-muted">{t('common.or')}</span>
                                         <div className="h-px flex-1 bg-theme-border-medium" />
                                     </div>
                                     <AlipayUpload
@@ -142,25 +144,25 @@ export const SolutionsPage = ({
             )
         },
         growth: {
-            title: "Sybil Guard",
-            desc: "Verify users based on real-world spending power (e.g. Uber rides > 5) to prevent Sybil attacks.",
+            title: t('solutions.tabs.growthTitle'),
+            desc: t('solutions.tabs.growthDesc'),
             mockup: (
                 <div className="flex flex-col md:flex-row items-center justify-between w-full h-full gap-8 p-6 font-mono">
                     <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 4, repeat: Infinity }} className="flex flex-col items-center gap-4">
                         <div className="w-24 h-24 rounded-2xl bg-surface-elevated-1 border border-theme-border-medium flex items-center justify-center shadow-theme-glow">
                             <UberIcon size={48} className="text-theme-text-primary" />
                         </div>
-                        <div className="text-xs text-theme-text-muted tracking-[0.3em]">APP_DATA_SOURCE</div>
+                        <div className="text-xs text-theme-text-muted tracking-[0.3em]">{t('solutions.labels.appDataSource')}</div>
                     </motion.div>
                     <div className="relative"><CrystallineCube size={180} /></div>
                     <div className="flex-1 w-full max-w-md">
                         <div className="bg-surface-1 border border-theme-border-strong rounded-2xl p-8 text-center relative overflow-hidden shadow-theme-strong">
                             <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 to-transparent pointer-events-none" />
                             <Users size={40} className="mx-auto mb-6 text-theme-accent-secondary dark:text-purple-400" />
-                            <h4 className="text-theme-text-primary dark:text-white text-sm font-bold mb-3">EXCLUSIVE_AIRDROP</h4>
-                            <p className="text-sm text-theme-text-muted mb-8 font-professional">Verification required for claim eligibility.</p>
-                            <button className="w-full py-4 bg-theme-accent-secondary/10 dark:bg-purple-600/20 border border-theme-accent-secondary/30 dark:border-purple-500/30 text-theme-accent-secondary dark:text-purple-400 rounded-xl text-sm font-bold tracking-widest uppercase hover:bg-theme-accent-secondary/20 transition-all cursor-pointer">
-                                PROVE_RIDE_HISTORY
+                            <h4 className="text-theme-text-primary dark:text-white text-sm font-bold mb-3">{t('solutions.labels.exclusiveAirdrop')}</h4>
+                            <p className="text-sm text-theme-text-muted mb-8 font-professional">{t('solutions.tabs.growthDesc')}</p>
+                            <button className="w-full py-4 bg-theme-accent-secondary/10 dark:bg-purple-600/20 border border-theme-accent-secondary/30 dark:border-purple-500/30 text-theme-accent-secondary dark:text-purple-400 rounded-xl text-sm font-bold tracking-widest hover:bg-theme-accent-secondary/20 transition-all cursor-pointer">
+                                {t('solutions.labels.proveRideHistory')}
                             </button>
                         </div>
                     </div>
@@ -168,25 +170,25 @@ export const SolutionsPage = ({
             )
         },
         identity: {
-            title: "Identity Bridge",
-            desc: "Link multiple Web2 accounts to create a robust, private on-chain identity.",
+            title: t('solutions.tabs.identityTitle'),
+            desc: t('solutions.tabs.identityDesc'),
             mockup: (
                 <div className="flex flex-col md:flex-row items-center justify-between w-full h-full gap-8 p-6 font-mono">
                     <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 4, repeat: Infinity }} className="flex flex-col items-center gap-4">
                         <div className="w-24 h-24 rounded-2xl bg-surface-elevated-1 border border-theme-border-medium flex items-center justify-center shadow-theme-glow">
                             <Github size={48} className="text-theme-text-primary" />
                         </div>
-                        <div className="text-xs text-theme-text-muted tracking-[0.3em]">SOCIAL_CREDENTIALS</div>
+                        <div className="text-xs text-theme-text-muted tracking-[0.3em]">{t('solutions.labels.socialCredentials')}</div>
                     </motion.div>
                     <div className="relative"><CrystallineCube size={180} /></div>
                     <div className="flex-1 w-full max-w-md">
                         <div className="bg-surface-1 border border-theme-border-strong rounded-2xl p-8 space-y-6 shadow-theme-strong">
                             <div className="flex justify-between items-center mb-6">
-                                <span className="text-xs text-slate-400">PASSPORT_v2</span>
+                                <span className="text-xs text-slate-400">{t('solutions.labels.passport')}</span>
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded">
                                     <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
-                                    <span className="text-cyan-400 text-[10px] uppercase tracking-tighter font-bold">
-                                        {(initialVerificationStatus === 'success' ? 1 : 0) + (twitterStatus === 'success' ? 1 : 0)} Active
+                                    <span className="text-cyan-400 text-[12px] tracking-tighter font-bold">
+                                        {t('solutions.activeCount', { count: (initialVerificationStatus === 'success' ? 1 : 0) + (twitterStatus === 'success' ? 1 : 0) })}
                                     </span>
                                 </div>
                             </div>
@@ -195,7 +197,7 @@ export const SolutionsPage = ({
                             <div className="flex items-center justify-between p-4 bg-surface-elevated-2 dark:bg-white/5 border border-theme-border-medium dark:border-white/5 rounded-xl border-dashed">
                                 <div className="flex items-center gap-4">
                                     <Github size={20} className={initialVerificationStatus === 'success' ? 'text-emerald-400' : 'text-theme-text-muted'} />
-                                    <span className="text-xs text-theme-text-primary dark:text-white tracking-widest">GITHUB</span>
+                                    <span className="text-xs text-theme-text-primary dark:text-white tracking-widest">GitHub</span>
                                 </div>
                                 {initialVerificationStatus === 'success' ? (
                                     <Check size={18} className="text-emerald-400" />
@@ -203,9 +205,9 @@ export const SolutionsPage = ({
                                     <button
                                         onClick={onGithubConnect}
                                         disabled={initialVerificationStatus === 'loading'}
-                                        className="text-[10px] text-theme-accent-primary dark:text-cyan-400 border border-theme-accent-primary/30 dark:border-cyan-500/30 px-3 py-1.5 rounded bg-theme-accent-primary/5 dark:bg-cyan-500/5 hover:bg-theme-accent-primary/20 transition-all font-bold cursor-pointer"
+                                        className="text-[12px] text-theme-accent-primary dark:text-cyan-400 border border-theme-accent-primary/30 dark:border-cyan-500/30 px-3 py-1.5 rounded bg-theme-accent-primary/5 dark:bg-cyan-500/5 hover:bg-theme-accent-primary/20 transition-all font-bold cursor-pointer"
                                     >
-                                        {initialVerificationStatus === 'loading' ? 'Binding...' : 'BIND'}
+                                        {initialVerificationStatus === 'loading' ? t('solutions.labels.binding') : t('solutions.labels.bind')}
                                     </button>
                                 )}
                             </div>
@@ -214,7 +216,7 @@ export const SolutionsPage = ({
                             <div className="flex items-center justify-between p-4 bg-surface-elevated-2 dark:bg-white/5 border border-theme-border-medium dark:border-white/5 rounded-xl border-dashed">
                                 <div className="flex items-center gap-4">
                                     <Twitter size={20} className={twitterStatus === 'success' ? 'text-emerald-400' : 'text-theme-text-muted'} />
-                                    <span className="text-xs text-theme-text-primary dark:text-white tracking-widest">TWITTER</span>
+                                    <span className="text-xs text-theme-text-primary dark:text-white tracking-widest">Twitter</span>
                                 </div>
                                 {twitterStatus === 'success' ? (
                                     <Check size={18} className="text-emerald-400" />
@@ -222,9 +224,9 @@ export const SolutionsPage = ({
                                     <button
                                         onClick={onTwitterConnect}
                                         disabled={twitterStatus === 'loading'}
-                                        className="text-[10px] text-theme-accent-primary dark:text-cyan-400 border border-theme-accent-primary/30 dark:border-cyan-500/30 px-3 py-1.5 rounded bg-theme-accent-primary/5 dark:bg-cyan-500/5 hover:bg-theme-accent-primary/20 transition-all font-bold cursor-pointer"
+                                        className="text-[12px] text-theme-accent-primary dark:text-cyan-400 border border-theme-accent-primary/30 dark:border-cyan-500/30 px-3 py-1.5 rounded bg-theme-accent-primary/5 dark:bg-cyan-500/5 hover:bg-theme-accent-primary/20 transition-all font-bold cursor-pointer"
                                     >
-                                        {twitterStatus === 'loading' ? 'Binding...' : 'BIND'}
+                                        {twitterStatus === 'loading' ? t('solutions.labels.binding') : t('solutions.labels.bind')}
                                     </button>
                                 )}
                             </div>
@@ -248,17 +250,17 @@ export const SolutionsPage = ({
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-slate-900 font-display tracking-tight">
-                                    Privacy Bridge <span className="text-amber-500">Interface</span>
+                                    {t('solutions.privacyBridge')} <span className="text-amber-500">{t('solutions.interface')}</span>
                                 </h1>
                                 <p className="text-sm text-slate-500 mt-1 font-sans">
-                                    Transform fragmented web2 activity into secure ZK proofs
+                                    {t('solutions.subtitle')}
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="status-light success">
-                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                                    SYSTEM ONLINE
-                                </span>
+                                    <span className="status-light success">
+                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                        {t('solutions.systemOnline')}
+                                    </span>
                             </div>
                         </div>
                     </div>
@@ -275,7 +277,7 @@ export const SolutionsPage = ({
                                             key={key}
                                             onClick={() => setActiveTab(key)}
                                             className={`
-                                                flex-1 px-4 py-3 text-xs font-semibold uppercase tracking-wider
+                                                flex-1 px-4 py-3 text-xs font-semibold tracking-wider
                                                 border-b-2 transition-all cursor-pointer
                                                 ${activeTab === key
                                                     ? 'border-slate-900 text-slate-900 bg-slate-50'
@@ -308,7 +310,7 @@ export const SolutionsPage = ({
                                         />
                                         <div className="flex items-center gap-4 py-2">
                                             <div className="h-px flex-1 bg-slate-200" />
-                                            <span className="text-xs text-slate-400 font-medium">OR</span>
+                                            <span className="text-xs text-slate-400 font-medium">{t('common.or')}</span>
                                             <div className="h-px flex-1 bg-slate-200" />
                                         </div>
                                         <AlipayUpload
@@ -325,7 +327,7 @@ export const SolutionsPage = ({
                                 {activeTab === 'growth' && (
                                     <div className="text-center py-8 text-slate-400">
                                         <Users size={32} className="mx-auto mb-3 text-slate-300" />
-                                        <p className="text-sm">Sybil Guard controls</p>
+                                        <p className="text-sm">{t('solutions.sybilControls')}</p>
                                     </div>
                                 )}
                                 {activeTab === 'identity' && (
@@ -337,14 +339,14 @@ export const SolutionsPage = ({
                                                 <span className="text-sm font-medium text-slate-700">GitHub</span>
                                             </div>
                                             {initialVerificationStatus === 'success' ? (
-                                                <span className="status-light success">Verified</span>
+                                                <span className="status-light success">{t('common.verified')}</span>
                                             ) : (
                                                 <button
                                                     onClick={onGithubConnect}
                                                     disabled={initialVerificationStatus === 'loading'}
                                                     className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors cursor-pointer"
                                                 >
-                                                    {initialVerificationStatus === 'loading' ? 'Binding...' : 'Connect'}
+                                                    {initialVerificationStatus === 'loading' ? t('solutions.labels.binding') : t('common.connect')}
                                                 </button>
                                             )}
                                         </div>
@@ -352,17 +354,17 @@ export const SolutionsPage = ({
                                         <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg">
                                             <div className="flex items-center gap-3">
                                                 <Twitter size={18} className={twitterStatus === 'success' ? 'text-emerald-500' : 'text-slate-400'} />
-                                                <span className="text-sm font-medium text-slate-700">Twitter / X</span>
+                                                <span className="text-sm font-medium text-slate-700">{t('solutions.twitterX')}</span>
                                             </div>
                                             {twitterStatus === 'success' ? (
-                                                <span className="status-light success">Verified</span>
+                                                <span className="status-light success">{t('common.verified')}</span>
                                             ) : (
                                                 <button
                                                     onClick={onTwitterConnect}
                                                     disabled={twitterStatus === 'loading'}
                                                     className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors cursor-pointer"
                                                 >
-                                                    {twitterStatus === 'loading' ? 'Binding...' : 'Connect'}
+                                                    {twitterStatus === 'loading' ? t('solutions.labels.binding') : t('common.connect')}
                                                 </button>
                                             )}
                                         </div>
@@ -385,16 +387,16 @@ export const SolutionsPage = ({
                                     {/* Simplified visualization for Light Mode */}
                                     <div className="text-center">
                                         <CrystallineCube size={200} />
-                                        <p className="mt-6 text-xs text-slate-400 font-mono uppercase tracking-widest">
-                                            ZK_PROOF_ENGINE :: {tabContent[activeTab].title}
+                                        <p className="mt-6 text-xs text-slate-400 font-mono tracking-widest">
+                                            {t('solutions.zkProofEngine', { title: tabContent[activeTab].title })}
                                         </p>
                                     </div>
                                 </motion.div>
                             </AnimatePresence>
 
                             {/* Status Footer */}
-                            <div className="absolute bottom-4 right-4 text-[10px] font-mono text-slate-300 uppercase tracking-widest">
-                                Status::Secured_By_ZK
+                            <div className="absolute bottom-4 right-4 text-[12px] font-mono text-slate-300 tracking-widest">
+                                {t('solutions.statusSecured')}
                             </div>
                         </div>
                     </div>
@@ -404,12 +406,14 @@ export const SolutionsPage = ({
                 <div className="min-h-screen bg-gradient-to-b from-surface-base via-surface-1 to-surface-base pt-32 pb-20 px-6">
                     <div className="max-w-7xl mx-auto">
                         <div className="text-center max-w-2xl mx-auto mb-20 font-mono">
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[10px] text-cyan-400 tracking-[0.2em] uppercase">
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[13px] text-cyan-400 tracking-[0.2em]">
                                 <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#00f0ff]" />
-                                System_Solutions::V3
+                                {t('solutions.systemSolutions')}
                             </motion.div>
-                            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-theme-text-primary tracking-tight">PRIVACY_BRIDGE_<span className="text-cyan-400">INTERFACE</span></h2>
-                            <p className="text-theme-text-secondary text-base font-professional tracking-wide max-w-xl mx-auto">Transforming fragmented web2 activity into secure, on-chain zero-knowledge proofs.</p>
+                            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-theme-text-primary tracking-tight">
+                                {t('solutions.privacyBridge')} <span className="text-cyan-400">{t('solutions.interface')}</span>
+                            </h2>
+                            <p className="text-theme-text-secondary text-base font-professional tracking-wide max-w-xl mx-auto">{t('solutions.subtitle')}</p>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -418,7 +422,7 @@ export const SolutionsPage = ({
                                     <motion.div key={key} onClick={() => setActiveTab(key)} animate={activeTab === key ? { scale: [1, 1.01, 1], x: 8 } : { x: 0 }} transition={{ duration: 4, repeat: Infinity }} className={`p-6 rounded-xl cursor-pointer transition-all duration-500 border relative group ${activeTab === key ? 'bg-theme-accent-primary/5 border-theme-accent-primary/50 shadow-theme-glow' : 'bg-surface-1 border-theme-border-medium hover:border-theme-border-strong opacity-60 hover:opacity-100'}`}>
                                         {activeTab === key && <div className="absolute left-0 top-0 bottom-0 w-1 bg-theme-accent-primary dark:bg-cyan-400 shadow-[0_0_15px_#00f0ff] dark:shadow-[0_0_15px_#00f0ff]" />}
                                         <div className="flex items-center gap-4 mb-3">
-                                            <h3 className={`font-bold tracking-tight uppercase font-display transition-all duration-300 ${activeTab === key
+                                            <h3 className={`font-bold tracking-tight font-display transition-all duration-300 ${activeTab === key
                                                 ? 'text-lg text-theme-accent-primary dark:bg-gradient-to-r dark:from-cyan-400 dark:via-purple-400 dark:to-cyan-400 dark:bg-clip-text dark:text-transparent dark:bg-[length:200%_auto] dark:animate-shimmer'
                                                 : 'text-sm text-theme-text-muted group-hover:text-theme-text-secondary'}`}>
                                                 {tabContent[key].title}
@@ -441,7 +445,7 @@ export const SolutionsPage = ({
                                             <motion.div variants={scanlineEntry}>{tabContent[activeTab].mockup}</motion.div>
                                         </motion.div>
                                     </AnimatePresence>
-                                    <div className="absolute bottom-6 right-8 font-mono text-[8px] text-theme-text-muted tracking-[0.5em] uppercase">Status::Secured_By_ZK</div>
+                                    <div className="absolute bottom-6 right-8 font-mono text-[12px] text-theme-text-muted tracking-[0.5em]">{t('solutions.statusSecured')}</div>
                                 </div>
                             </div>
                         </div>

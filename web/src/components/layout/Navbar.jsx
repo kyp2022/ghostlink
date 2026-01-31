@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, Zap, Ghost, Sun, Moon } from 'lucide-react';
+import { Menu, X, Zap, Ghost, Sun, Moon, LogOut } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useI18n } from '../../contexts/I18nContext';
+import LanguageToggle from '../ui/LanguageToggle';
 
-export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) => {
+export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet, disconnectWallet, isConnecting }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { theme, toggleTheme } = useTheme();
+    const { t } = useI18n();
 
     const navItems = [
-        { key: 'home', label: 'HOME' },
-        { key: 'solutions', label: 'SOLUTIONS' },
-        { key: 'explorer', label: 'EXPLORER' },
-        { key: 'developers', label: 'DEVELOPERS' },
-        { key: 'company', label: 'COMPANY' }
+        { key: 'home', label: t('nav.home') },
+        { key: 'solutions', label: t('nav.solutions') },
+        { key: 'explorer', label: t('nav.explorer') },
+        { key: 'developers', label: t('nav.developers') },
+        { key: 'company', label: t('nav.company') }
     ];
 
     const formatAddress = (addr) => {
@@ -59,14 +62,19 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
 
                         {/* Theme Toggle \u0026 Connect Wallet */}
                         <div className="hidden md:flex items-center gap-3">
+                            <LanguageToggle
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-surface-1 border border-theme-border-medium 
+                                         hover:bg-surface-2 hover:border-theme-accent-primary/30
+                                         transition-all cursor-pointer text-sm font-semibold text-theme-text-primary"
+                            />
                             {/* Theme Toggle Button */}
                             <button
                                 onClick={toggleTheme}
                                 className="p-2.5 rounded-lg bg-surface-1 border border-theme-border-medium 
                                          hover:bg-surface-2 hover:border-theme-accent-primary/30
                                          transition-all cursor-pointer group"
-                                aria-label="Toggle theme"
-                                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                                aria-label={t('theme.toggle')}
+                                title={theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')}
                             >
                                 {theme === 'dark' ? (
                                     <Sun size={18} className="text-theme-accent-primary group-hover:rotate-45 transition-transform duration-300" />
@@ -77,22 +85,35 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
 
                             {/* Wallet */}
                             {account ? (
-                                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 
-                                              rounded-xl text-sm text-emerald-400 font-mono">
-                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                    {formatAddress(account)}
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 
+                                                  rounded-xl text-sm text-emerald-400 font-mono">
+                                        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                                        {formatAddress(account)}
+                                    </div>
+                                    <button
+                                        onClick={() => disconnectWallet?.()}
+                                        className="p-2.5 rounded-lg bg-surface-1 border border-theme-border-medium
+                                                 hover:bg-surface-2 hover:border-theme-accent-primary/30
+                                                 transition-all cursor-pointer group"
+                                        aria-label={t('wallet.disconnect')}
+                                        title={t('wallet.disconnect')}
+                                    >
+                                        <LogOut size={16} className="text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" />
+                                    </button>
                                 </div>
                             ) : (
                                 <button
                                     onClick={onConnectWallet}
+                                    disabled={isConnecting}
                                     className="flex items-center gap-2 px-5 py-2.5 
                                              bg-surface-1 border border-theme-border-medium 
                                              hover:border-theme-accent-primary/30 hover:bg-theme-accent-primary/10
                                              text-theme-text-primary rounded-xl text-sm font-semibold
-                                             transition-all cursor-pointer group"
+                                             transition-all cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <Zap size={16} className="text-theme-text-muted group-hover:text-theme-accent-primary transition-colors" />
-                                    <span>Connect Wallet</span>
+                                    <span>{isConnecting ? t('wallet.connecting') : t('wallet.connect')}</span>
                                 </button>
                             )}
                         </div>
@@ -134,10 +155,31 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
 
                                 {/* Mobile Connect */}
                                 <div className="pt-2 mt-2 border-t border-theme-border-medium">
+                                    <LanguageToggle
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 
+                                                 bg-surface-2 border border-theme-border-medium
+                                                 text-theme-text-primary rounded-lg text-sm font-semibold
+                                                 cursor-pointer hover:border-theme-accent-primary/30"
+                                    />
                                     {account ? (
-                                        <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 
-                                                      rounded-lg text-sm font-mono text-emerald-500 dark:text-emerald-400 text-center">
-                                            {formatAddress(account)}
+                                        <div className="space-y-2">
+                                            <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 
+                                                          rounded-lg text-sm font-mono text-emerald-500 dark:text-emerald-400 text-center">
+                                                {formatAddress(account)}
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    disconnectWallet?.();
+                                                    setMobileMenuOpen(false);
+                                                }}
+                                                className="w-full flex items-center justify-center gap-2 px-4 py-3 
+                                                         bg-surface-2 border border-theme-border-medium
+                                                         text-theme-text-primary rounded-lg text-sm font-semibold
+                                                         cursor-pointer hover:border-theme-accent-primary/30"
+                                            >
+                                                <LogOut size={16} />
+                                                {t('wallet.disconnect')}
+                                            </button>
                                         </div>
                                     ) : (
                                         <button
@@ -145,13 +187,14 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet }) =>
                                                 onConnectWallet();
                                                 setMobileMenuOpen(false);
                                             }}
+                                            disabled={isConnecting}
                                             className="w-full flex items-center justify-center gap-2 px-4 py-3 
                                                      bg-surface-2 border border-theme-border-medium
                                                      text-theme-text-primary rounded-lg text-sm font-semibold font-medium
-                                                     cursor-pointer hover:border-theme-accent-primary/30"
+                                                     cursor-pointer hover:border-theme-accent-primary/30 disabled:opacity-60 disabled:cursor-not-allowed"
                                         >
                                             <Zap size={16} />
-                                            Connect Wallet
+                                            {isConnecting ? t('wallet.connecting') : t('wallet.connect')}
                                         </button>
                                     )}
                                 </div>

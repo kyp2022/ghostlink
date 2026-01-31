@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/constants';
+import { t } from '../i18n/strings';
 
 export const useContract = (signer, account) => {
     const [isMinting, setIsMinting] = useState(false);
@@ -8,35 +9,35 @@ export const useContract = (signer, account) => {
     const [progressSteps, setProgressSteps] = useState([]);
     const [currentProgressStep, setCurrentProgressStep] = useState(0);
     const [showProgressModal, setShowProgressModal] = useState(false);
-    const [progressTitle, setProgressTitle] = useState('Progress');
+    const [progressTitle, setProgressTitle] = useState(t('modal.processing'));
 
     const defaultProgressSteps = [
-        { title: 'Generate ZK Proof', description: 'Prover is running… this may take a few minutes.' },
-        { title: 'Prepare Transaction', description: 'Preparing contract parameters…' },
-        { title: 'Confirm in Wallet', description: 'Please confirm in your wallet.' },
-        { title: 'Await Confirmation', description: 'Waiting for on-chain confirmation…' },
-        { title: 'Completed', description: 'Done.' }
+        { title: t('progress.stepGenerate'), description: t('progress.descGenerate') },
+        { title: t('progress.stepPrepare'), description: t('progress.descPrepare') },
+        { title: t('progress.stepConfirm'), description: t('progress.descConfirm') },
+        { title: t('progress.stepAwait'), description: t('progress.descAwait') },
+        { title: t('progress.stepDone'), description: t('progress.descDone') }
     ];
     const TOTAL_STEPS = defaultProgressSteps.length;
 
     const ensureProgressInitialized = (titleOverride) => {
-        setProgressTitle(titleOverride || 'Progress');
+        setProgressTitle(titleOverride || t('modal.processing'));
         setProgressSteps(prev => (prev && prev.length > 0 ? prev : defaultProgressSteps));
     };
 
     const mintCredential = async (zkProof, credentialType, autoStart = false) => {
         if (!signer || !account) {
-            alert('Please connect your wallet first.');
+            alert(t('errors.connectWalletFirst'));
             return false;
         }
 
         if (!zkProof) {
-            alert('Missing zero-knowledge proof data.');
+            alert(t('errors.missingProof'));
             return false;
         }
 
         setIsMinting(true);
-        ensureProgressInitialized('Proof → Mint');
+        ensureProgressInitialized(t('progress.proofToMint'));
 
         if (autoStart) {
             setShowProgressModal(true);
@@ -45,13 +46,13 @@ export const useContract = (signer, account) => {
         try {
             // Mark proof step as completed
             setProgressSteps(prev => prev.map((s, i) =>
-                i === 0 ? { ...s, description: 'Proof ready', details: `Proof ID: ${zkProof.proofId || 'N/A'}` } : s
+                i === 0 ? { ...s, description: t('progress.proofReady'), details: `Proof ID: ${zkProof.proofId || 'N/A'}` } : s
             ));
 
             // Step 2: Prepare transaction
             setCurrentProgressStep(1);
             setProgressSteps(prev => prev.map((s, i) =>
-                i === 1 ? { ...s, description: 'Transaction parameters ready' } : s
+                i === 1 ? { ...s, description: t('progress.txParamsReady') } : s
             ));
 
             const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
@@ -113,16 +114,16 @@ export const useContract = (signer, account) => {
             // Step 3: Submit transaction
             setCurrentProgressStep(2);
             setProgressSteps(prev => prev.map((s, i) =>
-                i === 2 ? { ...s, description: 'Please confirm in your wallet' } : s
+                i === 2 ? { ...s, description: t('progress.confirmInWallet') } : s
             ));
-            setMintStatus({ type: 'pending', message: 'Waiting for wallet confirmation...' });
+            setMintStatus({ type: 'pending', message: t('progress.waitingWallet') });
 
             // Simulate transaction (new interface: seal, nullifier, credType)
             try {
                 await contract.callStatic.mint(seal, nullifier, credType);
             } catch (simError) {
-                const errorMsg = simError.reason || simError.message || 'Transaction simulation failed';
-                throw new Error(`Transaction will fail: ${errorMsg}`);
+                const errorMsg = simError.reason || simError.message || t('errors.transactionSimulationFailed');
+                throw new Error(t('errors.transactionWillFail', { message: errorMsg }));
             }
 
             // Estimate gas
@@ -143,11 +144,11 @@ export const useContract = (signer, account) => {
             setProgressSteps(prev => prev.map((s, i) =>
                 i === 3 ? {
                     ...s,
-                    description: 'Transaction submitted, waiting for confirmation...',
+                    description: t('progress.txSubmittedWaiting'),
                     details: `Tx hash: ${tx.hash.substring(0, 10)}...`
                 } : s
             ));
-            setMintStatus({ type: 'pending', message: 'Transaction submitted...', txHash: tx.hash });
+            setMintStatus({ type: 'pending', message: t('progress.txSubmitted'), txHash: tx.hash });
 
             const receipt = await tx.wait();
 
@@ -156,28 +157,28 @@ export const useContract = (signer, account) => {
             setProgressSteps(prev => prev.map((s, i) =>
                 i === 4 ? {
                     ...s,
-                    description: 'Credential minted successfully.',
+                    description: t('progress.mintedOk'),
                     details: `Block: ${receipt.blockNumber} · Tx: ${receipt.transactionHash.substring(0, 10)}...`
                 } : s
             ));
             setMintStatus({
                 type: 'success',
-                message: 'Credential minted successfully.',
+                message: t('progress.mintedOk'),
                 txHash: receipt.transactionHash
             });
 
             return true;
         } catch (error) {
             console.error('Minting failed:', error);
-            let errorMessage = 'Transaction failed.';
+            let errorMessage = t('errors.transactionFailed');
             if (error.code === 4001) {
-                errorMessage = 'User rejected the transaction.';
+                errorMessage = t('errors.userRejectedTx');
             } else if (error.message) {
                 errorMessage = error.message;
             }
             setMintStatus({ type: 'error', message: errorMessage });
             setProgressSteps(prev => prev.map((s, i) =>
-                i === currentProgressStep ? { ...s, description: `Failed: ${errorMessage}` } : s
+                i === currentProgressStep ? { ...s, description: t('progress.failedPrefix', { message: errorMessage }) } : s
             ));
             // Don't advance to TOTAL_STEPS - stay at the failed step
             // setCurrentProgressStep(TOTAL_STEPS); // REMOVED

@@ -2,8 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import ZKAnimation from './ZKAnimation';
+import { useI18n } from '../../contexts/I18nContext';
 
 export const NodeLayout = ({ sourceIcon, sourceLabel, children }) => {
+    const { t } = useI18n();
     return (
         <div className="relative w-full h-full min-h-[500px] flex flex-col md:flex-row items-center justify-between gap-8 p-4 md:p-8">
 
@@ -35,7 +37,7 @@ export const NodeLayout = ({ sourceIcon, sourceLabel, children }) => {
                     {sourceIcon}
                 </div>
                 <div className="text-center">
-                    <div className="text-xs font-mono text-theme-accent-secondary mb-1">SOURCE</div>
+                    <div className="text-xs font-mono text-theme-accent-secondary mb-1">{t('common.source')}</div>
                     <div className="font-bold text-theme-text-primary text-sm tracking-wide">{sourceLabel}</div>
                 </div>
             </motion.div>
@@ -55,7 +57,7 @@ export const NodeLayout = ({ sourceIcon, sourceLabel, children }) => {
                     <ZKAnimation state="idle" />
                 </div>
                 <div className="text-xs font-mono text-theme-accent-secondary mt-[-10px] bg-surface-elevated-2/80 px-2 rounded">
-                    ZK_CIRCUIT
+                    {t('common.zkCircuit')}
                 </div>
             </motion.div>
 

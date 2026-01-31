@@ -1,7 +1,53 @@
 import { Github, Twitter, Globe, Terminal, Code, Zap, Package, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useI18n } from '../contexts/I18nContext';
 
 export const DevelopersPage = () => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+
+    const copy = isZh ? {
+        tag: '开发者::SDK',
+        titleA: '接入。',
+        titleB: '验证。',
+        titleC: '铸造。',
+        subtitle: '用 Rust SDK 编写自定义解析器，把验证逻辑写成可审计的 Rust 规则。',
+        quickStart: '快速开始',
+        steps: [
+            { step: 1, title: '安装 Rust SDK', desc: 'cargo add ghostlink-sdk' },
+            { step: 2, title: '编写解析器逻辑', desc: '定义你的数据验证规则' },
+            { step: 3, title: '部署到网络', desc: '我们负责电路编译与证明流水线' }
+        ],
+        codeFile: 'main.rs',
+        codeCommentRead: '// 从宿主读取输入',
+        codeCommentVerify: '// 校验 JSON 结构',
+        codeCommit: '"偿付良好"',
+        marketplace: '解析器市场',
+        viewAll: '查看全部',
+        statusLive: '上线',
+        statusBeta: '内测',
+    } : {
+        tag: 'DEVELOPERS::SDK',
+        titleA: 'Import.',
+        titleB: 'Verify.',
+        titleC: 'Mint.',
+        subtitle: 'Use our Rust SDK to build custom data parsers. Define verification logic in standard Rust.',
+        quickStart: 'Quick Start',
+        steps: [
+            { step: 1, title: 'Install Rust SDK', desc: 'cargo add ghostlink-sdk' },
+            { step: 2, title: 'Write Parser Logic', desc: 'Define your data verification rules' },
+            { step: 3, title: 'Deploy to Network', desc: 'We handle ZK circuit compilation' }
+        ],
+        codeFile: 'main.rs',
+        codeCommentRead: '// Read data from host',
+        codeCommentVerify: '// Verify JSON structure',
+        codeCommit: '"SOLVENT"',
+        marketplace: 'Parser Marketplace',
+        viewAll: 'View All',
+        statusLive: 'LIVE',
+        statusBeta: 'BETA',
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-surface-base via-surface-1 to-surface-base pt-32 pb-20 px-6">
             <div className="max-w-7xl mx-auto">
@@ -15,13 +61,16 @@ export const DevelopersPage = () => {
                                  text-xs font-mono text-theme-accent-secondary"
                     >
                         <Terminal size={14} />
-                        DEVELOPERS::SDK
+                        {copy.tag}
                     </motion.div>
                     <h1 className="text-4xl md:text-5xl font-bold mb-4 text-theme-text-primary">
-                        Import. Verify. <span className="text-theme-accent-secondary dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-cyan-400 dark:to-purple-400">Mint.</span>
+                        {copy.titleA} {copy.titleB}{' '}
+                        <span className="text-theme-accent-secondary dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-cyan-400 dark:to-purple-400">
+                            {copy.titleC}
+                        </span>
                     </h1>
                     <p className="text-theme-text-secondary text-lg">
-                        Use our Rust SDK to build custom data parsers. Define verification logic in standard Rust.
+                        {copy.subtitle}
                     </p>
                 </div>
 
@@ -36,14 +85,10 @@ export const DevelopersPage = () => {
                     >
                         <h2 className="text-2xl font-bold text-theme-text-primary mb-6 flex items-center gap-3">
                             <Zap className="text-theme-accent-primary" size={24} />
-                            Quick Start
+                            {copy.quickStart}
                         </h2>
                         <div className="flex flex-col gap-4">
-                            {[
-                                { step: 1, title: 'Install Rust SDK', desc: 'cargo add ghostlink-sdk' },
-                                { step: 2, title: 'Write Parser Logic', desc: 'Define your data verification rules' },
-                                { step: 3, title: 'Deploy to Network', desc: 'We handle ZK circuit compilation' }
-                            ].map(({ step, title, desc }) => (
+                            {copy.steps.map(({ step, title, desc }) => (
                                 <div
                                     key={step}
                                     className="flex items-start gap-4 p-5 bg-surface-elevated-1 rounded-xl 
@@ -83,7 +128,7 @@ export const DevelopersPage = () => {
                             </div>
                             <span className="text-xs text-theme-text-muted font-mono flex items-center gap-2">
                                 <Code size={12} />
-                                main.rs
+                                {copy.codeFile}
                             </span>
                         </div>
 
@@ -92,17 +137,17 @@ export const DevelopersPage = () => {
                             <div><span className="text-purple-400">use</span> <span className="text-cyan-300 dark:text-cyan-400">ghostlink_sdk</span>::prelude::*;</div>
                             <br />
                             <div><span className="text-purple-400">fn</span> <span className="text-yellow-600 dark:text-yellow-300">main</span>() {'{'}</div>
-                            <div className="pl-4 text-theme-text-muted">// Read data from host</div>
+                            <div className="pl-4 text-theme-text-muted">{copy.codeCommentRead}</div>
                             <div className="pl-4"><span className="text-purple-400">let</span> input: <span className="text-cyan-300 dark:text-cyan-400">String</span> = env::<span className="text-yellow-600 dark:text-yellow-300">read</span>();</div>
                             <br />
-                            <div className="pl-4 text-theme-text-muted">// Verify JSON structure</div>
+                            <div className="pl-4 text-theme-text-muted">{copy.codeCommentVerify}</div>
                             <div className="pl-4">
                                 <span className="text-purple-400">let</span> data: <span className="text-cyan-300 dark:text-cyan-400">AlipayData</span> =
                                 <span className="text-theme-text-primary"> serde_json</span>::<span className="text-yellow-600 dark:text-yellow-300">from_str</span>(&input).unwrap();
                             </div>
                             <br />
                             <div className="pl-4"><span className="text-purple-400">if</span> data.balance {'>'} <span className="text-emerald-500 dark:text-emerald-400">10000.0</span> {'{'}</div>
-                            <div className="pl-8">env::<span className="text-yellow-600 dark:text-yellow-300">commit</span>(<span className="text-emerald-500 dark:text-emerald-400">"SOLVENT"</span>);</div>
+                            <div className="pl-8">env::<span className="text-yellow-600 dark:text-yellow-300">commit</span>(<span className="text-emerald-500 dark:text-emerald-400">{copy.codeCommit}</span>);</div>
                             <div className="pl-4">{'}'}</div>
                             <div>{'}'}</div>
                         </div>
@@ -118,19 +163,19 @@ export const DevelopersPage = () => {
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-2xl font-bold text-theme-text-primary flex items-center gap-3">
                             <Package className="text-theme-accent-secondary" size={24} />
-                            Parser Marketplace
+                            {copy.marketplace}
                         </h3>
                         <a href="#" className="text-sm text-theme-accent-primary hover:text-theme-accent-secondary flex items-center gap-1 font-medium">
-                            View All <ExternalLink size={14} />
+                            {copy.viewAll} <ExternalLink size={14} />
                         </a>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
-                            { name: 'GitHub', status: 'LIVE', icon: Github, color: 'emerald' },
-                            { name: 'Twitter', status: 'LIVE', icon: Twitter, color: 'emerald' },
-                            { name: 'Alipay', status: 'BETA', icon: Globe, color: 'yellow' },
-                            { name: 'Steam', status: 'LIVE', icon: Globe, color: 'emerald' },
+                            { name: 'GitHub', status: copy.statusLive, icon: Github, color: 'emerald' },
+                            { name: 'Twitter', status: copy.statusLive, icon: Twitter, color: 'emerald' },
+                            { name: 'Alipay', status: copy.statusBeta, icon: Globe, color: 'yellow' },
+                            { name: 'Steam', status: copy.statusLive, icon: Globe, color: 'emerald' },
                         ].map((item) => (
                             <div
                                 key={item.name}

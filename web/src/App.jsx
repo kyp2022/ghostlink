@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from './hooks/useWallet';
 import { useTheme } from './contexts/ThemeContext';
+import { useI18n } from './contexts/I18nContext';
 import { LayoutShell } from './components/layout/LayoutShell';
 import { Navbar } from './components/layout/Navbar';
 import { SideNavbar } from './components/layout/SideNavbar';
@@ -19,6 +20,7 @@ function App() {
     // Theme context for bifurcated layout
     const { theme } = useTheme();
     const isLight = theme === 'light';
+    const { t } = useI18n();
 
     // Persist activeTab across refreshes
     const [activeTab, setActiveTab] = useState(() => {
@@ -99,7 +101,7 @@ function App() {
         if (!recipient) {
             console.error("Wallet not connected. Please connect wallet first.");
             setVerificationStatus('error');
-            alert('请先连接钱包！');
+            alert(t('wallet.notConnected'));
             return;
         }
 
@@ -150,7 +152,7 @@ function App() {
         if (!recipient) {
             console.error("Wallet not connected.");
             setTwitterStatus('error');
-            alert('请先连接钱包！');
+            alert(t('wallet.notConnected'));
             return;
         }
 
@@ -193,13 +195,13 @@ function App() {
             }
 
             if (!currentAccount) {
-                alert('Failed to connect wallet. Please try again.');
+                alert(t('errors.walletConnectFailed'));
                 return;
             }
         }
 
         if (!GITHUB_CLIENT_ID) {
-            alert("Configuration error: please set your GitHub Client ID.");
+            alert(t('errors.configGithubClientId'));
             return;
         }
         const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read:user`;
@@ -229,12 +231,12 @@ function App() {
             }
 
             if (!currentAccount) {
-                alert('Failed to connect wallet. Please try again.');
+                alert(t('errors.walletConnectFailed'));
                 return;
             }
         }
 
-        if (!TWITTER_CLIENT_ID) { alert("Configuration error: please set TWITTER_CLIENT_ID."); return; }
+        if (!TWITTER_CLIENT_ID) { alert(t('errors.configTwitterClientId')); return; }
 
         // PKCE Flow
         const generateRandomString = (length) => {
@@ -313,6 +315,8 @@ function App() {
                     setActiveTab={setActiveTab}
                     account={account}
                     onConnectWallet={connectWallet}
+                    disconnectWallet={disconnectWallet}
+                    isConnecting={isConnecting}
                 />
             }
             footer={<Footer />}

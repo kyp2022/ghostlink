@@ -1,4 +1,5 @@
 import { useTheme } from '../../contexts/ThemeContext';
+import { useI18n } from '../../contexts/I18nContext';
 
 /**
  * LayoutShell - Master layout wrapper for bifurcated UI
@@ -14,6 +15,7 @@ export const LayoutShell = ({
 }) => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
+    const { t } = useI18n();
 
     // Dark Mode Layout - Traditional vertical stack
     if (!isLight) {
@@ -53,10 +55,10 @@ export const LayoutShell = ({
                 {/* Footer - Simplified for sidebar layout */}
                 <footer className="border-t border-border-medium px-8 py-6">
                     <div className="flex items-center justify-between text-xs text-text-muted font-mono">
-                        <span>© 2024 GHOSTLINK</span>
+                        <span>{t('footer.rights')}</span>
                         <span className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                            NETWORK::SEPOLIA
+                            {t('footer.network')}
                         </span>
                     </div>
                 </footer>

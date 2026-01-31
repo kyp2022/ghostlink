@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Cpu, Smartphone, Blocks, Zap, Shield, Lock, ArrowRight, Check, Github, CreditCard, Wallet } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../contexts/I18nContext';
 
 // ============================================================================
 // SHARED COMPONENTS
@@ -37,6 +38,7 @@ const RevealLight = ({ children, delay = 0, className = "" }) => (
 
 // Animated geometric prism for hero section (Dark Mode)
 const ZKPrismHero = () => {
+    const { t } = useI18n();
     return (
         <div className="relative h-[600px] w-full flex items-center justify-center 
                       bg-gradient-to-br from-surface-1 via-surface-base to-surface-1 
@@ -95,7 +97,7 @@ const ZKPrismHero = () => {
                                   font-mono text-xs text-cyan-400 font-medium tracking-wider 
                                   bg-surface-1/90 px-4 py-2 rounded-lg border border-theme-border-medium
                                   shadow-theme-glow">
-                        ZK_CIRCUIT
+                        {t('common.zkCircuit')}
                     </div>
                 </div>
             </div>
@@ -123,29 +125,33 @@ const BlueprintGridBackground = () => (
 
 // Live Protocol Status Bar (Bloomberg-style single line)
 const ProtocolStatusBar = () => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const s = (en, zh) => (isZh ? zh : en);
+
     return (
         <div className="w-full bg-slate-900 border-b border-slate-800">
             <div className="max-w-7xl mx-auto px-8 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-8 font-mono text-xs tracking-wider">
                     <span className="flex items-center gap-2 text-emerald-400">
                         <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                        STATUS: OPERATIONAL
+                        {s('STATUS: OPERATIONAL', '状态：运行中')}
                     </span>
                     <span className="text-slate-400">|</span>
                     <span className="text-slate-300">
-                        PROOFS_GENERATED: <span className="text-white font-semibold">12,847</span>
+                        {s('PROOFS_GENERATED:', '已生成证明：')} <span className="text-white font-semibold">12,847</span>
                     </span>
                     <span className="text-slate-400">|</span>
                     <span className="text-slate-300">
-                        AVG_VERIFY_TIME: <span className="text-white font-semibold">~2.3s</span>
+                        {s('AVG_VERIFY_TIME:', '平均验证：')} <span className="text-white font-semibold">~2.3s</span>
                     </span>
                     <span className="text-slate-400">|</span>
                     <span className="text-slate-300">
-                        ACTIVE_SBT: <span className="text-white font-semibold">3,291</span>
+                        {s('ACTIVE_SBT:', '活跃凭证：')} <span className="text-white font-semibold">3,291</span>
                     </span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500 tracking-widest">
-                    NETWORK::SEPOLIA_LIVE
+                <span className="text-[12px] font-mono text-slate-500 tracking-widest">
+                    {s('NETWORK::SEPOLIA_LIVE', '网络::Sepolia_运行中')}
                 </span>
             </div>
         </div>
@@ -153,8 +159,13 @@ const ProtocolStatusBar = () => {
 };
 
 // Hero Visualization Panel with Blueprint Grid
-const HeroVisualization = () => (
-    <div className="relative w-full h-full min-h-[480px] bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+const HeroVisualization = () => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const s = (en, zh) => (isZh ? zh : en);
+
+    return (
+        <div className="relative w-full h-full min-h-[480px] bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Technical Grid Background */}
         <BlueprintGridBackground />
 
@@ -165,8 +176,8 @@ const HeroVisualization = () => (
         <div className="absolute bottom-3 right-3 w-6 h-6 border-r border-b border-slate-300" />
 
         {/* Document ID */}
-        <div className="absolute top-3 left-12 text-[9px] font-mono text-slate-400 tracking-widest">
-            DOC::ZK_BRIDGE_SCHEMATIC_v3.2
+        <div className="absolute top-3 left-12 text-[12px] font-mono text-slate-400 tracking-widest">
+            {s('DOC::ZK_BRIDGE_SCHEMATIC_v3.2', '文档::ZK_BRIDGE_SCHEMATIC_v3.2')}
         </div>
 
         {/* Generated Image */}
@@ -178,19 +189,20 @@ const HeroVisualization = () => (
         >
             <img
                 src="/images/zk_bridge_blueprint.png"
-                alt="ZK Bridge Blueprint"
+                alt={s('ZK Bridge Blueprint', '零知识桥蓝图')}
                 className="max-w-full max-h-full object-contain drop-shadow-sm"
             />
         </motion.div>
 
         {/* Bottom Status */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-4 text-[9px] font-mono text-slate-400">
-            <span>PROTOCOL::GHOSTLINK</span>
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-4 text-[12px] font-mono text-slate-400">
+            <span>{s('PROTOCOL::GHOSTLINK', '协议::GHOSTLINK')}</span>
             <span className="w-1 h-1 bg-slate-300 rounded-full" />
-            <span>CHAIN::ETHEREUM</span>
+            <span>{s('CHAIN::ETHEREUM', '链::Ethereum')}</span>
         </div>
-    </div>
-);
+        </div>
+    );
+};
 
 // Mechanism Flow Step Component
 const MechanismStep = ({ step, icon, title, subtitle, description, delay, isCenter = false }) => (
@@ -203,7 +215,7 @@ const MechanismStep = ({ step, icon, title, subtitle, description, delay, isCent
         `}>
             {/* Step Badge */}
             <div className={`
-                absolute -top-2.5 left-5 px-2.5 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded
+                absolute -top-2.5 left-5 px-2.5 py-0.5 text-[12px] font-mono font-bold tracking-wider rounded
                 ${isCenter
                     ? 'bg-amber-400 text-slate-900'
                     : 'bg-slate-900 text-white'}
@@ -285,15 +297,20 @@ const FlowConnectors = () => (
 );
 
 // Use Case Card (Physical Folder Style)
-const UseCaseCard = ({ id, title, subtitle, description, tag, color, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay }}
-        whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
-        className="bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group"
-    >
+const UseCaseCard = ({ id, title, subtitle, description, tag, color, delay }) => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const learnMore = isZh ? '了解更多' : 'Learn More';
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay }}
+            whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
+            className="bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group"
+        >
         {/* Color Tab */}
         <div className={`h-1.5 ${color === 'amber' ? 'bg-amber-400' :
             color === 'emerald' ? 'bg-emerald-500' :
@@ -301,7 +318,7 @@ const UseCaseCard = ({ id, title, subtitle, description, tag, color, delay }) =>
             }`} />
 
         <div className="p-5">
-            <div className="text-[8px] font-mono text-slate-400 tracking-widest mb-3 flex items-center gap-1.5">
+            <div className="text-[12px] font-mono text-slate-400 tracking-widest mb-3 flex items-center gap-1.5">
                 <span className="w-1 h-1 bg-slate-300 rounded-full" />
                 {tag}
             </div>
@@ -309,7 +326,7 @@ const UseCaseCard = ({ id, title, subtitle, description, tag, color, delay }) =>
             <h3 className="text-base font-bold text-slate-900 mb-0.5 group-hover:text-slate-700 transition-colors">
                 {title}
             </h3>
-            <p className="text-[11px] font-mono text-slate-500 mb-3">
+            <p className="text-[12px] font-mono text-slate-500 mb-3">
                 {subtitle}
             </p>
             <p className="text-sm text-slate-600 leading-relaxed mb-4">
@@ -317,15 +334,21 @@ const UseCaseCard = ({ id, title, subtitle, description, tag, color, delay }) =>
             </p>
 
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 group-hover:gap-2.5 transition-all">
-                Learn More <ArrowRight size={12} />
+                {learnMore} <ArrowRight size={12} />
             </div>
         </div>
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 // Code Preview Terminal (GitHub Light style)
-const CodePreview = () => (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+const CodePreview = () => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const s = (en, zh) => (isZh ? zh : en);
+
+    return (
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         {/* Editor Header */}
         <div className="flex items-center gap-2.5 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
             <div className="flex gap-1.5">
@@ -333,12 +356,12 @@ const CodePreview = () => (
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
             </div>
-            <span className="text-[11px] font-mono text-slate-500">proof_inspector.rs</span>
+            <span className="text-[12px] font-mono text-slate-500">proof_inspector.rs</span>
         </div>
 
         {/* Code Content */}
         <div className="p-5 font-mono text-[13px] leading-relaxed overflow-x-auto">
-            <div className="text-slate-400">// GhostLink Proof Inspector</div>
+            <div className="text-slate-400">{s('// GhostLink Proof Inspector', '// GhostLink 证明检查器')}</div>
             <div className="mt-2">
                 <span className="text-purple-600">struct</span>{' '}
                 <span className="text-amber-600">ProofOutput</span> {'{'}
@@ -350,7 +373,7 @@ const CodePreview = () => (
                 verified: <span className="text-emerald-600">bool</span>,
             </div>
             <div className="text-slate-700">{'}'}</div>
-            <div className="mt-3 text-slate-400">// Zero-knowledge verification</div>
+            <div className="mt-3 text-slate-400">{s('// Zero-knowledge verification', '// 零知识验证')}</div>
             <div>
                 <span className="text-purple-600">fn</span>{' '}
                 <span className="text-blue-600">verify</span>(journal: &[u8]) {'{'}
@@ -363,13 +386,14 @@ const CodePreview = () => (
 
         {/* Footer */}
         <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <span className="text-[10px] font-mono text-slate-400">Rust • UTF-8</span>
-            <span className="text-[10px] font-mono text-emerald-600 flex items-center gap-1">
-                <Check size={10} /> VERIFIED_BY_RISC0
+            <span className="text-[12px] font-mono text-slate-400">{s('Rust • UTF-8', 'Rust • UTF-8')}</span>
+            <span className="text-[12px] font-mono text-emerald-600 flex items-center gap-1">
+                <Check size={10} /> {s('VERIFIED_BY_RISC0', '已由 RISC0 验证')}
             </span>
         </div>
-    </div>
-);
+        </div>
+    );
+};
 
 // ============================================================================
 // MAIN HOMEPAGE COMPONENT
@@ -378,6 +402,9 @@ const CodePreview = () => (
 export const HomePage = ({ onConnectWallet, onViewDemo }) => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const s = (en, zh) => (isZh ? zh : en);
 
     // ========================================================================
     // LIGHT MODE: "The Daylight Blueprint" - High-Resolution Protocol Showcase
@@ -398,21 +425,30 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                         <div className="space-y-6">
                             {/* Technical Label */}
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md">
-                                <span className="text-[10px] font-mono text-slate-500 tracking-widest">
-                                    PROTOCOL::GHOSTLINK_V3
+                                <span className="text-[12px] font-mono text-slate-500 tracking-widest">
+                                    {s('PROTOCOL::GHOSTLINK_V3', '协议::GHOSTLINK_V3')}
                                 </span>
                             </div>
 
                             {/* Massive Headline */}
                             <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-black text-slate-900 leading-[1.1] tracking-tight">
-                                Bridging Web2 Data with Zero-Knowledge Privacy.
+                                {s('Bridging Web2 Data with Zero-Knowledge Privacy.', '让 Web2 轨迹变成可验证的隐私资产')}
                             </h1>
 
                             {/* Subtitle */}
                             <p className="text-lg text-slate-600 leading-relaxed max-w-lg">
-                                Transform your <strong className="font-semibold text-slate-900">real-world credentials</strong> into
-                                verifiable on-chain identity without exposing sensitive data.
-                                Built on RISC Zero zkVM.
+                                {isZh ? (
+                                    <>
+                                        把<strong className="font-semibold text-slate-900">真实世界履历</strong>变成链上可验凭证 只交结论 不交细节
+                                        由 RISC Zero 证明引擎提供能力
+                                    </>
+                                ) : (
+                                    <>
+                                        Transform your <strong className="font-semibold text-slate-900">real-world credentials</strong> into
+                                        verifiable on-chain identity without exposing sensitive data.
+                                        Built on RISC Zero zkVM.
+                                    </>
+                                )}
                             </p>
 
                             {/* CTA Buttons */}
@@ -424,7 +460,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                              transition-all duration-200 cursor-pointer flex items-center gap-2"
                                 >
                                     <Zap size={16} className="text-amber-400" />
-                                    Start Bridging
+                                    {s('Start Bridging', '开始连接')}
                                 </button>
                                 <button
                                     onClick={onViewDemo}
@@ -432,7 +468,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                              hover:bg-slate-50 hover:border-slate-400
                                              transition-all duration-200 cursor-pointer"
                                 >
-                                    Read Docs →
+                                    {s('Read Docs →', '查看文档 →')}
                                 </button>
                             </div>
                         </div>
@@ -448,10 +484,10 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                         {/* Section Header */}
                         <div className="text-center mb-12">
                             <h2 className="text-xs font-mono text-slate-400 tracking-widest uppercase mb-3">
-                                The ZK-Protocol Mechanism
+                                {s('The ZK-Protocol Mechanism', '零知识协议流程')}
                             </h2>
                             <p className="text-2xl font-bold text-slate-900">
-                                From Private Data to Public Verification
+                                {s('From Private Data to Public Verification', '从私密数据到公开可验')}
                             </p>
                         </div>
 
@@ -464,28 +500,28 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-20">
                                 <MechanismStep
-                                    step="STEP_01"
+                                    step={isZh ? '步骤 01' : 'STEP_01'}
                                     icon="/images/icon_privacy_shielding.png"
-                                    title="PRIVACY_SHIELDING"
-                                    subtitle="Input Layer"
-                                    description="Your data stays on your device. TLS encryption preserves privacy throughout the entire process."
+                                    title={s('PRIVACY_SHIELDING', '隐私封装')}
+                                    subtitle={s('Input Layer', '输入层')}
+                                    description={s('Your data stays on your device. TLS encryption preserves privacy throughout the entire process.', '数据留在本地设备 传输加密与证明流程相伴 尽量减少暴露面')}
                                     delay={0}
                                 />
                                 <MechanismStep
-                                    step="STEP_02"
+                                    step={isZh ? '步骤 02' : 'STEP_02'}
                                     icon="/images/icon_risc_zero_compute.png"
-                                    title="RISC_ZERO_COMPUTE"
-                                    subtitle="Processing Layer"
-                                    description="RISC Zero zkVM generates a mathematical proof in an isolated, verifiable environment."
+                                    title={s('RISC_ZERO_COMPUTE', '证明计算')}
+                                    subtitle={s('Processing Layer', '处理层')}
+                                    description={s('RISC Zero zkVM generates a mathematical proof in an isolated, verifiable environment.', 'RISC Zero 在隔离环境里生成可验证的数学证明')}
                                     delay={0.15}
                                     isCenter={true}
                                 />
                                 <MechanismStep
-                                    step="STEP_03"
+                                    step={isZh ? '步骤 03' : 'STEP_03'}
                                     icon="/images/icon_verifiable_credential.png"
-                                    title="VERIFIABLE_CREDENTIAL"
-                                    subtitle="Output Layer"
-                                    description="Soulbound Token minted on-chain. Publicly verifiable, composable across DeFi protocols."
+                                    title={s('VERIFIABLE_CREDENTIAL', '可验证凭证')}
+                                    subtitle={s('Output Layer', '输出层')}
+                                    description={s('Soulbound Token minted on-chain. Publicly verifiable, composable across DeFi protocols.', '把凭证铸到链上 公开可验 也能被各类应用组合使用')}
                                     delay={0.3}
                                 />
                             </div>
@@ -498,38 +534,38 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                     <div className="max-w-5xl mx-auto">
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-1">Use Cases</h2>
-                                <p className="text-sm text-slate-500">Modular protocols for verification needs</p>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-1">{s('Use Cases', '使用场景')}</h2>
+                                <p className="text-sm text-slate-500">{s('Modular protocols for verification needs', '按需组合的验证协议套件')}</p>
                             </div>
-                            <span className="text-[9px] font-mono text-slate-400 tracking-widest">
-                                PROTOCOL_SUITE::V3
+                            <span className="text-[12px] font-mono text-slate-400 tracking-widest">
+                                {s('PROTOCOL_SUITE::V3', '协议套件::V3')}
                             </span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <UseCaseCard
                                 id="defi"
-                                title="DeFi Access"
-                                subtitle="Asset-Pass Protocol"
-                                description="Prove solvency without exposing balances. Enable under-collateralized lending."
+                                title={s('DeFi Access', '借贷准入')}
+                                subtitle={s('Asset-Pass Protocol', '资产通行证协议')}
+                                description={s('Prove solvency without exposing balances. Enable under-collateralized lending.', '证明偿付能力 不公开余额 让低抵押借贷成为可能')}
                                 tag="ID_7382_GHOST"
                                 color="slate"
                                 delay={0}
                             />
                             <UseCaseCard
                                 id="growth"
-                                title="Sybil Prevention"
-                                subtitle="Guard Protocol"
-                                description="Verify unique human identity through spending patterns without revealing transactions."
+                                title={s('Sybil Prevention', '女巫防护')}
+                                subtitle={s('Guard Protocol', '守护协议')}
+                                description={s('Verify unique human identity through spending patterns without revealing transactions.', '用行为特征核验真人 不暴露具体交易')}
                                 tag="ID_4291_GUARD"
                                 color="amber"
                                 delay={0.1}
                             />
                             <UseCaseCard
                                 id="identity"
-                                title="Identity Bridge"
-                                subtitle="Social Credentials"
-                                description="Link GitHub, Twitter to on-chain identity. Portable reputation across platforms."
+                                title={s('Identity Bridge', '身份通行证')}
+                                subtitle={s('Social Credentials', '社交凭证')}
+                                description={s('Link GitHub, Twitter to on-chain identity. Portable reputation across platforms.', '把 GitHub 与 X 等账号拼进链上身份 声誉可携带 也可被组合使用')}
                                 tag="ID_8847_BRIDGE"
                                 color="emerald"
                                 delay={0.2}
@@ -542,28 +578,37 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                 <section className="px-8 py-20 max-w-5xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         <div className="space-y-5">
-                            <div className="text-[9px] font-mono text-slate-400 tracking-widest">
-                                DEV_TOOLS::SDK
+                            <div className="text-[12px] font-mono text-slate-400 tracking-widest">
+                                {s('DEV_TOOLS::SDK', '开发工具::SDK')}
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900">
-                                Developer-First Design
+                                {s('Developer-First Design', '为开发者而生')}
                             </h2>
                             <p className="text-slate-600 leading-relaxed">
-                                GhostLink provides a Rust SDK for seamless integration.
-                                Verify proofs directly in your smart contracts with minimal gas overhead.
+                                {isZh ? (
+                                    <>
+                                        GhostLink 提供 Rust SDK，接入轻量、组合灵活。
+                                        证明可在合约内直接验真，尽量减少手续费负担。
+                                    </>
+                                ) : (
+                                    <>
+                                        GhostLink provides a Rust SDK for seamless integration.
+                                        Verify proofs directly in your smart contracts with minimal gas overhead.
+                                    </>
+                                )}
                             </p>
                             <ul className="space-y-2.5 text-sm text-slate-600">
                                 <li className="flex items-center gap-2.5">
                                     <Check size={14} className="text-emerald-600" />
-                                    Open-source SDK on GitHub
+                                    {s('Open-source SDK on GitHub', 'SDK 开源托管于 GitHub')}
                                 </li>
                                 <li className="flex items-center gap-2.5">
                                     <Check size={14} className="text-emerald-600" />
-                                    12ms average proof generation
+                                    {s('12ms average proof generation', '平均生成证明约 12ms')}
                                 </li>
                                 <li className="flex items-center gap-2.5">
                                     <Check size={14} className="text-emerald-600" />
-                                    Composable with any EVM chain
+                                    {s('Composable with any EVM chain', '可组合接入任意 EVM 链')}
                                 </li>
                             </ul>
                         </div>
@@ -574,8 +619,8 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                 {/* TRUST SECTION */}
                 <section className="px-8 py-12 border-t border-slate-200">
                     <div className="max-w-4xl mx-auto text-center">
-                        <p className="text-[10px] font-mono text-slate-400 tracking-widest mb-6">
-                            TRUSTED_INFRASTRUCTURE
+                        <p className="text-[12px] font-mono text-slate-400 tracking-widest mb-6">
+                            {s('TRUSTED_INFRASTRUCTURE', '可信底座')}
                         </p>
                         <div className="flex flex-wrap justify-center gap-10 text-base font-bold font-mono text-slate-300">
                             <span className="hover:text-slate-900 transition-colors cursor-pointer">RISC_ZERO</span>
@@ -607,7 +652,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                  shadow-theme-glow"
                     >
                         <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-theme-glow" />
-                        NETWORK::LIVE_ON_SEPOLIA
+                        {s('NETWORK::LIVE_ON_SEPOLIA', '网络::Sepolia_运行中')}
                     </motion.div>
 
                     {/* Main headline */}
@@ -617,11 +662,11 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                         transition={{ delay: 0.1 }}
                         className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] text-theme-text-primary"
                     >
-                        <span>Prove it's you,</span>
+                        <span>{s("Prove it's you,", '证明是你，')}</span>
                         <br />
                         <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent
                                        bg-[length:200%_auto] animate-[shine_3s_linear_infinite]">
-                            without revealing who you are.
+                            {s('without revealing who you are.', '却不必暴露你是谁')}
                         </span>
                     </motion.h1>
 
@@ -632,11 +677,21 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                         transition={{ delay: 0.2 }}
                         className="text-lg text-theme-text-secondary max-w-md leading-relaxed font-light"
                     >
-                        GhostLink transforms your <span className="text-cyan-400 font-semibold">GitHub</span>,
-                        <span className="text-cyan-400 font-semibold"> Alipay</span>, and <span className="text-cyan-400 font-semibold">wallet history</span> into
-                        verifiable on-chain credentials.
+                        {isZh ? (
+                            <>
+                                GhostLink 将你的 <span className="text-cyan-400 font-semibold">GitHub</span>、
+                                <span className="text-cyan-400 font-semibold">支付宝</span> 与
+                                <span className="text-cyan-400 font-semibold">钱包轨迹</span> 炼成链上可验凭证
+                            </>
+                        ) : (
+                            <>
+                                GhostLink transforms your <span className="text-cyan-400 font-semibold">GitHub</span>,
+                                <span className="text-cyan-400 font-semibold"> Alipay</span>, and <span className="text-cyan-400 font-semibold">wallet history</span> into
+                                verifiable on-chain credentials.
+                            </>
+                        )}
                         <span className="block mt-2 text-theme-text-primary font-medium">
-                            Private. Verifiable. Built on RISC Zero.
+                            {s('Private. Verifiable. Built on RISC Zero.', '先验隐私 · 公开可验 · 基于 RISC Zero')}
                         </span>
                     </motion.p>
 
@@ -657,7 +712,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                      flex items-center gap-2"
                         >
                             <Zap size={18} className="group-hover:animate-pulse" />
-                            Connect Wallet
+                            {s('Connect Wallet', '连接钱包')}
                         </button>
                         <button
                             onClick={onViewDemo}
@@ -667,7 +722,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                      shadow-theme-glow
                                      transition-all duration-300 cursor-pointer"
                         >
-                            View Demo →
+                            {s('View Demo →', '查看演示 →')}
                         </button>
                     </motion.div>
                 </div>
@@ -704,9 +759,19 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                               transition-all duration-300">
                                     <Smartphone size={32} className="text-theme-text-muted group-hover:text-cyan-400 transition-colors" />
                                 </div>
-                                <h3 className="font-semibold text-lg text-theme-text-primary font-mono">USER_LOCAL</h3>
+                                <h3 className="font-semibold text-lg text-theme-text-primary font-mono">
+                                    {s('USER_LOCAL', '本地端')}
+                                </h3>
                                 <p className="text-sm text-theme-text-muted">
-                                    Data stays on your device.<br />TLS encryption intact.
+                                    {isZh ? (
+                                        <>
+                                            数据留在你的设备上<br />传输加密链路保持完整
+                                        </>
+                                    ) : (
+                                        <>
+                                            Data stays on your device.<br />TLS encryption intact.
+                                        </>
+                                    )}
                                 </p>
                             </motion.div>
 
@@ -722,9 +787,19 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                               transition-all duration-300">
                                     <Cpu size={32} className="text-cyan-400" />
                                 </div>
-                                <h3 className="font-semibold text-lg text-cyan-400 font-mono">ZK_PROCESSOR</h3>
+                                <h3 className="font-semibold text-lg text-cyan-400 font-mono">
+                                    {s('ZK_PROCESSOR', '零知识处理器')}
+                                </h3>
                                 <p className="text-sm text-theme-text-muted">
-                                    Mathematical proof generated<br />in isolated RISC Zero environment.
+                                    {isZh ? (
+                                        <>
+                                            在隔离的 RISC Zero 环境中<br />生成可验证的数学证明
+                                        </>
+                                    ) : (
+                                        <>
+                                            Mathematical proof generated<br />in isolated RISC Zero environment.
+                                        </>
+                                    )}
                                 </p>
                             </motion.div>
 
@@ -740,9 +815,19 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                               transition-all duration-300">
                                     <Blocks size={32} className="text-theme-text-muted group-hover:text-emerald-400 transition-colors" />
                                 </div>
-                                <h3 className="font-semibold text-lg text-theme-text-primary font-mono">BLOCKCHAIN</h3>
+                                <h3 className="font-semibold text-lg text-theme-text-primary font-mono">
+                                    {s('BLOCKCHAIN', '区块链')}
+                                </h3>
                                 <p className="text-sm text-theme-text-muted">
-                                    Public verification.<br />Smart contract composability.
+                                    {isZh ? (
+                                        <>
+                                            公开验证<br />合约可组合
+                                        </>
+                                    ) : (
+                                        <>
+                                            Public verification.<br />Smart contract composability.
+                                        </>
+                                    )}
                                 </p>
                             </motion.div>
                         </div>
@@ -761,7 +846,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
             {/* Trust Section */}
             <section className="text-center py-32">
                 <Reveal delay={0.4}>
-                    <p className="text-sm font-mono tracking-widest text-theme-text-muted mb-8">TRUSTED_INFRASTRUCTURE</p>
+                    <p className="text-sm font-mono tracking-widest text-theme-text-muted mb-8">{s('TRUSTED_INFRASTRUCTURE', '可信底座')}</p>
                     <div className="flex flex-wrap justify-center gap-12 opacity-40 hover:opacity-80 transition-opacity duration-500">
                         <span className="text-xl font-bold font-mono text-cyan-400">RISC_ZERO</span>
                         <span className="text-xl font-bold font-mono text-purple-400">ETHEREUM</span>

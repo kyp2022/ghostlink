@@ -1,6 +1,7 @@
 import { motion, useInView, useAnimation } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Shield, FileText, Users, Target } from 'lucide-react';
+import { useI18n } from '../contexts/I18nContext';
 
 // Typewriter hook
 const useTypewriter = (text, speed = 50) => {
@@ -27,6 +28,7 @@ const useTypewriter = (text, speed = 50) => {
 
 // Verified Identity Node Component
 const IdentityNode = ({ name, role, verified, delay }) => {
+    const { t } = useI18n();
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -53,7 +55,7 @@ const IdentityNode = ({ name, role, verified, delay }) => {
                     {verified && (
                         <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded text-xs font-mono text-emerald-500 dark:text-emerald-400">
                             <Check className="w-3 h-3" />
-                            <span>VERIFIED</span>
+                            <span>{t('common.verified')}</span>
                         </div>
                     )}
                 </div>
@@ -70,6 +72,8 @@ const IdentityNode = ({ name, role, verified, delay }) => {
 
 // Mission Log Item Component
 const MissionLog = ({ date, title, desc, status, index }) => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
     const isActive = status === 'active';
     const isComplete = status === 'complete';
 
@@ -96,7 +100,7 @@ const MissionLog = ({ date, title, desc, status, index }) => {
                     {isActive && (
                         <div className="flex items-center gap-1 px-2 py-1 bg-theme-accent-secondary/10 border border-theme-accent-secondary/30 rounded text-xs font-mono text-theme-accent-secondary">
                             <div className="w-1.5 h-1.5 bg-theme-accent-secondary rounded-full animate-pulse" />
-                            <span>ACTIVE</span>
+                            <span>{isZh ? '进行中' : 'ACTIVE'}</span>
                         </div>
                     )}
                 </div>
@@ -108,10 +112,16 @@ const MissionLog = ({ date, title, desc, status, index }) => {
 };
 
 export const CompanyPage = () => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const s = (en, zh) => (isZh ? zh : en);
+
     const missionRef = useRef(null);
     const isInView = useInView(missionRef, { once: true, margin: "-100px" });
 
-    const missionText = "We believe that in the digital age, privacy is not about secrecy, but about control. GhostLink builds the bridge for true data ownership.";
+    const missionText = isZh
+        ? '我们相信：在数字时代，隐私不是“藏起来”，而是“掌控权”。GhostLink 让数据回到你手里。'
+        : 'We believe that in the digital age, privacy is not about secrecy, but about control. GhostLink builds the bridge for true data ownership.';
     const { displayedText, isComplete } = useTypewriter(isInView ? missionText : '', 30);
 
     return (
@@ -131,13 +141,13 @@ export const CompanyPage = () => {
                     className="inline-flex items-center gap-2 px-4 py-2 mb-8 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-xs font-mono text-emerald-600 dark:text-emerald-400 shadow-sm"
                 >
                     <Shield className="w-4 h-4" />
-                    <span>FILE ACCESS: AUTHORIZED</span>
+                    <span>{s('FILE ACCESS: AUTHORIZED', '档案权限：已授权')}</span>
                     <div className="w-1.5 h-1.5 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse" />
                 </motion.div>
 
                 {/* Main manifesto */}
                 <h1 className="text-4xl md:text-7xl font-bold tracking-tight mb-8 text-theme-text-primary">
-                    Data is Property.
+                    {s('Data is Property.', '数据即资产。')}
                 </h1>
 
                 {/* Typewriter mission statement */}
@@ -164,13 +174,13 @@ export const CompanyPage = () => {
             >
                 <div className="flex items-center gap-3 mb-8 justify-center">
                     <Target className="w-6 h-6 text-theme-accent-secondary" />
-                    <h3 className="text-2xl font-bold text-theme-text-primary font-mono">VERIFIED_PERSONNEL</h3>
+                    <h3 className="text-2xl font-bold text-theme-text-primary font-mono">{s('VERIFIED_PERSONNEL', '已验证成员')}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                    <IdentityNode name="Core Team" role="Protocol Development" verified delay={0} />
-                    <IdentityNode name="Security Auditors" role="Smart Contract Security" verified delay={0.1} />
-                    <IdentityNode name="Research Partners" role="ZK Cryptography" verified delay={0.2} />
+                    <IdentityNode name={s('Core Team', '核心团队')} role={s('Protocol Development', '协议研发')} verified delay={0} />
+                    <IdentityNode name={s('Security Auditors', '安全审计')} role={s('Smart Contract Security', '合约安全')} verified delay={0.1} />
+                    <IdentityNode name={s('Research Partners', '研究伙伴')} role={s('ZK Cryptography', '零知识研究')} verified delay={0.2} />
                 </div>
             </motion.section>
 
@@ -178,28 +188,28 @@ export const CompanyPage = () => {
             <section className="max-w-3xl mx-auto">
                 <div className="flex items-center gap-3 mb-12 justify-center">
                     <FileText className="w-6 h-6 text-theme-accent-primary" />
-                    <h3 className="text-2xl font-bold text-theme-text-primary font-mono">MISSION_LOGS</h3>
+                    <h3 className="text-2xl font-bold text-theme-text-primary font-mono">{s('MISSION_LOGS', '任务日志')}</h3>
                 </div>
 
                 <div className="relative border-l-2 border-dashed border-theme-border-medium ml-6 md:ml-0 space-y-6 pl-8 md:pl-12">
                     <MissionLog
                         date="Q1 2026"
-                        title="Phase Alpha: MVP Launch"
-                        desc="Deploy GitHub Passport authentication and foundational SDK release. Establish secure verification infrastructure with RISC Zero integration."
+                        title={s('Phase Alpha: MVP Launch', '阶段 Alpha：MVP 上线')}
+                        desc={s('Deploy GitHub Passport authentication and foundational SDK release. Establish secure verification infrastructure with RISC Zero integration.', '上线 GitHub 通行证验证与基础 SDK。完成与 RISC Zero 的证明链路整合，搭建可复用的验证基础设施。')}
                         status="active"
                         index={0}
                     />
                     <MissionLog
                         date="Q2 2026"
-                        title="Phase Beta: SDK Ecosystem"
-                        desc="Launch plug-and-play ZK components for React & Vue frameworks. Enable seamless dApp integration with comprehensive developer tooling and documentation."
+                        title={s('Phase Beta: SDK Ecosystem', '阶段 Beta：SDK 生态')}
+                        desc={s('Launch plug-and-play ZK components for React & Vue frameworks. Enable seamless dApp integration with comprehensive developer tooling and documentation.', '推出 React/Vue 即插即用组件，完善开发工具链与文档，让 dApp 集成更顺滑。')}
                         status="pending"
                         index={1}
                     />
                     <MissionLog
                         date="Q3 2026"
-                        title="Phase Gamma: Data Staking Economy"
-                        desc="Introduce economic layer enabling users to earn yield through data verification. Revolutionary model where privacy generates sustainable returns."
+                        title={s('Phase Gamma: Data Staking Economy', '阶段 Gamma：数据质押经济')}
+                        desc={s('Introduce economic layer enabling users to earn yield through data verification. Revolutionary model where privacy generates sustainable returns.', '引入经济层：让数据验证产生收益分配，探索“隐私带来可持续回报”的新模型。')}
                         status="pending"
                         index={2}
                     />

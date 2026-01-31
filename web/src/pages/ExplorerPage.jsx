@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/constants';
+import { useI18n } from '../contexts/I18nContext';
 
 // Credential type icons
 const CredentialIcon = ({ type }) => {
@@ -17,6 +18,10 @@ const CredentialIcon = ({ type }) => {
 };
 
 export const ExplorerPage = ({ walletSigner }) => {
+    const { locale } = useI18n();
+    const isZh = locale === 'zh';
+    const s = (en, zh) => (isZh ? zh : en);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [stats, setStats] = useState({
@@ -295,7 +300,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                 });
             }
         } catch (err) {
-            setError('Search failed: ' + err.message);
+            setError((isZh ? '搜索失败：' : 'Search failed: ') + err.message);
         } finally {
             setSearching(false);
         }
@@ -312,6 +317,12 @@ export const ExplorerPage = ({ walletSigner }) => {
 
     const formatAge = (timestamp) => {
         const diff = Math.floor(Date.now() / 1000) - timestamp;
+        if (isZh) {
+            if (diff < 60) return `${diff}秒前`;
+            if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+            return `${Math.floor(diff / 86400)}天前`;
+        }
         if (diff < 60) return `${diff}s ago`;
         if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
         if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -340,9 +351,9 @@ export const ExplorerPage = ({ walletSigner }) => {
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
                     <h1 className="text-4xl font-bold text-theme-text-primary mb-3">
-                        GhostLink <span className="text-theme-accent-secondary dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-cyan-400 dark:to-purple-400">Explorer</span>
+                        GhostLink <span className="text-theme-accent-secondary dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-cyan-400 dark:to-purple-400">{s('Explorer', '浏览')}</span>
                     </h1>
-                    <p className="text-theme-text-secondary">Real-time blockchain explorer for SBT credentials</p>
+                    <p className="text-theme-text-secondary">{s('Real-time blockchain explorer for SBT credentials', '实时查看链上凭证动向')}</p>
                 </motion.div>
 
                 {/* Stats Cards - Restored */}
@@ -354,7 +365,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 <Award className="w-5 h-5 text-theme-accent-primary" />
                             </div>
                             <div>
-                                <div className="text-xs text-theme-text-muted">Total Minted</div>
+                                <div className="text-xs text-theme-text-muted">{s('Total Minted', '已铸造总量')}</div>
                                 <div className="text-xl font-bold text-theme-text-primary">
                                     {loading ? <Loader className="w-5 h-5 animate-spin text-theme-accent-primary" /> : stats.totalSupply}
                                 </div>
@@ -369,7 +380,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 <Activity className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
                             </div>
                             <div>
-                                <div className="text-xs text-theme-text-muted">Transactions</div>
+                                <div className="text-xs text-theme-text-muted">{s('Transactions', '交易数')}</div>
                                 <div className="text-xl font-bold text-theme-text-primary">
                                     {loading ? <Loader className="w-5 h-5 animate-spin text-emerald-400" /> : stats.recentMints.length}
                                 </div>
@@ -384,7 +395,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 <Clock className="w-5 h-5 text-theme-accent-secondary" />
                             </div>
                             <div>
-                                <div className="text-xs text-theme-text-muted">Network</div>
+                                <div className="text-xs text-theme-text-muted">{s('Network', '网络')}</div>
                                 <div className="text-xl font-bold text-theme-text-primary">Sepolia</div>
                             </div>
                         </div>
@@ -397,7 +408,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 <Wallet className="w-5 h-5 text-orange-500 dark:text-orange-400" />
                             </div>
                             <div>
-                                <div className="text-xs text-theme-text-muted">Contract</div>
+                                <div className="text-xs text-theme-text-muted">{s('Contract', '合约')}</div>
                                 <a href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`} target="_blank" rel="noopener noreferrer"
                                     className="text-sm font-mono text-theme-accent-primary hover:text-theme-accent-secondary">
                                     {formatAddress(CONTRACT_ADDRESS)}
@@ -420,12 +431,12 @@ export const ExplorerPage = ({ walletSigner }) => {
                         {isLive ? (
                             <>
                                 <span className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></span>
-                                Live
+                                {s('Live', '实时')}
                             </>
                         ) : (
                             <>
                                 <Activity className="w-4 h-4" />
-                                Go Live
+                                {s('Go Live', '开启实时')}
                             </>
                         )}
                     </button>
@@ -453,16 +464,16 @@ export const ExplorerPage = ({ walletSigner }) => {
                                     className="absolute right-0 top-12 w-72 bg-surface-elevated-2 backdrop-blur-xl rounded-xl shadow-theme-strong border border-theme-border-medium z-50 overflow-hidden"
                                 >
                                     <div className="p-3 border-b border-theme-border-medium flex items-center justify-between">
-                                        <span className="font-semibold text-theme-text-primary">Notifications</span>
+                                        <span className="font-semibold text-theme-text-primary">{s('Notifications', '通知')}</span>
                                         {notifications.length > 0 && (
                                             <button onClick={() => setNotifications([])} className="text-xs text-theme-text-muted hover:text-theme-accent-primary cursor-pointer">
-                                                Clear all
+                                                {s('Clear all', '清空')}
                                             </button>
                                         )}
                                     </div>
                                     <div className="max-h-64 overflow-y-auto">
                                         {notifications.length === 0 ? (
-                                            <div className="p-4 text-center text-theme-text-muted text-sm">No notifications</div>
+                                            <div className="p-4 text-center text-theme-text-muted text-sm">{s('No notifications', '暂无通知')}</div>
                                         ) : (
                                             notifications.map(n => (
                                                 <div key={n.id} className="p-3 border-b border-theme-border-medium hover:bg-surface-elevated-3">
@@ -507,7 +518,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 </AreaChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="h-48 flex items-center justify-center text-theme-text-muted">No data available</div>
+                            <div className="h-48 flex items-center justify-center text-theme-text-muted">{s('No data available', '暂无数据')}</div>
                         )}
                     </motion.div>
 
@@ -516,7 +527,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                         className="bg-surface-elevated-1 rounded-2xl p-6 border border-theme-border-medium shadow-theme-strong">
                         <h3 className="text-sm font-semibold text-theme-text-primary mb-4 flex items-center gap-2">
                             <Award className="w-4 h-4 text-theme-accent-secondary" />
-                            Top Holders
+                            {s('Top Holders', '持有人排行')}
                         </h3>
                         {stats.holderDistribution.length > 0 ? (
                             <div className="flex items-center gap-6">
@@ -540,7 +551,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="h-40 flex items-center justify-center text-theme-text-muted">No data available</div>
+                            <div className="h-40 flex items-center justify-center text-theme-text-muted">{s('No data available', '暂无数据')}</div>
                         )}
                     </motion.div>
                 </div>
@@ -557,7 +568,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            placeholder="Search by Wallet Address or Token ID..."
+                            placeholder={s('Search by Wallet Address or Token ID...', '输入钱包地址或凭证编号搜索…')}
                             className="w-full pl-10 pr-4 py-2.5 bg-surface-elevated-2 border border-theme-border-medium rounded-xl text-theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-accent-primary/50 focus:border-theme-accent-primary/50 transition-all"
                         />
                         {searchResult && (
@@ -585,7 +596,9 @@ export const ExplorerPage = ({ walletSigner }) => {
                                         : 'text-theme-text-muted hover:text-theme-text-primary'
                                         }`}
                                 >
-                                    {range.charAt(0).toUpperCase() + range.slice(1)}
+                                    {isZh
+                                        ? ({ all: '全部', today: '今天', week: '近一周', month: '近一月' }[range] || range)
+                                        : (range.charAt(0).toUpperCase() + range.slice(1))}
                                 </button>
                             ))}
                         </div>
@@ -597,16 +610,16 @@ export const ExplorerPage = ({ walletSigner }) => {
                                 onChange={(e) => setFilters(f => ({ ...f, sortBy: e.target.value }))}
                                 className="appearance-none pl-3 pr-8 py-2 bg-surface-elevated-2 border border-theme-border-medium rounded-lg text-sm font-medium text-theme-text-primary hover:border-theme-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-theme-accent-primary/50 cursor-pointer"
                             >
-                                <option value="newest">Newest First</option>
-                                <option value="oldest">Oldest First</option>
-                                <option value="tokenId">Token ID</option>
+                                <option value="newest">{s('Newest First', '最新优先')}</option>
+                                <option value="oldest">{s('Oldest First', '最早优先')}</option>
+                                <option value="tokenId">{s('Token ID', '编号')}</option>
                             </select>
                             <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted pointer-events-none" />
                         </div>
 
                         <button onClick={handleSearch} disabled={searching}
                             className="px-4 py-2 bg-gradient-to-r from-theme-accent-primary to-theme-accent-secondary hover:brightness-110 text-white rounded-lg text-sm font-medium transition-all shadow-theme-glow cursor-pointer">
-                            {searching ? <Loader className="w-4 h-4 animate-spin" /> : 'Search'}
+                            {searching ? <Loader className="w-4 h-4 animate-spin" /> : s('Search', '搜索')}
                         </button>
                     </div>
                 </motion.div>
@@ -621,18 +634,18 @@ export const ExplorerPage = ({ walletSigner }) => {
                             {searchResult ? (
                                 <>
                                     <Search className="w-4 h-4 text-theme-accent-primary" />
-                                    Search Results
+                                    {s('Search Results', '搜索结果')}
                                 </>
                             ) : (
                                 <>
                                     <Activity className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                                    Latest Transactions
+                                    {s('Latest Transactions', '最新交易')}
                                 </>
                             )}
                         </h2>
                         {!searchResult && (
                             <span className="text-xs text-theme-text-muted font-medium px-2 py-1 bg-surface-elevated-1 border border-theme-border-medium rounded-md">
-                                {filteredTxs.length} items
+                                {isZh ? `${filteredTxs.length} 条` : `${filteredTxs.length} items`}
                             </span>
                         )}
                     </div>
@@ -648,7 +661,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                                 <Wallet className="w-6 h-6" />
                                             </div>
                                             <div>
-                                                <div className="text-sm text-theme-text-muted mb-1">Wallet Address</div>
+                                                <div className="text-sm text-theme-text-muted mb-1">{s('Wallet Address', '钱包地址')}</div>
                                                 <div className="font-mono text-xl font-bold text-theme-text-primary flex items-center gap-2">
                                                     {formatAddress(searchResult.address)}
                                                     <button onClick={() => copyText(searchResult.address)} className="p-1 hover:bg-surface-elevated-2 rounded-full transition-colors">
@@ -658,13 +671,15 @@ export const ExplorerPage = ({ walletSigner }) => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm text-theme-text-muted mb-1">Total Assets</div>
-                                            <div className="text-2xl font-bold text-theme-accent-secondary">{searchResult.balance} SBTs</div>
+                                            <div className="text-sm text-theme-text-muted mb-1">{s('Total Assets', '资产总量')}</div>
+                                            <div className="text-2xl font-bold text-theme-accent-secondary">
+                                                {isZh ? `${searchResult.balance} 枚凭证` : `${searchResult.balance} SBTs`}
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h3 className="font-semibold text-theme-text-primary mb-3">Owned Tokens</h3>
+                                        <h3 className="font-semibold text-theme-text-primary mb-3">{s('Owned Tokens', '持有的凭证')}</h3>
                                         {searchResult.tokens.length > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                                 {searchResult.tokens.map((token) => (
@@ -674,8 +689,10 @@ export const ExplorerPage = ({ walletSigner }) => {
                                                                 <Award className="w-5 h-5" />
                                                             </div>
                                                             <div>
-                                                                <div className="font-semibold text-theme-text-primary">Token #{token.tokenId}</div>
-                                                                <div className="text-xs text-theme-text-muted">GhostLink Credential</div>
+                                                                <div className="font-semibold text-theme-text-primary">
+                                                                    {isZh ? `凭证 #${token.tokenId}` : `Token #${token.tokenId}`}
+                                                                </div>
+                                                                <div className="text-xs text-theme-text-muted">{s('GhostLink Credential', '链上凭证')}</div>
                                                             </div>
                                                         </div>
                                                         <a href={`https://sepolia.etherscan.io/tx/${token.txHash}`} target="_blank" rel="noopener noreferrer"
@@ -686,7 +703,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-theme-text-muted italic">No tokens found for this address.</p>
+                                            <p className="text-theme-text-muted italic">{s('No tokens found for this address.', '该地址暂无凭证')}</p>
                                         )}
                                     </div>
 
@@ -694,7 +711,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                         onClick={() => { setSearchQuery(''); setSearchResult(null); fetchStats(); }}
                                         className="text-sm text-theme-accent-primary hover:text-theme-accent-secondary font-medium"
                                     >
-                                        ← Back to Dashboard
+                                        {s('← Back to Dashboard', '← 返回概览')}
                                     </button>
                                 </div>
                             ) : (
@@ -702,12 +719,12 @@ export const ExplorerPage = ({ walletSigner }) => {
                                     <div className="w-20 h-20 bg-surface-elevated-2 rounded-2xl mx-auto flex items-center justify-center text-theme-text-primary mb-6 shadow-theme-strong">
                                         <Award className="w-10 h-10" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-theme-text-primary mb-2">Token #{searchResult.tokenId}</h3>
-                                    <p className="text-theme-text-muted mb-6">GhostLink Identity Credential</p>
+                                    <h3 className="text-2xl font-bold text-theme-text-primary mb-2">{isZh ? `凭证 #${searchResult.tokenId}` : `Token #${searchResult.tokenId}`}</h3>
+                                    <p className="text-theme-text-muted mb-6">{s('GhostLink Identity Credential', 'GhostLink 身份凭证')}</p>
 
                                     <div className="bg-surface-elevated-2 rounded-xl p-4 border border-theme-border-medium text-left mb-6">
                                         <div className="flex justify-between items-center mb-3">
-                                            <span className="text-theme-text-muted">Owner</span>
+                                            <span className="text-theme-text-muted">{s('Owner', '持有人')}</span>
                                             <div className="font-mono text-theme-text-primary flex items-center gap-2">
                                                 {formatAddress(searchResult.owner)}
                                                 <button onClick={() => copyText(searchResult.owner)} className="p-1 hover:bg-surface-elevated-3 rounded">
@@ -716,9 +733,9 @@ export const ExplorerPage = ({ walletSigner }) => {
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-theme-text-muted">Status</span>
+                                            <span className="text-theme-text-muted">{s('Status', '状态')}</span>
                                             <span className="px-2 py-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-medium flex items-center gap-1">
-                                                <CheckCircle className="w-3 h-3" /> Active
+                                                <CheckCircle className="w-3 h-3" /> {s('Active', '有效')}
                                             </span>
                                         </div>
                                     </div>
@@ -727,7 +744,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                         onClick={() => { setSearchQuery(''); setSearchResult(null); fetchStats(); }}
                                         className="text-theme-accent-primary hover:text-theme-accent-secondary font-medium"
                                     >
-                                        Back to Explorer
+                                        {s('Back to Explorer', '返回浏览')}
                                     </button>
                                 </div>
                             )}
@@ -737,28 +754,28 @@ export const ExplorerPage = ({ walletSigner }) => {
                         loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
                                 <Loader className="w-10 h-10 text-theme-accent-primary animate-spin mb-4" />
-                                <p className="text-theme-text-muted font-medium">Loading blockchain data...</p>
+                                <p className="text-theme-text-muted font-medium">{s('Loading blockchain data...', '正在加载链上数据…')}</p>
                             </div>
                         ) : filteredTxs.length === 0 ? (
                             <div className="text-center py-20">
                                 <div className="w-16 h-16 bg-surface-elevated-2 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Search className="w-8 h-8 text-theme-text-muted" />
                                 </div>
-                                <h3 className="text-theme-text-primary font-medium mb-1">No transactions found</h3>
-                                <p className="text-theme-text-muted text-sm">Try adjusting your filters or search query.</p>
+                                <h3 className="text-theme-text-primary font-medium mb-1">{s('No transactions found', '未找到交易')}</h3>
+                                <p className="text-theme-text-muted text-sm">{s('Try adjusting your filters or search query.', '可以尝试调整筛选条件或搜索内容')}</p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead className="bg-surface-elevated-2 text-theme-text-muted text-xs uppercase tracking-wider border-b border-theme-border-medium">
                                         <tr>
-                                            <th className="px-6 py-4 text-left font-medium">Tx Hash</th>
-                                            <th className="px-6 py-4 text-left font-medium">Method</th>
-                                            <th className="px-6 py-4 text-left font-medium">Block</th>
-                                            <th className="px-6 py-4 text-left font-medium">Age</th>
-                                            <th className="px-6 py-4 text-left font-medium">From</th>
-                                            <th className="px-6 py-4 text-left font-medium">Token</th>
-                                            <th className="px-6 py-4 text-right font-medium">Fee</th>
+                                            <th className="px-6 py-4 text-left font-medium">{s('Tx Hash', '交易哈希')}</th>
+                                            <th className="px-6 py-4 text-left font-medium">{s('Method', '方法')}</th>
+                                            <th className="px-6 py-4 text-left font-medium">{s('Block', '区块')}</th>
+                                            <th className="px-6 py-4 text-left font-medium">{s('Age', '时间')}</th>
+                                            <th className="px-6 py-4 text-left font-medium">{s('From', '发起方')}</th>
+                                            <th className="px-6 py-4 text-left font-medium">{s('Token', '凭证')}</th>
+                                            <th className="px-6 py-4 text-right font-medium">{s('Fee', '手续费')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-theme-border-medium">
@@ -783,7 +800,7 @@ export const ExplorerPage = ({ walletSigner }) => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-md text-xs font-semibold uppercase">
-                                                        Mint
+                                                        {s('Mint', '铸造')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">

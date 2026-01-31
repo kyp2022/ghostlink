@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { CHAIN_ID } from '../config/constants';
+import { t } from '../i18n/strings';
 
 // Helper: Wait for ethers.js to be ready
 const waitForEthers = () => Promise.resolve(ethers);
@@ -15,13 +16,13 @@ export const useWallet = () => {
         try {
             await waitForEthers();
         } catch (error) {
-            alert('Failed to load ethers.js. Please refresh the page and try again.');
+            alert(t('errors.ethersLoadFailed'));
             console.error('ethers.js loading error:', error);
             return false;
         }
 
         if (typeof window.ethereum === 'undefined') {
-            alert('MetaMask is not detected. Please install the MetaMask extension.');
+            alert(t('errors.metamaskNotDetected'));
             return false;
         }
 
@@ -102,7 +103,7 @@ export const useWallet = () => {
             return true;
         } catch (error) {
             console.error('Wallet connection failed:', error);
-            alert('Wallet connection failed: ' + error.message);
+            alert(t('errors.walletConnectionFailedWithMessage', { message: error.message }));
             return false;
         } finally {
             setIsConnecting(false);
