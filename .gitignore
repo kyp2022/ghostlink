@@ -8,6 +8,8 @@ target/
 .vscode/
 *.swp
 *.swo
+.agent/
+.cursor/
 
 # OS
 .DS_Store
@@ -27,9 +29,12 @@ coverage/
 # Environment
 .env
 
+# Secrets / Keys (never commit)
+*.pem
+*.key
+*.p12
+*.pfx
+
 # Node modules
 node_modules/
 web/node_modules/
-
-# Contracts directory
-contracts/

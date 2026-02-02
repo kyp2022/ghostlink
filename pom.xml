@@ -46,6 +46,11 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
 		<!-- PDFBox for Alipay Asset Proof Parsing (Downgraded to 2.0.x for macOS stability) -->
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>

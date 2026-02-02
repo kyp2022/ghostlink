@@ -1,17 +1,38 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from './hooks/useWallet';
+import { useTheme } from './contexts/ThemeContext';
+import { useI18n } from './contexts/I18nContext';
+import { LayoutShell } from './components/layout/LayoutShell';
 import { Navbar } from './components/layout/Navbar';
+import { SideNavbar } from './components/layout/SideNavbar';
 import { Footer } from './components/layout/Footer';
+import { LensFlareTransition } from './components/ui/LensFlareTransition';
 import { HomePage } from './pages/HomePage';
 import { SolutionsPage } from './pages/SolutionsPage';
 import { ExplorerPage } from './pages/ExplorerPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { CompanyPage } from './pages/CompanyPage';
-import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI, API_BASE_URL } from './config/constants';
+import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI } from './config/constants';
+import { ENDPOINTS } from './config/endpoints';
 
 function App() {
-    const [activeTab, setActiveTab] = useState('home');
+    // Theme context for bifurcated layout
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
+    const { t } = useI18n();
+
+    // Persist activeTab across refreshes
+    const [activeTab, setActiveTab] = useState(() => {
+        const saved = localStorage.getItem('ghostlink_active_tab');
+        return saved || 'home';
+    });
+
+    // Save to localStorage whenever activeTab changes
+    useEffect(() => {
+        localStorage.setItem('ghostlink_active_tab', activeTab);
+    }, [activeTab]);
+
     const [verificationStatus, setVerificationStatus] = useState('idle');
     const [userData, setUserData] = useState(null);
     const [zkProof, setZkProof] = useState(null);
@@ -47,6 +68,9 @@ function App() {
         const handleMessage = (event) => {
             if (event.origin !== window.location.origin) return;
 
+            // Prevent strict mode double-firing
+            if (verificationStatus === 'loading' || twitterStatus === 'loading') return;
+
             if (event.data.type === 'GITHUB_AUTH_CODE') {
                 handleGithubCallback(event.data.code);
             } else if (event.data.type === 'TWITTER_AUTH_CODE') {
@@ -56,7 +80,7 @@ function App() {
 
         window.addEventListener('message', handleMessage);
         return () => window.removeEventListener('message', handleMessage);
-    }, []);
+    }, [verificationStatus, twitterStatus]); // Add deps to ensure latest state is checked
 
     const handleGithubCallback = async (code) => {
         setActiveTab('solutions');
@@ -77,14 +101,18 @@ function App() {
         if (!recipient) {
             console.error("Wallet not connected. Please connect wallet first.");
             setVerificationStatus('error');
-            alert('请先连接钱包！');
+            alert(t('wallet.notConnected'));
             return;
         }
 
-        fetch(`${API_BASE_URL}/api/v1/auth/github/callback`, {
+        fetch(ENDPOINTS.AUTH.GITHUB_CALLBACK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, recipient })
+            body: JSON.stringify({
+                code,
+                recipient,
+                redirectUri: REDIRECT_URI // Send redirect_uri to backend
+            })
         })
             .then(res => res.json())
             .then(data => {
@@ -124,11 +152,11 @@ function App() {
         if (!recipient) {
             console.error("Wallet not connected.");
             setTwitterStatus('error');
-            alert('请先连接钱包！');
+            alert(t('wallet.notConnected'));
             return;
         }
 
-        fetch(`${API_BASE_URL}/api/v1/auth/twitter/callback`, {
+        fetch(ENDPOINTS.AUTH.TWITTER_CALLBACK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -167,13 +195,13 @@ function App() {
             }
 
             if (!currentAccount) {
-                alert('Failed to connect wallet. Please try again.');
+                alert(t('errors.walletConnectFailed'));
                 return;
             }
         }
 
         if (!GITHUB_CLIENT_ID) {
-            alert("Configuration error: please set your GitHub Client ID.");
+            alert(t('errors.configGithubClientId'));
             return;
         }
         const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=read:user`;
@@ -203,12 +231,12 @@ function App() {
             }
 
             if (!currentAccount) {
-                alert('Failed to connect wallet. Please try again.');
+                alert(t('errors.walletConnectFailed'));
                 return;
             }
         }
 
-        if (!TWITTER_CLIENT_ID) { alert("Configuration error: please set TWITTER_CLIENT_ID."); return; }
+        if (!TWITTER_CLIENT_ID) { alert(t('errors.configTwitterClientId')); return; }
 
         // PKCE Flow
         const generateRandomString = (length) => {
@@ -261,35 +289,53 @@ function App() {
             case 'explorer': return <ExplorerPage walletSigner={signer} />;
             case 'developers': return <DevelopersPage />;
             case 'company': return <CompanyPage />;
-            default: return <HomePage />;
+            default: return <HomePage
+                onConnectWallet={connectWallet}
+                onViewDemo={() => setActiveTab('solutions')}
+            />;
         }
     };
 
+    // Bifurcated Layout Rendering
     return (
-        <div className="min-h-screen bg-bg">
-            <Navbar
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                account={account}
-                connectWallet={connectWallet}
-                disconnectWallet={disconnectWallet}
-                isConnecting={isConnecting}
-            />
+        <LayoutShell
+            topNavbar={
+                <Navbar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    account={account}
+                    onConnectWallet={connectWallet}
+                    disconnectWallet={disconnectWallet}
+                    isConnecting={isConnecting}
+                />
+            }
+            sideNavbar={
+                <SideNavbar
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    account={account}
+                    onConnectWallet={connectWallet}
+                    disconnectWallet={disconnectWallet}
+                    isConnecting={isConnecting}
+                />
+            }
+            footer={<Footer />}
+        >
+            {/* Only show lens flare in dark mode */}
+            {!isLight && <LensFlareTransition />}
 
             <AnimatePresence mode="wait">
-                <motion.main
+                <motion.div
                     key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{ opacity: 0, y: isLight ? 0 : 10, x: isLight ? 20 : 0 }}
+                    animate={{ opacity: 1, y: 0, x: 0 }}
+                    exit={{ opacity: 0, y: isLight ? 0 : -10, x: isLight ? -20 : 0 }}
+                    transition={{ duration: isLight ? 0.2 : 0.3 }}
                 >
                     {renderContent()}
-                </motion.main>
+                </motion.div>
             </AnimatePresence>
-
-            <Footer />
-        </div>
+        </LayoutShell>
     );
 }
 

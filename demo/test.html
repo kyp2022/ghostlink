@@ -1,25 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GhostLink Prover & Mint Console</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
     <style>
-        body { font-family: monospace; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f0f0f0; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        textarea { width: 100%; font-family: monospace; border: 1px solid #ccc; padding: 10px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #000; color: white; border: none; border-radius: 4px; margin-top: 10px; margin-right: 10px;}
-        button:hover { background-color: #333; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #status { margin-top: 20px; font-weight: bold; }
-        pre { background: #eee; padding: 10px; overflow-x: auto; }
-        .section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .step { margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-left: 3px solid #ccc; }
-        .warning { color: red; font-weight: bold; }
-        .info-box { background: #e8f4f8; padding: 10px; border-radius: 4px; margin-top: 10px; border: 1px solid #bce8f1; }
+        body {
+            font-family: monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            width: 100%;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #333;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        pre {
+            background: #eee;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .step {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 3px solid #ccc;
+        }
+
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #bce8f1;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>GhostLink Demo</h1>
@@ -40,12 +109,18 @@
                 <h4>Step A: Verifier Address</h4>
                 <p>Using RISC Zero Official Pre-deployed Verifier</p>
                 <select id="networkSelect" style="width: 100%; padding: 5px; margin-top: 5px; margin-bottom: 10px;">
-                    <option value="sepolia-router">Sepolia - Router (推荐) - 0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187</option>
-                    <option value="sepolia-groth16">Sepolia - Groth16 (直接) - 0x2a098988600d87650Fb061FfAff08B97149Fa84D</option>
-                    <option value="mainnet-router">Mainnet - Router (推荐) - 0x8EaB2D97Dfce405A1692a21b3ff3A172d593D319</option>
-                    <option value="mainnet-groth16">Mainnet - Groth16 (直接) - 0x54aCE3ED46529B4d4F3770C8Bad5dDC48717B9bF</option>
+                    <option value="sepolia-router">Sepolia - Router (推荐) - 0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187
+                    </option>
+                    <option value="sepolia-groth16">Sepolia - Groth16 (直接) - 0x2a098988600d87650Fb061FfAff08B97149Fa84D
+                    </option>
+                    <option value="mainnet-router">Mainnet - Router (推荐) - 0x8EaB2D97Dfce405A1692a21b3ff3A172d593D319
+                    </option>
+                    <option value="mainnet-groth16">Mainnet - Groth16 (直接) - 0x54aCE3ED46529B4d4F3770C8Bad5dDC48717B9bF
+                    </option>
                 </select>
-                <input type="text" id="verifierAddress" placeholder="Verifier Address" value="0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187" style="width: 100%; padding: 5px; margin-top: 5px;" readonly>
+                <input type="text" id="verifierAddress" placeholder="Verifier Address"
+                    value="0x925d8331ddc0a1F0d96E68CF073DFE1d92b69187"
+                    style="width: 100%; padding: 5px; margin-top: 5px;" readonly>
                 <p style="font-size: 11px; color: #666; margin-top: 5px;">
                     <strong>Router（推荐）</strong>: 自动路由到正确的 verifier，支持未来版本更新<br>
                     <strong>Groth16（直接）</strong>: 直接使用 Groth16 verifier，跳过路由层
@@ -56,7 +131,8 @@
                 <h4>Step B: Deploy SBT</h4>
                 <p id="bytecodeStatus" style="font-size: 12px; color: #666;">Status: Waiting for artifact...</p>
                 <label>Image ID (Hex):</label>
-                <input type="text" id="deployImageId" placeholder="Paste Image ID here (from Step 3)..." style="width: 100%; padding: 5px; margin-bottom: 10px;">
+                <input type="text" id="deployImageId" placeholder="Paste Image ID here (from Step 3)..."
+                    style="width: 100%; padding: 5px; margin-bottom: 10px;">
                 <button id="deploySBTBtn">Deploy SBT</button>
                 <div id="deployStatus"></div>
             </div>
@@ -65,16 +141,18 @@
         <!-- Prover Section -->
         <div class="section">
             <h3>3. Generate ZK Proof (Off-chain)</h3>
-            <p>Backend Service: <code>http://localhost:3000/prove</code></p>
+            <p>Backend Service: <code>http://localhost:8081/api/v1/receipt-data</code></p>
             <p class="info-box" style="margin-bottom: 10px;">
                 <strong>⚠️ 注意：</strong>请确保后端服务正在运行！<br>
                 运行命令：<code>cd host && cargo run</code>
             </p>
             <textarea id="jsonInput" rows="5" placeholder='Enter GitHub user JSON data...'></textarea>
             <p style="font-size: 12px; color: #666; margin-top: 5px;">
-                Example: <code>{"id": 12345, "login": "test_user", "created_at": "2020-01-01T00:00:00Z", "public_repos": 5}</code>
+                Example:
+                <code>{"id": 12345, "login": "test_user", "created_at": "2020-01-01T00:00:00Z", "public_repos": 5}</code>
             </p>
-            <button id="loadExampleBtn" style="padding: 5px 10px; font-size: 12px; margin-top: 5px;">Load Example</button>
+            <button id="loadExampleBtn" style="padding: 5px 10px; font-size: 12px; margin-top: 5px;">Load
+                Example</button>
             <button id="proveBtn">Generate Proof</button>
             <div id="proverStatus"></div>
 
@@ -88,7 +166,9 @@
         <!-- Mint Section -->
         <div class="section">
             <h3>4. Mint SBT (On-chain)</h3>
-            <p>Contract Address: <input type="text" id="contractAddress" placeholder="Deploy first, then address will appear here..." style="width: 300px; padding: 5px;"></p>
+            <p>Contract Address: <input type="text" id="contractAddress"
+                    placeholder="Deploy first, then address will appear here..." style="width: 300px; padding: 5px;">
+            </p>
             <button id="mintBtn" disabled>Mint SBT</button>
             <div id="mintStatus"></div>
         </div>
@@ -103,8 +183,10 @@
                 或 <code>https://cloudflare-ipfs.com/ipfs/YOUR_HASH/</code> (Cloudflare 公共网关)<br>
                 如果输入 <code>ipfs://</code> 格式，系统会自动转换为 HTTP 网关 URL
             </p>
-            <p>Contract Address: <input type="text" id="setURIContractAddress" placeholder="Enter contract address..." style="width: 300px; padding: 5px;"></p>
-            <input type="text" id="baseURIInput" placeholder="Enter Base URI (e.g., https://ipfs.io/ipfs/QmXXX/)" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+            <p>Contract Address: <input type="text" id="setURIContractAddress" placeholder="Enter contract address..."
+                    style="width: 300px; padding: 5px;"></p>
+            <input type="text" id="baseURIInput" placeholder="Enter Base URI (e.g., https://ipfs.io/ipfs/QmXXX/)"
+                style="width: 100%; padding: 5px; margin-bottom: 5px;">
             <button id="setBaseURIBtn" disabled>Set Base URI</button>
             <button id="getBaseURIBtn" disabled>Get Current Base URI</button>
             <button id="testMetadataBtn" disabled>Test Metadata JSON</button>
@@ -120,7 +202,7 @@
         <!-- Verify & Query Section -->
         <div class="section">
             <h3>6. Verify & Query</h3>
-            
+
             <div class="step">
                 <h4>5.1 Check My SBTs</h4>
                 <button id="checkMySBTsBtn" disabled>Check My SBTs</button>
@@ -134,7 +216,8 @@
             <div class="step">
                 <h4>5.2 Verify Address</h4>
                 <p>Check if an address owns any GhostLink SBT:</p>
-                <input type="text" id="verifyAddressInput" placeholder="Enter address to verify (0x...)" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                <input type="text" id="verifyAddressInput" placeholder="Enter address to verify (0x...)"
+                    style="width: 100%; padding: 5px; margin-bottom: 5px;">
                 <button id="verifyAddressBtn" disabled>Verify Address</button>
                 <div id="verifyAddressStatus"></div>
             </div>
@@ -142,7 +225,8 @@
             <div class="step">
                 <h4>5.3 Check Nullifier</h4>
                 <p>Check if a nullifier has been used:</p>
-                <input type="text" id="checkNullifierInput" placeholder="Enter nullifier (0x...)" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                <input type="text" id="checkNullifierInput" placeholder="Enter nullifier (0x...)"
+                    style="width: 100%; padding: 5px; margin-bottom: 5px;">
                 <button id="checkNullifierBtn" disabled>Check Nullifier</button>
                 <div id="checkNullifierStatus"></div>
             </div>
@@ -150,7 +234,8 @@
             <div class="step">
                 <h4>5.4 Query Token Info</h4>
                 <p>Get token information by tokenId:</p>
-                <input type="number" id="tokenIdInput" placeholder="Enter token ID" style="width: 100%; padding: 5px; margin-bottom: 5px;" min="0">
+                <input type="number" id="tokenIdInput" placeholder="Enter token ID"
+                    style="width: 100%; padding: 5px; margin-bottom: 5px;" min="0">
                 <button id="queryTokenBtn" disabled>Query Token</button>
                 <div id="queryTokenStatus"></div>
             </div>
@@ -192,14 +277,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             const networkSelect = document.getElementById('networkSelect');
             const verifierAddress = document.getElementById('verifierAddress');
-            
+
             if (networkSelect && verifierAddress) {
                 networkSelect.addEventListener('change', (e) => {
                     const network = e.target.value;
                     verifierAddress.value = VERIFIER_ADDRESSES[network];
                 });
             }
-            
+
             // 加载示例 JSON
             const loadExampleBtn = document.getElementById('loadExampleBtn');
             const jsonInput = document.getElementById('jsonInput');
@@ -255,21 +340,21 @@
                     provider = new ethers.BrowserProvider(window.ethereum);
                     signer = await provider.getSigner();
                     const address = await signer.getAddress();
-                    
+
                     // 验证地址格式（确保是有效的以太坊地址）
                     if (!ethers.isAddress(address)) {
                         throw new Error("Invalid address format: " + address);
                     }
-                    
+
                     // 确保地址格式正确（小写，带0x前缀）
                     userAddress = ethers.getAddress(address); // 这会标准化地址格式
-                    
+
                     console.log("Connected wallet address:", userAddress);
                     console.log("Address length:", userAddress.length, "(should be 42)");
-                    
+
                     document.getElementById('walletAddress').innerText = userAddress;
                     loadAllArtifacts();
-                    
+
                     // 更新查询按钮状态
                     setTimeout(() => {
                         if (typeof updateQueryButtonsState === 'function') {
@@ -306,7 +391,7 @@
 
                 statusDiv.innerText = "✅ SBT Deployed at: " + addr;
                 document.getElementById('contractAddress').value = addr;
-                
+
                 // 更新查询按钮状态
                 if (typeof updateQueryButtonsState === 'function') {
                     updateQueryButtonsState();
@@ -336,7 +421,7 @@
             try {
                 // 移除可能的 BOM 和不可见字符
                 json = json.replace(/^\uFEFF/, '').trim();
-                
+
                 // 尝试解析 JSON
                 let parsed;
                 try {
@@ -346,7 +431,7 @@
                     const errorMsg = parseError.message || 'Invalid JSON format';
                     const position = parseError.message?.match(/position (\d+)/)?.[1];
                     let helpfulMsg = errorMsg;
-                    
+
                     if (position) {
                         const pos = parseInt(position);
                         const lines = json.split('\n');
@@ -361,13 +446,13 @@
                         }
                         helpfulMsg = `${errorMsg}\nAt line ${lineNum}, column ${pos - charCount + 1}`;
                     }
-                    
+
                     statusDiv.innerHTML = `❌ JSON Parse Error: ${helpfulMsg}<br><small>Please check your JSON input. Make sure it's valid JSON format.</small>`;
                     console.error('JSON Parse Error:', parseError);
                     console.error('JSON content:', json);
                     return;
                 }
-                
+
                 // 验证必需字段
                 if (typeof parsed.id !== 'number') {
                     throw new Error('JSON must contain "id" field (number)');
@@ -381,10 +466,10 @@
                 if (typeof parsed.public_repos !== 'number') {
                     throw new Error('JSON must contain "public_repos" field (number)');
                 }
-                
+
                 // 重新序列化以确保格式正确
                 json = JSON.stringify(parsed);
-                
+
                 console.log('Validated JSON:', json);
             } catch (e) {
                 statusDiv.innerHTML = `❌ Validation Error: ${e.message}<br><small>Please check your JSON input</small>`;
@@ -402,12 +487,12 @@
                 if (!userAddress || !ethers.isAddress(userAddress)) {
                     throw new Error("Invalid wallet address. Please reconnect your wallet.");
                 }
-                
+
                 // 标准化地址格式
                 const normalizedAddress = ethers.getAddress(userAddress);
                 console.log("Sending proof request with recipient:", normalizedAddress);
-                
-                const response = await fetch('http://localhost:3000/prove', {
+
+                const response = await fetch('http://localhost:8081/api/v1/receipt-data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -432,14 +517,14 @@
                 console.log("Journal hex length:", data.journal_hex?.length || 0, "chars (should be 128)");
                 console.log("Nullifier hex length:", data.nullifier_hex?.length || 0, "chars (should be 64)");
                 console.log("Image ID hex length:", data.image_id_hex?.length || 0, "chars (should be 64)");
-                
+
                 // 检查 journal 格式
                 if (data.journal_hex && data.journal_hex.length !== 128) {
                     console.warn("⚠️ WARNING: Journal hex length is", data.journal_hex.length, "but should be 128!");
                     console.warn("  Journal hex:", data.journal_hex);
                     console.warn("  This may cause verification to fail!");
                 }
-                
+
                 // 检查 nullifier 格式
                 if (data.nullifier_hex && data.nullifier_hex.length !== 64) {
                     console.warn("⚠️ WARNING: Nullifier hex length is", data.nullifier_hex.length, "but should be 64!");
@@ -484,11 +569,11 @@
                     throw new Error(`Invalid address from signer: ${currentAddress}`);
                 }
                 userAddress = ethers.getAddress(currentAddress); // 标准化地址
-                
+
                 if (userAddress.length !== 42) {
                     throw new Error(`Invalid address length: ${userAddress.length}, expected 42. Address: ${userAddress}`);
                 }
-                
+
                 console.log("✅ Validated address:", userAddress, "Length:", userAddress.length);
                 const abi = sbtArtifact ? sbtArtifact.abi : [
                     "function mint(bytes calldata seal, address recipient, bytes32 nullifier) external",
@@ -506,10 +591,10 @@
                 statusDiv.innerText = "Verifying contract parameters...";
                 const contractImageId = await readOnlyContract.imageId();
                 const proofImageId = "0x" + proofData.image_id_hex;
-                
+
                 console.log("Contract Image ID:", contractImageId);
                 console.log("Proof Image ID:", proofImageId);
-                
+
                 if (contractImageId.toLowerCase() !== proofImageId.toLowerCase()) {
                     throw new Error(`Image ID mismatch!\nContract: ${contractImageId}\nProof: ${proofImageId}\n\nPlease ensure the contract was deployed with the correct Image ID.`);
                 }
@@ -520,7 +605,7 @@
                 if (!seal.startsWith("0x")) {
                     seal = "0x" + seal;
                 }
-                
+
                 // 处理 nullifier：确保有 0x 前缀，且格式正确
                 let nullifier = proofData.nullifier_hex;
                 // 移除可能存在的 0x 前缀
@@ -545,31 +630,31 @@
                 if (!nullifier || nullifier.length !== 66) { // 0x + 64 hex chars
                     throw new Error(`Invalid nullifier format. Expected 66 chars, got ${nullifier.length}: ${nullifier}`);
                 }
-                
+
                 // 输出验证后的参数（用于调试）
                 console.log("Processed parameters:");
                 console.log("  Seal:", seal.substring(0, 20) + "...", "Length:", seal.length);
                 console.log("  Nullifier:", nullifier, "Length:", nullifier.length);
                 console.log("  Recipient:", userAddress);
-                
+
                 // 验证 seal 格式（Groth16 seal 应该以特定选择器开头）
                 console.log("=== Seal Analysis ===");
                 console.log("Seal first 10 chars:", seal.substring(0, 10));
                 console.log("Seal length:", seal.length, "chars");
-                
+
                 // 提取 seal 的选择器（前4个字节，去掉0x后是8个字符）
                 const sealSelector = seal.substring(0, 10); // "0x" + 8 hex chars = 10 chars
                 console.log("Seal selector (first 4 bytes):", sealSelector);
                 console.log("Seal selector hex (without 0x):", seal.substring(2, 10));
-                
+
                 // 检查 seal 长度（Groth16 seal 应该是约 256-300 字节 = 512-600 字符）
                 const sealByteLength = (seal.length - 2) / 2; // 减去 "0x"，除以2得到字节数
                 console.log("Seal byte length:", sealByteLength, "bytes");
-                
+
                 if (sealByteLength < 200 || sealByteLength > 400) {
                     console.warn("⚠️ Seal length unusual. Groth16 seals are typically 256-300 bytes.");
                 }
-                
+
                 // 验证 journal 编码（用于调试）
                 // 合约期望：abi.encode(recipient, nullifier)
                 // 这会产生 64 字节：12字节填充 + 20字节地址 + 32字节nullifier
@@ -579,33 +664,33 @@
                         [userAddress, nullifier]
                     );
                     const expectedJournalDigest = ethers.sha256(expectedJournal);
-                    
+
                     // 获取后端返回的 journal（如果有）
                     const backendJournal = proofData.journal_hex ? ("0x" + proofData.journal_hex) : null;
-                    
+
                     console.log("=== Journal Verification ===");
                     console.log("Expected journal (from contract):", expectedJournal);
                     console.log("Expected journal digest:", expectedJournalDigest);
                     console.log("Backend journal hex:", backendJournal);
-                    
+
                     if (backendJournal) {
                         const backendJournalDigest = ethers.sha256(backendJournal);
                         console.log("Backend journal digest:", backendJournalDigest);
                         console.log("Journal match:", expectedJournal.toLowerCase() === backendJournal.toLowerCase());
                         console.log("Journal digest match:", expectedJournalDigest.toLowerCase() === backendJournalDigest.toLowerCase());
-                        
+
                         if (expectedJournal.toLowerCase() !== backendJournal.toLowerCase()) {
                             console.warn("⚠️ WARNING: Journal mismatch!");
                             console.warn("  Expected:", expectedJournal);
                             console.warn("  Backend: ", backendJournal);
                         }
                     }
-                    
+
                     console.log("Journal length:", expectedJournal.length, "bytes (should be 64 bytes = 128 hex chars + 0x)");
                 } catch (e) {
                     console.warn("Could not encode journal:", e);
                 }
-                
+
                 // 地址已在函数开始时验证，这里再次确认
                 console.log("Using address for mint:", userAddress, "Length:", userAddress.length);
 
@@ -632,18 +717,18 @@
 
                 // 预检查：使用 callStatic 模拟交易以获取详细错误
                 statusDiv.innerText = "Simulating transaction...";
-                
+
                 // 验证参数类型和格式
                 console.log("Parameter types check:");
                 console.log("  seal type:", typeof seal, "is hex:", seal.startsWith("0x"));
                 console.log("  userAddress type:", typeof userAddress, "is address:", ethers.isAddress(userAddress));
                 console.log("  nullifier type:", typeof nullifier, "is hex:", nullifier.startsWith("0x"));
-                
+
                 // 确保 seal 是有效的 bytes
                 if (!seal.startsWith("0x")) {
                     throw new Error("Seal must be a hex string starting with 0x");
                 }
-                
+
                 // 再次验证 nullifier 格式（确保没有被修改）
                 if (!nullifier.startsWith("0x") || nullifier.length !== 66) {
                     console.error("Nullifier validation failed:", {
@@ -653,7 +738,7 @@
                     });
                     throw new Error(`Nullifier must be a hex string of 66 characters (0x + 64 hex), got: ${nullifier.length}. Value: ${nullifier}`);
                 }
-                
+
                 // 验证 nullifier 是有效的 bytes32
                 try {
                     // 尝试将 nullifier 转换为 bytes32 格式
@@ -666,22 +751,22 @@
                     console.error("❌ Nullifier format error:", e);
                     throw new Error(`Invalid nullifier format: ${e.message}. Value: ${nullifier}`);
                 }
-                
+
                 try {
                     console.log("Calling mint.staticCall with parameters:");
                     console.log("  seal:", seal.substring(0, 20) + "...", "type:", typeof seal);
                     console.log("  userAddress:", userAddress, "type:", typeof userAddress);
                     console.log("  nullifier:", nullifier, "type:", typeof nullifier);
-                    
+
                     await contract.mint.staticCall(seal, userAddress, nullifier);
                     console.log("✅ Transaction simulation successful");
                 } catch (simError) {
                     console.error("Transaction simulation failed:", simError);
                     console.error("Error data:", simError.data);
                     console.error("Error transaction:", simError.transaction);
-                    
+
                     let errorMsg = "Transaction will fail";
-                    
+
                     // 尝试解析错误信息
                     if (simError.reason) {
                         errorMsg = simError.reason;
@@ -704,7 +789,7 @@
                                 console.warn("Could not decode error reason:", e);
                             }
                         }
-                        
+
                         // 尝试解码自定义错误
                         try {
                             const errorInterface = new ethers.Interface([
@@ -723,15 +808,15 @@
                         } catch (decodeError) {
                             console.warn("Could not decode custom error:", decodeError);
                         }
-                        
+
                         // 如果错误数据是 0xe4ea6542，这可能是 verifier 的错误
                         if (errorData.startsWith("0xe4ea6542")) {
                             errorMsg = "❌ Proof verification failed (0xe4ea6542). This usually means:\n" +
-                                      "  1. Seal format is incorrect\n" +
-                                      "  2. Image ID doesn't match\n" +
-                                      "  3. Journal digest doesn't match\n" +
-                                      "  4. Verifier address is wrong";
-                            
+                                "  1. Seal format is incorrect\n" +
+                                "  2. Image ID doesn't match\n" +
+                                "  3. Journal digest doesn't match\n" +
+                                "  4. Verifier address is wrong";
+
                             console.error("⚠️ Verifier error detected (0xe4ea6542). Detailed check:");
                             console.error("  1. Seal format and length:", seal.length, "chars");
                             console.error("     Seal first 10 chars:", seal.substring(0, 10));
@@ -740,7 +825,7 @@
                             console.error("  2. Image ID match:", contractImageId.toLowerCase() === proofImageId.toLowerCase());
                             console.error("     Contract Image ID:", contractImageId);
                             console.error("     Proof Image ID:", proofImageId);
-                            
+
                             // 计算期望的 journal digest
                             try {
                                 const expectedJournal = ethers.AbiCoder.defaultAbiCoder().encode(
@@ -748,26 +833,26 @@
                                     [userAddress, nullifier]
                                 );
                                 const expectedDigest = ethers.sha256(expectedJournal);
-                                
+
                                 // 获取后端返回的 journal
                                 const backendJournal = proofData.journal_hex ? ("0x" + proofData.journal_hex) : null;
-                                
+
                                 console.error("  3. Journal encoding check:");
                                 console.error("     Expected journal:", expectedJournal);
                                 console.error("     Expected digest:", expectedDigest);
-                                
+
                                 if (backendJournal) {
                                     const backendDigest = ethers.sha256(backendJournal);
                                     console.error("     Backend journal:", backendJournal);
                                     console.error("     Backend digest:", backendDigest);
                                     console.error("     Journal match:", expectedJournal.toLowerCase() === backendJournal.toLowerCase());
                                     console.error("     Digest match:", expectedDigest.toLowerCase() === backendDigest.toLowerCase());
-                                    
+
                                     if (expectedJournal.toLowerCase() !== backendJournal.toLowerCase()) {
                                         console.error("     ❌ JOURNAL MISMATCH - This is likely the problem!");
                                     }
                                 }
-                                
+
                                 console.error("  4. Verifier address:", document.getElementById('verifierAddress').value);
                                 console.error("  5. Recipient address:", userAddress);
                                 console.error("  6. Nullifier:", nullifier);
@@ -783,7 +868,7 @@
                             errorMsg = simError.message;
                         }
                     }
-                    
+
                     throw new Error(errorMsg);
                 }
 
@@ -794,7 +879,7 @@
                 console.log("  seal:", seal.substring(0, 30) + "...", "starts with 0x:", seal.startsWith("0x"));
                 console.log("  userAddress:", userAddress, "is valid:", ethers.isAddress(userAddress));
                 console.log("  nullifier:", nullifier, "starts with 0x:", nullifier.startsWith("0x"), "length:", nullifier.length);
-                
+
                 // 确保 nullifier 格式正确
                 if (!nullifier.startsWith("0x")) {
                     console.error("❌ CRITICAL: Nullifier missing 0x prefix!");
@@ -802,7 +887,7 @@
                     nullifier = "0x" + nullifier;
                     console.log("  Fixed value:", nullifier);
                 }
-                
+
                 // 使用 ethers.hexlify 确保格式正确
                 try {
                     nullifier = ethers.hexlify(nullifier);
@@ -811,7 +896,7 @@
                     console.error("❌ Failed to hexlify nullifier:", e);
                     throw new Error(`Invalid nullifier format: ${e.message}. Value: ${nullifier}`);
                 }
-                
+
                 // 调用 mint 函数：mint(bytes calldata seal, address recipient, bytes32 nullifier)
                 // 使用 estimateGas 先估算 gas
                 let gasEstimate;
@@ -820,7 +905,7 @@
                     console.log("  seal length:", seal.length);
                     console.log("  userAddress:", userAddress);
                     console.log("  nullifier:", nullifier);
-                    
+
                     gasEstimate = await contract.mint.estimateGas(seal, userAddress, nullifier);
                     console.log("Estimated gas:", gasEstimate.toString());
                 } catch (estimateError) {
@@ -829,10 +914,10 @@
                     console.error("  seal:", seal.substring(0, 30) + "...");
                     console.error("  userAddress:", userAddress);
                     console.error("  nullifier:", nullifier, "type:", typeof nullifier);
-                    
+
                     // 如果估算失败，尝试从 staticCall 的错误中获取信息
                     let errorMsg = "Gas estimation failed";
-                    
+
                     if (estimateError.reason) {
                         errorMsg = estimateError.reason;
                     } else if (estimateError.data) {
@@ -840,7 +925,7 @@
                     } else if (estimateError.message) {
                         errorMsg = estimateError.message;
                     }
-                    
+
                     throw new Error(errorMsg);
                 }
 
@@ -851,14 +936,14 @@
                 console.log("  userAddress:", userAddress);
                 console.log("  nullifier:", nullifier);
 
-                const tx = await contract.mint(seal, userAddress, nullifier, { 
+                const tx = await contract.mint(seal, userAddress, nullifier, {
                     gasLimit: gasEstimate * BigInt(2)  // 使用估算值的 2 倍作为安全边界
                 });
-                
+
                 statusDiv.innerText = "Transaction sent: " + tx.hash + "\nWaiting for confirmation...";
 
                 const receipt = await tx.wait();
-                
+
                 if (receipt.status === 1) {
                     statusDiv.innerText = "✅ Minted Successfully!\nTX: " + tx.hash;
                 } else {
@@ -868,17 +953,17 @@
             } catch (e) {
                 console.error("Mint Error Details:", e);
                 console.error("Error object:", JSON.stringify(e, Object.getOwnPropertyNames(e)));
-                
+
                 let errorMsg = e.message || "Unknown error";
                 let helpfulTips = "";
-                
+
                 // 尝试解析更详细的错误信息
                 if (e.reason) {
                     errorMsg = e.reason;
                 } else if (e.data) {
                     errorMsg = "Transaction reverted. Check console for details.";
                 }
-                
+
                 // 根据错误类型提供帮助提示
                 if (errorMsg.includes("Image ID") || errorMsg.includes("imageId")) {
                     helpfulTips = "<br><strong>💡 Tip:</strong> Ensure the contract was deployed with the same Image ID as the proof.";
@@ -889,7 +974,7 @@
                 } else if (errorMsg.includes("Gas") || errorMsg.includes("estimation")) {
                     helpfulTips = "<br><strong>💡 Tip:</strong> Check console (F12) for detailed error. Common issues: Image ID mismatch, nullifier already used, or invalid proof.";
                 }
-                
+
                 statusDiv.innerHTML = `❌ Mint Error: ${errorMsg}${helpfulTips}<br><small>Check browser console (F12) for full details</small>`;
             }
         });
@@ -968,7 +1053,7 @@
                 if (tokens.length > 0) {
                     let html = `<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">`;
                     html += `<tr style="background: #f0f0f0;"><th style="padding: 8px; text-align: left;">Token ID</th><th style="padding: 8px; text-align: left;">Owner</th><th style="padding: 8px; text-align: left;">Token URI</th></tr>`;
-                    
+
                     for (const tokenId of tokens) {
                         try {
                             const owner = await contract.ownerOf(tokenId);
@@ -1022,10 +1107,10 @@
 
                 if (balanceNum > 0) {
                     statusDiv.innerHTML = `✅ <strong>Verified!</strong><br>` +
-                                        `Address <code>${addressInput}</code> owns <strong>${balanceNum}</strong> GhostLink SBT(s).`;
+                        `Address <code>${addressInput}</code> owns <strong>${balanceNum}</strong> GhostLink SBT(s).`;
                 } else {
                     statusDiv.innerHTML = `❌ <strong>Not verified.</strong><br>` +
-                                        `Address <code>${addressInput}</code> does not own any GhostLink SBTs.`;
+                        `Address <code>${addressInput}</code> does not own any GhostLink SBTs.`;
                 }
 
             } catch (e) {
@@ -1063,10 +1148,10 @@
 
                 if (used) {
                     statusDiv.innerHTML = `⚠️ <strong>Nullifier already used!</strong><br>` +
-                                        `Nullifier <code>${nullifier}</code> has been used and cannot be used again.`;
+                        `Nullifier <code>${nullifier}</code> has been used and cannot be used again.`;
                 } else {
                     statusDiv.innerHTML = `✅ <strong>Nullifier available!</strong><br>` +
-                                        `Nullifier <code>${nullifier}</code> has not been used yet.`;
+                        `Nullifier <code>${nullifier}</code> has not been used yet.`;
                 }
 
             } catch (e) {
@@ -1182,7 +1267,7 @@
 
         // 监听合约地址变化
         document.getElementById('contractAddress').addEventListener('input', updateQueryButtonsState);
-        
+
         // 监听钱包连接
         const originalConnectHandler = document.getElementById('connectBtn').onclick;
         document.getElementById('connectBtn').addEventListener('click', () => {
@@ -1194,7 +1279,7 @@
         updateQueryButtonsState();
 
         // ==================== Base URI 设置功能 ====================
-        
+
         // 监听合约地址输入，启用/禁用按钮
         document.getElementById('setURIContractAddress').addEventListener('input', () => {
             const contractAddr = document.getElementById('setURIContractAddress').value.trim();
@@ -1207,16 +1292,16 @@
         // 转换 JSON 中的 ipfs:// 图片 URL 为 HTTP URL
         function convertImageUrlInMetadata(metadata) {
             if (!metadata || !metadata.image) return metadata;
-            
+
             let imageUrl = metadata.image;
-            
+
             // 如果是 ipfs:// 协议，转换为 HTTP 网关
             if (imageUrl.startsWith('ipfs://')) {
                 const hash = imageUrl.replace('ipfs://', '').trim();
                 imageUrl = `https://cloudflare-ipfs.com/ipfs/${hash}`;
                 metadata.image = imageUrl;
             }
-            
+
             return metadata;
         }
 
@@ -1270,7 +1355,7 @@
                 }
 
                 const metadata = await response.json();
-                
+
                 // 检查并转换图片 URL
                 const originalImage = metadata.image;
                 const convertedMetadata = convertImageUrlInMetadata(JSON.parse(JSON.stringify(metadata)));
@@ -1292,9 +1377,9 @@
                     const imageUrl = metadata.image;
                     const isIpfsProtocol = imageUrl.startsWith('ipfs://');
                     const isHttp = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
-                    
+
                     resultHtml += `<strong>原始图片 URL:</strong> <code>${imageUrl}</code><br>`;
-                    
+
                     if (isIpfsProtocol) {
                         resultHtml += `<span style="color: orange;">⚠️ 图片 URL 使用 ipfs:// 协议（MetaMask 不支持）</span><br>`;
                         resultHtml += `<strong>建议的 HTTP URL:</strong> <code>${convertedMetadata.image}</code><br>`;
@@ -1325,12 +1410,12 @@
         // 转换 ipfs:// 协议为 HTTP 网关 URL
         function convertIpfsToHttp(uri) {
             if (!uri) return uri;
-            
+
             // 如果已经是 HTTP/HTTPS，直接返回
             if (uri.startsWith('http://') || uri.startsWith('https://')) {
                 return uri;
             }
-            
+
             // 如果是 ipfs:// 协议，转换为 HTTP 网关
             if (uri.startsWith('ipfs://')) {
                 // 移除 ipfs:// 前缀
@@ -1338,14 +1423,14 @@
                 // 使用 Cloudflare IPFS 网关（速度快，稳定）
                 return `https://cloudflare-ipfs.com/ipfs/${hash}`;
             }
-            
+
             // 如果只是 Hash（没有协议前缀），添加 HTTP 网关
             if (/^[Qmb][a-zA-Z0-9]{43,}$/.test(uri) || /^baf[a-z0-9]+$/.test(uri)) {
                 // 检查是否以 / 结尾
                 const hash = uri.endsWith('/') ? uri.slice(0, -1) : uri;
                 return `https://cloudflare-ipfs.com/ipfs/${hash}/`;
             }
-            
+
             return uri;
         }
 
@@ -1374,12 +1459,12 @@
                 // 自动转换 ipfs:// 为 HTTP 网关
                 const originalURI = baseURI;
                 baseURI = convertIpfsToHttp(baseURI);
-                
+
                 // 确保以 / 结尾
                 if (!baseURI.endsWith('/')) {
                     baseURI += '/';
                 }
-                
+
                 // 如果转换了，显示提示
                 if (originalURI !== baseURI) {
                     statusDiv.innerHTML = `ℹ️ 已自动转换 IPFS 协议为 HTTP 网关:<br>原始: <code>${originalURI}</code><br>转换后: <code>${baseURI}</code><br><br>继续设置...`;
@@ -1396,7 +1481,7 @@
                 statusDiv.innerText = "Checking permissions...";
                 const owner = await contract.owner();
                 const currentAddress = await signer.getAddress();
-                
+
                 if (owner.toLowerCase() !== currentAddress.toLowerCase()) {
                     throw new Error("Only contract owner can set Base URI!");
                 }
@@ -1405,9 +1490,9 @@
                 statusDiv.innerText = "Setting Base URI...";
                 const tx = await contract.setBaseURI(baseURI);
                 statusDiv.innerText = `Transaction sent: ${tx.hash}\nWaiting for confirmation...`;
-                
+
                 const receipt = await tx.wait();
-                
+
                 if (receipt.status === 1) {
                     statusDiv.innerHTML = `✅ Base URI set successfully!<br>TX: ${tx.hash}`;
                     // 自动获取并显示新的 Base URI
@@ -1448,7 +1533,7 @@
 
                 // 尝试获取 tokenURI(0) 来推断 Base URI
                 statusDiv.innerText = "Fetching Base URI...";
-                
+
                 try {
                     const tokenURI0 = await contract.tokenURI(0);
                     if (!tokenURI0 || tokenURI0 === "") {
@@ -1512,4 +1597,5 @@
         });
     </script>
 </body>
+
 </html>

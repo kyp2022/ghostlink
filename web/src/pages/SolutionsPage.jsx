@@ -1,22 +1,54 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Github, Twitter, Plus, Check, ShieldCheck, Car } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Github, Twitter, Check, Lock, Users, Zap } from 'lucide-react';
+import { EthereumIcon, UberIcon } from '../components/ui/Icons';
+import CrystallineCube from '../components/ui/CrystallineCube';
+
 import { useContract } from '../hooks/useContract';
 import { ProgressModal } from '../components/ProgressModal';
 import AlipayUpload from '../components/AlipayUpload';
 import CryptoPortfolio from '../components/CryptoPortfolio';
+import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../contexts/I18nContext';
+
+// Transition variants
+const particleExit = {
+    initial: { opacity: 0, scale: 0.9, filter: 'blur(0px)' },
+    animate: {
+        opacity: 1,
+        scale: 1,
+        filter: 'blur(0px)',
+        transition: { duration: 0.6, ease: "easeOut" }
+    },
+    exit: {
+        opacity: 0,
+        scale: 1.1,
+        filter: 'blur(20px)',
+        transition: { duration: 0.4, ease: "easeIn" }
+    }
+};
+
+const scanlineEntry = {
+    initial: { clipPath: 'inset(0 100% 0 0)', x: 20 },
+    animate: {
+        clipPath: 'inset(0 0% 0 0)',
+        x: 0,
+        transition: { duration: 0.8, ease: "anticipate" }
+    }
+};
 
 export const SolutionsPage = ({
     initialVerificationStatus, initialUserData, initialZkProof, onGithubConnect,
     twitterStatus, twitterUser, twitterProof, onTwitterConnect,
     walletAccount, walletSigner, onConnectWallet
 }) => {
-    const [activeTab, setActiveTab] = useState('identity');
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
+    const { t } = useI18n();
+
+    const [activeTab, setActiveTab] = useState('defi');
     const account = walletAccount;
     const signer = walletSigner;
-
-    // Debug: Log wallet props
-    console.log('[SolutionsPage] Wallet props received:', { walletAccount, walletSigner: !!walletSigner });
 
     const {
         mintCredential,
@@ -34,315 +66,169 @@ export const SolutionsPage = ({
         ensureProgressInitialized
     } = useContract(signer, account);
 
-    // Show progress modal when loading starts
+    // Auto-progress effects...
     useEffect(() => {
         const githubLoading = initialVerificationStatus === 'loading';
         const twitterLoading = twitterStatus === 'loading';
-
-        if (githubLoading) {
-            ensureProgressInitialized('GitHub · Proof → Mint');
-            setProgressSteps(defaultProgressSteps);
-            setCurrentProgressStep(0);
-            setShowProgressModal(true);
-            return;
-        }
-
-        if (twitterLoading) {
-            ensureProgressInitialized('X · Proof → Mint');
+        if (githubLoading || twitterLoading) {
+            ensureProgressInitialized(githubLoading ? t('progress.githubProofToMint') : t('progress.twitterProofToMint'));
             setProgressSteps(defaultProgressSteps);
             setCurrentProgressStep(0);
             setShowProgressModal(true);
         }
     }, [initialVerificationStatus, twitterStatus]);
 
-    // When proof arrives, mark step 0 as completed
     useEffect(() => {
-        if (initialVerificationStatus === 'success' && initialZkProof) {
-            setProgressTitle('GitHub · Proof → Mint');
+        if ((initialVerificationStatus === 'success' && initialZkProof) || (twitterStatus === 'success' && twitterProof)) {
+            const isTwitter = twitterStatus === 'success';
+            setProgressTitle(isTwitter ? t('progress.twitterProofToMint') : t('progress.githubProofToMint'));
             setProgressSteps(prev => (prev && prev.length > 0 ? prev : defaultProgressSteps));
             setProgressSteps(prev => prev.map((s, i) =>
-                i === 0 ? { ...s, description: 'Proof ready', details: `Proof ID: ${initialZkProof.proofId || 'N/A'}` } : s
+                i === 0 ? { ...s, description: t('progress.proofReady'), details: `Proof ID: ${(isTwitter ? twitterProof : initialZkProof).proofId || 'N/A'}` } : s
             ));
-            if (account && signer) {
-                setCurrentProgressStep(1);
+            setCurrentProgressStep(1);
+
+            // Auto-trigger minting
+            if (isTwitter) {
+                mintCredential(twitterProof, 2, false); // 2 = Twitter
             } else {
-                setProgressSteps(prev => prev.map((s, i) =>
-                    i === 1 ? { ...s, description: 'Connect wallet to continue.' } : s
-                ));
-                setCurrentProgressStep(1);
+                mintCredential(initialZkProof, 0, false); // 0 = Github
             }
         }
-    }, [initialVerificationStatus, initialZkProof]);
-
-    useEffect(() => {
-        if (twitterStatus === 'success' && twitterProof) {
-            setProgressTitle('X · Proof → Mint');
-            setProgressSteps(prev => (prev && prev.length > 0 ? prev : defaultProgressSteps));
-            setProgressSteps(prev => prev.map((s, i) =>
-                i === 0 ? { ...s, description: 'Proof ready', details: `Proof ID: ${twitterProof.proofId || 'N/A'}` } : s
-            ));
-            if (account && signer) {
-                setCurrentProgressStep(1);
-            } else {
-                setProgressSteps(prev => prev.map((s, i) =>
-                    i === 1 ? { ...s, description: 'Connect wallet to continue.' } : s
-                ));
-                setCurrentProgressStep(1);
-            }
-        }
-    }, [twitterStatus, twitterProof]);
-
-    // Auto-mint when verification succeeds
-    const githubAutoMintedRef = useRef(false);
-    const twitterAutoMintedRef = useRef(false);
-
-    useEffect(() => {
-        if (initialVerificationStatus === 'success' && account && initialZkProof && !isMinting && !githubAutoMintedRef.current) {
-            githubAutoMintedRef.current = true;
-            const timer = setTimeout(() => {
-                mintCredential(initialZkProof, 0, true);
-            }, 1500);
-            return () => clearTimeout(timer);
-        }
-    }, [initialVerificationStatus, account, initialZkProof, isMinting]);
-
-    useEffect(() => {
-        if (twitterStatus === 'success' && account && twitterProof && !isMinting && !twitterAutoMintedRef.current) {
-            twitterAutoMintedRef.current = true;
-            const timer = setTimeout(() => {
-                mintCredential(twitterProof, 1, true);
-            }, 1500);
-            return () => clearTimeout(timer);
-        }
-    }, [twitterStatus, account, twitterProof, isMinting]);
+    }, [initialVerificationStatus, initialZkProof, twitterStatus, twitterProof]);
 
     const tabContent = {
         defi: {
-            title: "Asset-Pass: Prove Solvency.",
-            desc: "Verify your real-world assets (Alipay) or on-chain holdings (Any Wallet) to unlock under-collateralized DeFi loans.",
+            title: t('solutions.tabs.defiTitle'),
+            desc: t('solutions.tabs.defiDesc'),
             mockup: (
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 h-full flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                                <ShieldCheck size={20} className="text-white" />
+                <div className="flex flex-col md:flex-row items-center justify-between w-full h-full gap-8 p-6">
+                    <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 4, repeat: Infinity }} className="flex flex-col items-center gap-4">
+                        <div className="w-24 h-24 rounded-2xl bg-surface-elevated-1 dark:bg-cyan-500/10 border border-theme-border-medium dark:border-cyan-500/30 flex items-center justify-center shadow-theme-strong dark:shadow-[0_0_40px_rgba(0,240,255,0.1)]">
+                            <EthereumIcon size={48} className="text-theme-accent-primary dark:text-cyan-400" />
+                        </div>
+                        <div className="font-mono text-xs text-theme-accent-primary dark:text-cyan-400 tracking-[0.3em]">{t('solutions.labels.ethMainnet')}</div>
+                    </motion.div>
+                    <div className="relative"><CrystallineCube size={180} /></div>
+                    <div className="flex-1 w-full max-w-md">
+                        <motion.div className="bg-surface-1 border border-theme-border-strong rounded-2xl p-8 shadow-theme-strong relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent pointer-events-none" />
+                            <div className="relative space-y-6 font-mono">
+                                <h4 className="text-xs font-bold text-theme-text-primary dark:text-white tracking-widest mb-2">{t('solutions.labels.solvencyPass')}</h4>
+                                <div className="space-y-4">
+                                    <CryptoPortfolio
+                                        walletAccount={account}
+                                        walletSigner={signer}
+                                        onConnectWallet={onConnectWallet}
+                                        mintCredential={mintCredential}
+                                    />
+                                    <div className="flex items-center gap-4">
+                                        <div className="h-px flex-1 bg-theme-border-medium" />
+                                        <span className="text-xs text-theme-text-muted">{t('common.or')}</span>
+                                        <div className="h-px flex-1 bg-theme-border-medium" />
+                                    </div>
+                                    <AlipayUpload
+                                        walletAccount={account}
+                                        mintCredential={mintCredential}
+                                        setShowProgressModal={setShowProgressModal}
+                                        setProgressSteps={setProgressSteps}
+                                        setCurrentProgressStep={setCurrentProgressStep}
+                                        setProgressTitle={setProgressTitle}
+                                        defaultProgressSteps={defaultProgressSteps}
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <div className="font-bold text-gray-900">Asset-Pass</div>
-                                <div className="text-xs text-gray-500">Multi-Source Verification</div>
-                            </div>
-                        </div>
-                        <div className="px-2 py-1 bg-green-100 rounded-full text-[10px] font-medium text-green-700">
-                            Production Ready
-                        </div>
-                    </div>
-
-                    {/* Asset Cards */}
-                    <div className="space-y-3 flex-1">
-                        {/* On-chain Portfolio */}
-                        <div className="rounded-xl p-4 border border-gray-200 bg-gray-50 hover:border-gray-300 transition-all">
-                            <CryptoPortfolio
-                                walletAccount={account}
-                                walletSigner={signer}
-                                onConnectWallet={onConnectWallet}
-                                onVerificationComplete={(data) => {
-                                    console.log('Portfolio Verified:', data);
-                                }}
-                            />
-                        </div>
-
-                        {/* Divider */}
-                        <div className="relative py-2">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-200"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs">
-                                <span className="px-2 bg-white text-gray-400">OR</span>
-                            </div>
-                        </div>
-
-                        {/* Alipay */}
-                        <div className="rounded-xl p-4 border border-gray-200 bg-gray-50 hover:border-gray-300 transition-all">
-                            <AlipayUpload
-                                onVerificationComplete={(data) => {
-                                    console.log('Alipay Verified:', data);
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                        <div className="flex justify-between text-[10px] text-gray-400">
-                            <span><span className="text-gray-600 font-medium">2</span> verification sources</span>
-                            <span>Powered by <span className="text-indigo-500">ZK Proofs</span></span>
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             )
         },
         growth: {
-            title: "Stop bots. Reward humans.",
-            desc: "Verify users based on real-world spending power (e.g. Uber rides > 5) to prevent Sybil attacks.",
+            title: t('solutions.tabs.growthTitle'),
+            desc: t('solutions.tabs.growthDesc'),
             mockup: (
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 h-full flex flex-col">
-                    <div className="text-center mb-8">
-                        <div className="w-12 h-12 bg-black rounded-full mx-auto mb-2"></div>
-                        <div className="font-bold">Exclusive Airdrop</div>
+                <div className="flex flex-col md:flex-row items-center justify-between w-full h-full gap-8 p-6 font-mono">
+                    <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 4, repeat: Infinity }} className="flex flex-col items-center gap-4">
+                        <div className="w-24 h-24 rounded-2xl bg-surface-elevated-1 border border-theme-border-medium flex items-center justify-center shadow-theme-glow">
+                            <UberIcon size={48} className="text-theme-text-primary" />
+                        </div>
+                        <div className="text-xs text-theme-text-muted tracking-[0.3em]">{t('solutions.labels.appDataSource')}</div>
+                    </motion.div>
+                    <div className="relative"><CrystallineCube size={180} /></div>
+                    <div className="flex-1 w-full max-w-md">
+                        <div className="bg-surface-1 border border-theme-border-strong rounded-2xl p-8 text-center relative overflow-hidden shadow-theme-strong">
+                            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/5 to-transparent pointer-events-none" />
+                            <Users size={40} className="mx-auto mb-6 text-theme-accent-secondary dark:text-purple-400" />
+                            <h4 className="text-theme-text-primary dark:text-white text-sm font-bold mb-3">{t('solutions.labels.exclusiveAirdrop')}</h4>
+                            <p className="text-sm text-theme-text-muted mb-8 font-professional">{t('solutions.tabs.growthDesc')}</p>
+                            <button className="w-full py-4 bg-theme-accent-secondary/10 dark:bg-purple-600/20 border border-theme-accent-secondary/30 dark:border-purple-500/30 text-theme-accent-secondary dark:text-purple-400 rounded-xl text-sm font-bold tracking-widest hover:bg-theme-accent-secondary/20 transition-all cursor-pointer">
+                                {t('solutions.labels.proveRideHistory')}
+                            </button>
+                        </div>
                     </div>
-                    <button className="w-full py-3 bg-gray-100 text-gray-400 rounded-lg font-medium cursor-not-allowed mb-3">
-                        Claim Tokens (Locked)
-                    </button>
-                    <button className="w-full py-3 bg-black text-white rounded-lg font-medium flex items-center justify-center gap-2">
-                        <Car size={16} />
-                        Verify Uber History
-                    </button>
-                    <p className="text-center text-xs text-green-600 mt-2 flex items-center justify-center gap-1">
-                        <Check size={12} />
-                        Requirement: 5+ Rides
-                    </p>
                 </div>
             )
         },
         identity: {
-            title: "One Person, One ID.",
-            desc: "Link multiple Web2 accounts (Twitter, GitHub, Email) to create a robust, private on-chain identity.",
+            title: t('solutions.tabs.identityTitle'),
+            desc: t('solutions.tabs.identityDesc'),
             mockup: (
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 h-full flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                                <ShieldCheck size={20} className="text-white" />
-                            </div>
-                            <div>
-                                <div className="font-bold text-gray-900">Identity Passport</div>
-                                <div className="text-xs text-gray-500">Powered by ZK Proofs</div>
-                            </div>
+                <div className="flex flex-col md:flex-row items-center justify-between w-full h-full gap-8 p-6 font-mono">
+                    <motion.div animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} transition={{ duration: 4, repeat: Infinity }} className="flex flex-col items-center gap-4">
+                        <div className="w-24 h-24 rounded-2xl bg-surface-elevated-1 border border-theme-border-medium flex items-center justify-center shadow-theme-glow">
+                            <Github size={48} className="text-theme-text-primary" />
                         </div>
-                        <div className="px-2 py-1 bg-gray-100 rounded-full text-[10px] font-medium text-gray-600">
-                            {(initialVerificationStatus === 'success' ? 1 : 0) + (twitterStatus === 'success' ? 1 : 0)}/2 Verified
-                        </div>
-                    </div>
+                        <div className="text-xs text-theme-text-muted tracking-[0.3em]">{t('solutions.labels.socialCredentials')}</div>
+                    </motion.div>
+                    <div className="relative"><CrystallineCube size={180} /></div>
+                    <div className="flex-1 w-full max-w-md">
+                        <div className="bg-surface-1 border border-theme-border-strong rounded-2xl p-8 space-y-6 shadow-theme-strong">
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="text-xs text-slate-400">{t('solutions.labels.passport')}</span>
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/30 rounded">
+                                    <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                                    <span className="text-cyan-400 text-[12px] tracking-tighter font-bold">
+                                        {t('solutions.activeCount', { count: (initialVerificationStatus === 'success' ? 1 : 0) + (twitterStatus === 'success' ? 1 : 0) })}
+                                    </span>
+                                </div>
+                            </div>
 
-                    {/* Credential Cards */}
-                    <div className="space-y-3 flex-1">
-                        {/* GitHub Card */}
-                        <motion.div
-                            initial={false}
-                            animate={{
-                                borderColor: initialVerificationStatus === 'success' ? '#22c55e' : '#e5e7eb',
-                                backgroundColor: initialVerificationStatus === 'success' ? '#f0fdf4' : '#f9fafb'
-                            }}
-                            className="rounded-xl p-4 border-2 transition-all"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${initialVerificationStatus === 'success'
-                                        ? 'bg-gradient-to-br from-green-400 to-emerald-500'
-                                        : 'bg-gray-900'
-                                        }`}>
-                                        <Github size={20} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-gray-900">GitHub</div>
-                                        {initialVerificationStatus === 'success' && initialUserData?.login && (
-                                            <div className="text-xs text-gray-500">@{initialUserData.login}</div>
-                                        )}
-                                        {initialVerificationStatus !== 'success' && (
-                                            <div className="text-xs text-gray-500">Developer Identity</div>
-                                        )}
-                                    </div>
+                            {/* GitHub Connection */}
+                            <div className="flex items-center justify-between p-4 bg-surface-elevated-2 dark:bg-white/5 border border-theme-border-medium dark:border-white/5 rounded-xl border-dashed">
+                                <div className="flex items-center gap-4">
+                                    <Github size={20} className={initialVerificationStatus === 'success' ? 'text-emerald-400' : 'text-theme-text-muted'} />
+                                    <span className="text-xs text-theme-text-primary dark:text-white tracking-widest">GitHub</span>
                                 </div>
                                 {initialVerificationStatus === 'success' ? (
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="flex items-center gap-1.5 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
-                                    >
-                                        <Check size={12} />
-                                        <span>Verified</span>
-                                    </motion.div>
+                                    <Check size={18} className="text-emerald-400" />
                                 ) : (
                                     <button
                                         onClick={onGithubConnect}
                                         disabled={initialVerificationStatus === 'loading'}
-                                        className="px-4 py-2 rounded-lg text-xs font-medium transition-all bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        className="text-[12px] text-theme-accent-primary dark:text-cyan-400 border border-theme-accent-primary/30 dark:border-cyan-500/30 px-3 py-1.5 rounded bg-theme-accent-primary/5 dark:bg-cyan-500/5 hover:bg-theme-accent-primary/20 transition-all font-bold cursor-pointer"
                                     >
-                                        {initialVerificationStatus === 'loading' ? (
-                                            <>
-                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                <span>Verifying...</span>
-                                            </>
-                                        ) : (
-                                            <span>Connect</span>
-                                        )}
+                                        {initialVerificationStatus === 'loading' ? t('solutions.labels.binding') : t('solutions.labels.bind')}
                                     </button>
                                 )}
                             </div>
-                        </motion.div>
 
-                        {/* Twitter Card */}
-                        <motion.div
-                            initial={false}
-                            animate={{
-                                borderColor: twitterStatus === 'success' ? '#22c55e' : '#e5e7eb',
-                                backgroundColor: twitterStatus === 'success' ? '#f0fdf4' : '#f9fafb'
-                            }}
-                            className="rounded-xl p-4 border-2 transition-all"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${twitterStatus === 'success'
-                                        ? 'bg-gradient-to-br from-green-400 to-emerald-500'
-                                        : 'bg-sky-500'
-                                        }`}>
-                                        <Twitter size={20} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-gray-900">X (Twitter)</div>
-                                        {twitterStatus === 'success' && twitterUser?.username && (
-                                            <div className="text-xs text-gray-500">@{twitterUser.username}</div>
-                                        )}
-                                        {twitterStatus !== 'success' && (
-                                            <div className="text-xs text-gray-500">Social Identity</div>
-                                        )}
-                                    </div>
+                            {/* Twitter Connection */}
+                            <div className="flex items-center justify-between p-4 bg-surface-elevated-2 dark:bg-white/5 border border-theme-border-medium dark:border-white/5 rounded-xl border-dashed">
+                                <div className="flex items-center gap-4">
+                                    <Twitter size={20} className={twitterStatus === 'success' ? 'text-emerald-400' : 'text-theme-text-muted'} />
+                                    <span className="text-xs text-theme-text-primary dark:text-white tracking-widest">Twitter</span>
                                 </div>
                                 {twitterStatus === 'success' ? (
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="flex items-center gap-1.5 bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium"
-                                    >
-                                        <Check size={12} />
-                                        <span>Verified</span>
-                                    </motion.div>
+                                    <Check size={18} className="text-emerald-400" />
                                 ) : (
                                     <button
                                         onClick={onTwitterConnect}
                                         disabled={twitterStatus === 'loading'}
-                                        className="px-4 py-2 rounded-lg text-xs font-medium transition-all bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        className="text-[12px] text-theme-accent-primary dark:text-cyan-400 border border-theme-accent-primary/30 dark:border-cyan-500/30 px-3 py-1.5 rounded bg-theme-accent-primary/5 dark:bg-cyan-500/5 hover:bg-theme-accent-primary/20 transition-all font-bold cursor-pointer"
                                     >
-                                        {twitterStatus === 'loading' ? (
-                                            <>
-                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                <span>Verifying...</span>
-                                            </>
-                                        ) : (
-                                            <span>Connect</span>
-                                        )}
+                                        {twitterStatus === 'loading' ? t('solutions.labels.binding') : t('solutions.labels.bind')}
                                     </button>
                                 )}
-                            </div>
-                        </motion.div>
-
-                        {/* Add More Card */}
-                        <div className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-gray-300 hover:text-gray-500 transition-colors cursor-pointer">
-                            <div className="flex items-center gap-2">
-                                <Plus size={18} />
-                                <span className="text-sm font-medium">Add More Sources</span>
                             </div>
                         </div>
                     </div>
@@ -353,58 +239,219 @@ export const SolutionsPage = ({
 
     return (
         <>
-            <ProgressModal
-                isOpen={showProgressModal}
-                onClose={() => setShowProgressModal(false)}
-                title={progressTitle}
-                steps={progressSteps}
-                currentStep={currentProgressStep}
-                mintStatus={mintStatus}
-            />
-            <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
-                <div className="text-center max-w-2xl mx-auto mb-16">
-                    <h2 className="text-4xl font-bold mb-4">Unlock the value of Web2 data.</h2>
-                    <p className="text-text-muted">Bridge the gap between off-chain reputation and on-chain utility.</p>
-                </div>
+            <ProgressModal isOpen={showProgressModal} onClose={() => setShowProgressModal(false)} title={progressTitle} steps={progressSteps} currentStep={currentProgressStep} mintStatus={mintStatus} />
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                    {/* Tabs Navigation */}
-                    <div className="lg:col-span-4 flex flex-col gap-2">
-                        {Object.keys(tabContent).map((key) => (
-                            <div
-                                key={key}
-                                onClick={() => setActiveTab(key)}
-                                className={`p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${activeTab === key
-                                    ? 'bg-white border-gray-200 shadow-sm'
-                                    : 'bg-transparent border-transparent hover:bg-white/50'
-                                    }`}
-                            >
-                                <h3 className={`font-semibold text-lg mb-1 ${activeTab === key ? 'text-accent' : 'text-text'}`}>
-                                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                                </h3>
-                                <p className="text-sm text-text-muted leading-relaxed">
-                                    {activeTab === key ? tabContent[key].desc : ""}
+            {/* BIFURCATED LAYOUT: Dark Mode = Vertical Stack | Light Mode = Studio Workbench */}
+            {isLight ? (
+                /* ============== LIGHT MODE: Studio Workbench Layout ============== */
+                <div className="min-h-screen bg-white">
+                    {/* Page Header - Clean & Professional */}
+                    <div className="border-b border-slate-200 bg-white px-8 py-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900 font-display tracking-tight">
+                                    {t('solutions.privacyBridge')} <span className="text-amber-500">{t('solutions.interface')}</span>
+                                </h1>
+                                <p className="text-sm text-slate-500 mt-1 font-sans">
+                                    {t('solutions.subtitle')}
                                 </p>
                             </div>
-                        ))}
+                            <div className="flex items-center gap-2">
+                                    <span className="status-light success">
+                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                        {t('solutions.systemOnline')}
+                                    </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Visual Mockup */}
-                    <div className="lg:col-span-8">
-                        <div className="bg-[#F0F2F5] p-8 rounded-3xl h-[500px] flex items-center justify-center relative overflow-hidden">
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.4 }}
-                                className="w-full max-w-md"
-                            >
-                                {tabContent[activeTab].mockup}
-                            </motion.div>
+                    {/* Workbench Grid: 1/3 Controls + 2/3 Canvas */}
+                    <div className="layout-workbench p-8">
+                        {/* LEFT: Control Panel */}
+                        <div className="control-panel">
+                            {/* Tab Navigation */}
+                            <div className="border-b border-slate-200">
+                                <div className="flex">
+                                    {Object.keys(tabContent).map((key) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setActiveTab(key)}
+                                            className={`
+                                                flex-1 px-4 py-3 text-xs font-semibold tracking-wider
+                                                border-b-2 transition-all cursor-pointer
+                                                ${activeTab === key
+                                                    ? 'border-slate-900 text-slate-900 bg-slate-50'
+                                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                                }
+                                            `}
+                                        >
+                                            {tabContent[key].title}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tab Content Description */}
+                            <div className="p-6 border-b border-slate-200 bg-slate-50">
+                                <p className="text-sm text-slate-600 leading-relaxed font-sans">
+                                    {tabContent[activeTab].desc}
+                                </p>
+                            </div>
+
+                            {/* Input Controls */}
+                            <div className="p-6 space-y-4">
+                                {activeTab === 'defi' && (
+                                    <>
+                                        <CryptoPortfolio
+                                            walletAccount={account}
+                                            walletSigner={signer}
+                                            onConnectWallet={onConnectWallet}
+                                            mintCredential={mintCredential}
+                                        />
+                                        <div className="flex items-center gap-4 py-2">
+                                            <div className="h-px flex-1 bg-slate-200" />
+                                            <span className="text-xs text-slate-400 font-medium">{t('common.or')}</span>
+                                            <div className="h-px flex-1 bg-slate-200" />
+                                        </div>
+                                        <AlipayUpload
+                                            walletAccount={account}
+                                            mintCredential={mintCredential}
+                                            setShowProgressModal={setShowProgressModal}
+                                            setProgressSteps={setProgressSteps}
+                                            setCurrentProgressStep={setCurrentProgressStep}
+                                            setProgressTitle={setProgressTitle}
+                                            defaultProgressSteps={defaultProgressSteps}
+                                        />
+                                    </>
+                                )}
+                                {activeTab === 'growth' && (
+                                    <div className="text-center py-8 text-slate-400">
+                                        <Users size={32} className="mx-auto mb-3 text-slate-300" />
+                                        <p className="text-sm">{t('solutions.sybilControls')}</p>
+                                    </div>
+                                )}
+                                {activeTab === 'identity' && (
+                                    <div className="space-y-3">
+                                        {/* GitHub */}
+                                        <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <Github size={18} className={initialVerificationStatus === 'success' ? 'text-emerald-500' : 'text-slate-400'} />
+                                                <span className="text-sm font-medium text-slate-700">GitHub</span>
+                                            </div>
+                                            {initialVerificationStatus === 'success' ? (
+                                                <span className="status-light success">{t('common.verified')}</span>
+                                            ) : (
+                                                <button
+                                                    onClick={onGithubConnect}
+                                                    disabled={initialVerificationStatus === 'loading'}
+                                                    className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+                                                >
+                                                    {initialVerificationStatus === 'loading' ? t('solutions.labels.binding') : t('common.connect')}
+                                                </button>
+                                            )}
+                                        </div>
+                                        {/* Twitter */}
+                                        <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <Twitter size={18} className={twitterStatus === 'success' ? 'text-emerald-500' : 'text-slate-400'} />
+                                                <span className="text-sm font-medium text-slate-700">{t('solutions.twitterX')}</span>
+                                            </div>
+                                            {twitterStatus === 'success' ? (
+                                                <span className="status-light success">{t('common.verified')}</span>
+                                            ) : (
+                                                <button
+                                                    onClick={onTwitterConnect}
+                                                    disabled={twitterStatus === 'loading'}
+                                                    className="px-3 py-1.5 text-xs font-semibold text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+                                                >
+                                                    {twitterStatus === 'loading' ? t('solutions.labels.binding') : t('common.connect')}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* RIGHT: Canvas Area */}
+                        <div className="canvas-area flex items-center justify-center">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="w-full h-full flex items-center justify-center p-8"
+                                >
+                                    {/* Simplified visualization for Light Mode */}
+                                    <div className="text-center">
+                                        <CrystallineCube size={200} />
+                                        <p className="mt-6 text-xs text-slate-400 font-mono tracking-widest">
+                                            {t('solutions.zkProofEngine', { title: tabContent[activeTab].title })}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
+
+                            {/* Status Footer */}
+                            <div className="absolute bottom-4 right-4 text-[12px] font-mono text-slate-300 tracking-widest">
+                                {t('solutions.statusSecured')}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            ) : (
+                /* ============== DARK MODE: Original Vertical Stack Layout ============== */
+                <div className="min-h-screen bg-gradient-to-b from-surface-base via-surface-1 to-surface-base pt-32 pb-20 px-6">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center max-w-2xl mx-auto mb-20 font-mono">
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[13px] text-cyan-400 tracking-[0.2em]">
+                                <span className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#00f0ff]" />
+                                {t('solutions.systemSolutions')}
+                            </motion.div>
+                            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-theme-text-primary tracking-tight">
+                                {t('solutions.privacyBridge')} <span className="text-cyan-400">{t('solutions.interface')}</span>
+                            </h2>
+                            <p className="text-theme-text-secondary text-base font-professional tracking-wide max-w-xl mx-auto">{t('solutions.subtitle')}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                            <div className="lg:col-span-4 flex flex-col gap-4">
+                                {Object.keys(tabContent).map((key) => (
+                                    <motion.div key={key} onClick={() => setActiveTab(key)} animate={activeTab === key ? { scale: [1, 1.01, 1], x: 8 } : { x: 0 }} transition={{ duration: 4, repeat: Infinity }} className={`p-6 rounded-xl cursor-pointer transition-all duration-500 border relative group ${activeTab === key ? 'bg-theme-accent-primary/5 border-theme-accent-primary/50 shadow-theme-glow' : 'bg-surface-1 border-theme-border-medium hover:border-theme-border-strong opacity-60 hover:opacity-100'}`}>
+                                        {activeTab === key && <div className="absolute left-0 top-0 bottom-0 w-1 bg-theme-accent-primary dark:bg-cyan-400 shadow-[0_0_15px_#00f0ff] dark:shadow-[0_0_15px_#00f0ff]" />}
+                                        <div className="flex items-center gap-4 mb-3">
+                                            <h3 className={`font-bold tracking-tight font-display transition-all duration-300 ${activeTab === key
+                                                ? 'text-lg text-theme-accent-primary dark:bg-gradient-to-r dark:from-cyan-400 dark:via-purple-400 dark:to-cyan-400 dark:bg-clip-text dark:text-transparent dark:bg-[length:200%_auto] dark:animate-shimmer'
+                                                : 'text-sm text-theme-text-muted group-hover:text-theme-text-secondary'}`}>
+                                                {tabContent[key].title}
+                                            </h3>
+                                        </div>
+                                        <p className={`leading-relaxed font-bold tracking-tight font-sans transition-colors duration-300 ${activeTab === key
+                                            ? 'text-base text-theme-text-primary dark:text-slate-100'
+                                            : 'text-sm text-theme-text-muted line-clamp-2'}`}>
+                                            {tabContent[key].desc}
+                                        </p>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            <div className="lg:col-span-8">
+                                <div className="bg-surface-base border border-theme-border-medium rounded-3xl min-h-[550px] flex items-center justify-center relative overflow-hidden shadow-inner">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
+                                    <AnimatePresence mode="wait">
+                                        <motion.div key={activeTab} variants={particleExit} initial="initial" animate="animate" exit="exit" className="w-full relative z-10 px-8">
+                                            <motion.div variants={scanlineEntry}>{tabContent[activeTab].mockup}</motion.div>
+                                        </motion.div>
+                                    </AnimatePresence>
+                                    <div className="absolute bottom-6 right-8 font-mono text-[12px] text-theme-text-muted tracking-[0.5em]">{t('solutions.statusSecured')}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

@@ -7,6 +7,7 @@ import org.example.ghostlink.model.ZkProof;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,15 +21,16 @@ public class GithubAuthService {
     private static final String GITHUB_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token";
     private static final String GITHUB_USER_API = "https://api.github.com/user";
     
-    // ZK 服务地址
-    private static final String ZK_SERVICE_URL = "http://127.0.0.1:3000/prove";
+
+    @Autowired
+    private ZkProofService zkProofService;
 
     /**
      * 处理 OAuth 回调逻辑：Code -> Token -> User -> ZK Proof
      */
-    public AuthResponse authenticateWithCode(String code, String recipient) {
+    public AuthResponse authenticateWithCode(String code, String recipient, String redirectUri) {
         // 1. 用 Code 换取 Access Token
-        String accessToken = exchangeCodeForToken(code);
+        String accessToken = exchangeCodeForToken(code, redirectUri);
         if (accessToken == null) {
             return new AuthResponse("Failed to retrieve access token from GitHub");
         }
@@ -50,21 +52,10 @@ public class GithubAuthService {
         
         GithubUser githubUser = new GithubUser(githubUserData);
 
-        // 2. 构造发送给 ZK 服务的请求数据
-        // 必须严格遵循 GhostLink_Integration_Guide.md 中的 input_json 结构要求
-        Map<String, Object> zkRequest = new HashMap<>();
-        zkRequest.put("id", githubUser.getId());          // Number
-        zkRequest.put("login", githubUser.getLogin());    // String
-        zkRequest.put("created_at", githubUser.getCreatedAt()); // String (ISO 8601)
-        // 注意：GitHub API 返回的是 public_repos，但我们的 GithubUser 模型中可能没有这个字段
-        // 如果 GithubUser 模型中没有，我们需要从原始 map 中获取
-        Object publicRepos = githubUserData.get("public_repos");
-        zkRequest.put("public_repos", publicRepos != null ? publicRepos : 0); // Number
+        // 2. 调用 ZK 服务生成证明
+        ZkProof zkProof = callZkService(githubUserData, recipient);
 
-        // 3. 调用 ZK 服务
-        ZkProof zkProof = callZkService(zkRequest, recipient);
-
-        // 4. 返回结果
+        // 3. 返回结果
         if (zkProof != null && zkProof.isVerified()) {
             return new AuthResponse("success", githubUser, zkProof);
         } else {
@@ -72,7 +63,7 @@ public class GithubAuthService {
         }
     }
 
-    private String exchangeCodeForToken(String code) {
+    private String exchangeCodeForToken(String code, String redirectUri) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -82,6 +73,9 @@ public class GithubAuthService {
         body.put("client_id", CLIENT_ID);
         body.put("client_secret", CLIENT_SECRET);
         body.put("code", code);
+        if (redirectUri != null && !redirectUri.isEmpty()) {
+             body.put("redirect_uri", redirectUri);
+        }
 
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
 
@@ -91,7 +85,11 @@ public class GithubAuthService {
             if (responseBody != null && responseBody.containsKey("access_token")) {
                 return (String) responseBody.get("access_token");
             }
+        } catch (org.springframework.web.client.HttpClientErrorException e) {
+            System.err.println("GitHub Token Exchange Failed: " + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            e.printStackTrace();
         } catch (Exception e) {
+            System.err.println("GitHub Token Exchange Exception: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -101,7 +99,7 @@ public class GithubAuthService {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
-        HttpEntity<String> entity = new HttpEntity<>("parameters", headers);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
             ResponseEntity<Map> response = restTemplate.exchange(
@@ -117,33 +115,36 @@ public class GithubAuthService {
         }
     }
 
-    private ZkProof callZkService(Map<String, Object> requestData, String recipient) {
+    /**
+     * 调用 ZK 服务生成证明
+     * 按照 risc_zero_spec.md 规范构造请求
+     */
+    private ZkProof callZkService(Map<String, Object> githubUserData, String recipient) {
         try {
-            // 增加超时时间设置，因为ZK证明生成可能需要较长时间（如10分钟）
-            org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(60000); // 连接超时 60秒
-            factory.setReadTimeout(600000);   // 读取超时 600秒 (10分钟)
-            
-            RestTemplate restTemplate = new RestTemplate(factory);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            
-            // 将请求数据包装在 input_json 字段中，并序列化为 JSON 字符串
             ObjectMapper objectMapper = new ObjectMapper();
-            String jsonString = objectMapper.writeValueAsString(requestData);
             
-            Map<String, Object> wrappedRequest = new HashMap<>();
-            wrappedRequest.put("input_json", jsonString);
-            // recipient 是必填项
-            wrappedRequest.put("recipient", recipient != null ? recipient : "0x0000000000000000000000000000000000000000");
+            // 按照规范构造 data 对象
+            Map<String, Object> data = new HashMap<>();
+            data.put("user_id", githubUserData.get("id"));  // Number
+            data.put("username", githubUserData.get("login"));  // String
+            data.put("created_at", githubUserData.get("created_at"));  // String (ISO 8601)
+            Object publicRepos = githubUserData.get("public_repos");
+            data.put("public_repos", publicRepos != null ? publicRepos : 0);  // Number
             
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(wrappedRequest, headers);
+            // 构造符合规范的请求体
+            Map<String, Object> request = new HashMap<>();
+            request.put("credential_type", "github");
+            request.put("data", data);
+            request.put("recipient", recipient != null ? recipient : "0x0000000000000000000000000000000000000000");
+
+            // 直接调用本地服务生成证明 (Refactored to avoid self-HTTP call)
+            System.out.println("开始调用ZK服务 (GitHub，本地调用)...");
+            System.out.println("请求数据: " + objectMapper.writeValueAsString(request));
             
-            System.out.println("开始调用ZK服务，这可能需要几分钟...");
-            ResponseEntity<Map> response = restTemplate.postForEntity(ZK_SERVICE_URL, entity, Map.class);
-            Map<String, Object> responseBody = response.getBody();
+            // 调用本地 Service
+            Map<String, String> responseBody = zkProofService.generateMockProof(request);
             
-            // 打印完整的响应体到控制台
+            // 打印响应 (Keeping existing logging structure)
             System.out.println("ZK服务响应: " + objectMapper.writeValueAsString(responseBody));
             
             if (responseBody != null && "success".equals(responseBody.get("status"))) {
@@ -154,7 +155,6 @@ public class GithubAuthService {
                 String nullifierHex = (String) responseBody.get("nullifier_hex");
                 
                 // 确保添加0x前缀（如果接口返回的没有）
-                // 注意：调用指导.md 指出接口返回的 hex 不带 0x 前缀，但前端和合约需要 0x 前缀
                 String receipt = receiptHex != null && !receiptHex.startsWith("0x") ? "0x" + receiptHex : receiptHex;
                 String journal = journalHex != null && !journalHex.startsWith("0x") ? "0x" + journalHex : journalHex;
                 String imageId = imageIdHex != null && !imageIdHex.startsWith("0x") ? "0x" + imageIdHex : imageIdHex;
@@ -170,7 +170,10 @@ public class GithubAuthService {
                         nullifier
                 );
             } else {
-                System.out.println("ZK服务返回状态非success: " + responseBody);
+                // 处理错误响应
+                String errorCode = (String) responseBody.get("error_code");
+                String errorMessage = (String) responseBody.get("message");
+                System.out.println("ZK服务返回错误 - Code: " + errorCode + ", Message: " + errorMessage);
             }
         } catch (Exception e) {
             System.out.println("调用ZK服务异常: " + e.getMessage());

@@ -1,143 +1,162 @@
-# Ghostlink Spring Boot 应用
+# GhostLink 👻🔗
 
-这是一个基于Spring Boot的Web应用，包含多个REST API端点供您测试和使用。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-## 项目特性
+**GhostLink** is a “Zero-Knowledge Data Passport” prototype: turn your Web2 signals into **verifiable on-chain credentials** (SBT/NFT) — **without exposing raw data**.  
+One sentence: **prove you meet a condition, not who you are.** 🕶️✨
 
-- Spring Boot 3.5.9
-- Java 21
-- RESTful API
-- 内存数据存储
-- 完整的CRUD操作支持
+> Slogan: Your Reputation, Unchained & Unseen.
 
-## 运行项目
+---
+
+## The “Why” 🌉
+
+Web3 lacks trust, while Web2 is full of reputation. GhostLink connects them — **privacy-first**:
+
+- 🧙 Prove you’re a real developer / real human / above an asset threshold — without doxxing accounts, statements, or exact numbers
+- 🛡️ Help projects run airdrops, allowlists, and access control with less Sybil pain
+- 🧩 Make off-chain signals composable on-chain (permissions, gating, identity layers)
+
+Big vision: **data becomes programmable private property, reputation becomes verifiable public capability.** 🧠⚙️
+
+---
+
+## What you can imagine building 🚀
+
+Not “features list”, but “product imagination list”:
+
+- 🏅 Dev-Pass: prove developer credibility from GitHub signals (age, contributions, merges…)
+- 📣 Social-Pass: prove social reach from X/Twitter signals (followers, account age…)
+- 💎 Asset-Pass: prove “≥ threshold” from statements — **show solvency without showing balances**
+- 🧷 Sybil Guard: one-person-one-claim via `nullifier` (no repeated minting / claiming)
+- 🧱 Private allowlists: events, communities, beta programs, RWA access, DeFi credit primitives
+
+Some of these are in prototype UI/flows today; others are the intended direction (see roadmap + `productdoc/`).
+
+---
+
+## The core trick: visibility vs. invisibility 🎭
+
+GhostLink doesn’t “move data”, it “moves conclusions”:
+
+- ✅ Public: whether a requirement is met
+- ❌ Private: raw data (accounts, transaction details, exact amounts)
+- 🔁 Reusable: third parties verify a credential, not your entire life
+- 🧷 Anti-replay: `nullifier` prevents “same identity, multiple mints”
+
+---
+
+## Web-First architecture (local privacy zone) 🧩
+
+We lean toward **Thick Client, Thin Server**: keep privacy computation on the user side, keep the server minimal.
+
+```mermaid
+graph TD
+  subgraph Browser["Browser / Local Privacy Zone"]
+    UI["UI (web/)"]
+    Prover["Local proving (target: zkVM/WASM)"]
+    UI --> Prover
+  end
+  subgraph Backend["Minimal backend (src/)"]
+    API["OAuth callbacks / PDF parsing / proof orchestration"]
+  end
+  subgraph Chain["On-chain"]
+    Verifier["Verifier contract"]
+    SBT["SBT/NFT credential"]
+    Verifier --> SBT
+  end
+  UI --> API
+  API --> Verifier
+```
+
+In this repo, proof generation currently runs in **demo mode** (mock proof) to validate product flows and UX. The target ZK + on-chain design is documented in `productdoc/`.
+
+---
+
+## Why zkVM + zkTLS? 🧬
+
+GhostLink’s design docs assume a future where:
+
+- ⚙️ A general-purpose zkVM (e.g. RISC Zero) runs **real parsing + verification logic** in standard Rust
+- 📄 We can handle not only neat JSON, but also messy HTML / PDFs (the real world is unstructured)
+- 🔁 Verification logic can evolve quickly (update rules, not rewrite circuits from scratch)
+- 🛰️ zkTLS (e.g. TLSNotary-style attestation) can prove the data truly came from a website/API without trusting the user or the server
+
+The repo focuses on **product UX + end-to-end flow** first, then swaps the proof engine underneath when ready. 🪄
+
+---
+
+## Screenshots (drop yours here) 📸
+
+Put images under `docs/screenshots/` and they will show up:
+
+![Home Hero](docs/screenshots/01-home-hero.png)
+![Solutions Overview](docs/screenshots/02-solutions-overview.png)
+![GitHub Flow](docs/screenshots/03-solutions-github-flow.png)
+![Explorer Dashboard](docs/screenshots/06-explorer-dashboard.png)
+
+More slots + recommended filenames: `docs/screenshots/README.md`
+
+---
+
+## Quick start ⚡
+
+### Backend (Java)
 
 ```bash
-cd /Users/ppg/Desktop/kyp/ghostlink
 ./mvnw spring-boot:run
-
-
-cd /Users/ppg/Desktop/kyp/ghostlink/web && npm run dev
 ```
 
-应用将在 `http://localhost:8080` 启动。
+Default port: `8080`
 
-## API 端点
-
-### 通用数据API
-
-#### 获取系统信息
-- **GET** `/api/v1/data/info`
-- 返回当前系统的相关信息
-
-#### 数学计算器
-- **GET** `/api/v1/data/calculate`
-- 参数：
-  - `num1`: 第一个数字
-  - `num2`: 第二个数字
-  - `operation`: 操作类型 (+, -, *, / 或 add, subtract, multiply, divide)
-- 示例：`/api/v1/data/calculate?num1=10&num2=5&operation=add`
-
-### 示例项目API
-
-#### 获取所有项目
-- **GET** `/api/v1/items`
-
-#### 根据ID获取项目
-- **GET** `/api/v1/items/{id}`
-
-#### 创建新项目
-- **POST** `/api/v1/items`
-- Content-Type: `application/json`
-- 示例请求体：
-```json
-{
-  "name": "新项目",
-  "description": "项目描述"
-}
-```
-
-#### 更新项目
-- **PUT** `/api/v1/items/{id}`
-- Content-Type: `application/json`
-
-#### 删除项目
-- **DELETE** `/api/v1/items/{id}`
-
-#### 健康检查
-- **GET** `/api/v1/health`
-
-#### 欢迎信息
-- **GET** `/api/v1/hello`
-
-### 用户管理API
-
-#### 获取所有用户
-- **GET** `/api/v1/users`
-
-#### 根据ID获取用户
-- **GET** `/api/v1/users/{id}`
-
-#### 创建新用户
-- **POST** `/api/v1/users`
-- Content-Type: `application/json`
-- 示例请求体：
-```json
-{
-  "name": "用户名",
-  "email": "user@example.com",
-  "role": "USER"
-}
-```
-
-#### 更新用户
-- **PUT** `/api/v1/users/{id}`
-- Content-Type: `application/json`
-
-#### 删除用户
-- **DELETE** `/api/v1/users/{id}`
-
-#### 搜索用户
-- **GET** `/api/v1/users/search?name={name}`
-
-## 示例请求
-
-您可以使用curl或Postman等工具测试API：
+### Frontend (Vite)
 
 ```bash
-# 获取所有示例项目
-curl http://localhost:8080/api/v1/items
-
-# 创建新项目
-curl -X POST http://localhost:8080/api/v1/items \
-  -H "Content-Type: application/json" \
-  -d '{"name":"测试项目","description":"这是一个测试"}'
-
-# 获取特定用户
-curl http://localhost:8080/api/v1/users/1
-
-# 计算数学表达式
-curl "http://localhost:8080/api/v1/data/calculate?num1=15&num2=5&operation=divide"
+cd web
+npm install
+npm run dev
 ```
 
-## 项目结构
+The terminal prints the local URL (commonly `http://localhost:5173`).
 
-```
-src/
-├── main/
-│   ├── java/org/example/ghostlink/
-│   │   ├── controller/      # 控制器类
-│   │   ├── model/           # 数据模型
-│   │   ├── service/         # 业务逻辑
-│   │   └── GhostlinkApplication.java  # 主应用类
-│   └── resources/
-│       └── application.properties
-└── test/
-```
+---
 
-## 技术栈
+## Configuration (please do this before going public) 🔐
 
-- Spring Boot
-- Spring Web MVC
-- Maven
-- Java 21
+Backend OAuth reads env vars (no secrets in source control):
+
+- `GHOSTLINK_GITHUB_CLIENT_ID`
+- `GHOSTLINK_GITHUB_CLIENT_SECRET`
+- `GHOSTLINK_TWITTER_CLIENT_ID`
+- `GHOSTLINK_TWITTER_CLIENT_SECRET`
+
+Frontend supports optional Vite overrides:
+
+- `VITE_GITHUB_CLIENT_ID`
+- `VITE_TWITTER_CLIENT_ID`
+
+---
+
+## Product / Protocol docs 📚
+
+- `productdoc/GhostLink_Product_Spec.md`
+- `productdoc/需求文档.md`
+- `productdoc/risc_zero_spec.md`
+- `productdoc/smart_contract_spec.md`
+
+---
+
+## Roadmap (star first, ship next) 🗺️✨
+
+- ✅ Web MVP: multi-page product UI + flows + demo proof plumbing
+- 🚧 Real proving: zkVM/WASM, local privacy computation, auditable rules
+- 🚧 zkTLS: prove the data source is authentic + untampered
+- 🌈 SDK & marketplace: “bring your own logic” for any dApp
+- 📱 Mobile: privacy + identity in your pocket
+
+---
+
+## Join us 🤝
+
+If this direction resonates, please give the repo a ⭐️ — it’s the fastest way to turn a privacy vision into real infrastructure.  
+Open an Issue with the one condition you wish you could prove… privately 👀

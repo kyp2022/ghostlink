@@ -1,0 +1,16 @@
+{
+    "name": "GhostLink Alipay Credential",
+    "description": "Verified Alipay identity via GhostLink ZK Proof",
+    "image": "https://purple-cheerful-amphibian-24.mypinata.cloud/ipfs/bafkreigfuom62r4wk7l3tokjasck4xxcwwy74cahxo2ibbxebvebkecwne",
+    "external_url": "https://github.com/kyp2022",
+    "attributes": [
+        {
+            "trait_type": "Credential Type",
+            "value": "Alipay"
+        },
+        {
+            "trait_type": "Verification System",
+            "value": "RISC Zero"
+        }
+    ]
+}

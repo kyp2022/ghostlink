@@ -3,18 +3,27 @@ package org.example.ghostlink.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import org.example.ghostlink.service.ZkProofService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/v1")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class ExampleController {
+
+    // 用于生成随机数据
+    private static final SecureRandom random = new SecureRandom();
 
     // 示例数据存储（实际应用中应使用数据库）
     private static List<Map<String, Object>> sampleData = new ArrayList<>();
+
+    @Autowired
+    private ZkProofService zkProofService;
 
     static {
         Map<String, Object> item1 = new HashMap<>();
@@ -112,6 +121,18 @@ public class ExampleController {
         response.put("message", "欢迎使用Ghostlink Spring Boot应用!");
         response.put("timestamp", String.valueOf(System.currentTimeMillis()));
         
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * 返回固定格式但内容每次请求都不同的数据
+     */
+    /**
+     * 返回固定格式但内容每次请求都不同的数据
+     */
+    @PostMapping("/receipt-data")
+    public ResponseEntity<Map<String, String>> getReceiptData(@RequestBody(required = false) Map<String, Object> requestData) {
+        Map<String, String> response = zkProofService.generateMockProof(requestData);
         return ResponseEntity.ok(response);
     }
 }

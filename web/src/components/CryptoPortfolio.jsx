@@ -1,23 +1,46 @@
-import React, { useState } from 'react';
-import { CheckCircle, Loader, AlertCircle, Info } from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Wallet, CheckCircle, Loader2, AlertCircle, Info, Zap } from 'lucide-react';
 import { ethers } from 'ethers';
+import { CREDENTIAL_TYPE, CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/constants';
+import { ENDPOINTS } from '../config/endpoints';
+import { EthereumIcon } from './ui/Icons';
+import { useI18n } from '../contexts/I18nContext';
 
-// Import wallet image
-import walletIcon from '../../image/qianbao.png';
+// Wallet icon with glow
+import walletIcon from '../assets/wallet.svg';
 
-const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, onConnectWallet }) => {
-    const [status, setStatus] = useState('idle'); // idle, verifying, success, error
+const REQUIRED_TX_COUNT = 10;
+
+const CryptoPortfolio = ({
+    walletAccount,
+    walletSigner,
+    onConnectWallet,
+    mintCredential,
+    setShowProgressModal,
+    setProgressSteps,
+    setCurrentProgressStep,
+    setProgressTitle,
+    defaultProgressSteps,
+    onVerificationComplete
+}) => {
+    const { t } = useI18n();
+    const [status, setStatus] = useState('idle'); // idle, verifying, success, generating_proof, minted, error
     const [balance, setBalance] = useState('0.00');
     const [txCount, setTxCount] = useState(0);
+    const [signature, setSignature] = useState('');
+    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
-    const REQUIRED_TX_COUNT = 10;
+    const handleConnect = async () => {
+        if (onConnectWallet) {
+            await onConnectWallet();
+        }
+    };
 
     const handleVerify = async () => {
-        console.log('=== CryptoPortfolio: Starting verification ===');
-
-        if (!walletAccount || !walletSigner) {
-            alert('Please connect your wallet first!');
+        if (!walletSigner || !walletAccount) {
+            setError(t('portfolio.walletNotConnected'));
             return;
         }
 
@@ -25,29 +48,24 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
         setError('');
 
         try {
-            // 1. Request Ownership Signature
-            const message = `GhostLink Asset-Pass Verification\n\nI confirm ownership of this wallet.\n\nAddress: ${walletAccount}\nTimestamp: ${Date.now()}`;
+            // 1. Request signature
+            const msg = `GhostLink Verification\nAddress: ${walletAccount} \nTimestamp: ${Date.now()} `;
+            setMessage(msg);
 
-            console.log('Requesting signature...');
-            const signature = await walletSigner.signMessage(message);
-            console.log('Signature obtained');
+            const sig = await walletSigner.signMessage(msg);
+            setSignature(sig);
 
-            // 2. Get provider and fetch data
+            // 2. Get balance
             const provider = walletSigner.provider;
-            if (!provider) throw new Error('Provider not available');
-
-            // 3. Fetch Balance
             const balanceWei = await provider.getBalance(walletAccount);
-            const balanceEth = ethers.utils.formatEther(balanceWei);
-            const formattedBalance = parseFloat(balanceEth).toFixed(4);
-            setBalance(formattedBalance);
+            const formattedBalance = ethers.utils.formatEther(balanceWei);
+            setBalance(parseFloat(formattedBalance).toFixed(4));
 
-            // 4. Fetch Transaction Count
+            // 3. Get transaction count
             const transactionCount = await provider.getTransactionCount(walletAccount);
-            console.log('Transaction count:', transactionCount);
             setTxCount(transactionCount);
 
-            // 5. Complete
+            // 4. Local Verification Complete
             setStatus('success');
 
             if (onVerificationComplete) {
@@ -58,116 +76,225 @@ const CryptoPortfolio = ({ walletAccount, walletSigner, onVerificationComplete, 
                     transaction_count: transactionCount,
                     has_10_plus_tx: transactionCount >= REQUIRED_TX_COUNT,
                     address: walletAccount,
-                    signature: signature
+                    signature: sig
                 });
             }
         } catch (err) {
             console.error('Verification error:', err);
             setStatus('error');
-            if (err.code === 4001 || err.code === 'ACTION_REJECTED') {
-                setError('Signature rejected');
-            } else {
-                setError(err.message?.slice(0, 40) || 'Verification failed');
+            setError(err.message || t('portfolio.verificationFailed'));
+        }
+    };
+
+    const handleMint = async () => {
+        setStatus('generating_proof');
+        setError('');
+
+        try {
+            // Initialize progress modal
+            if (setProgressTitle && setProgressSteps && setCurrentProgressStep && setShowProgressModal) {
+                setProgressTitle(t('portfolio.progressTitle'));
+                setProgressSteps([
+                    { title: t('progress.stepGenerate'), description: t('progress.descGenerate') },
+                    { title: t('progress.stepPrepare'), description: t('progress.descPrepare') },
+                    { title: t('progress.stepConfirm'), description: t('progress.descConfirm') },
+                    { title: t('progress.stepAwait'), description: t('progress.descAwait') },
+                    { title: t('progress.stepDone'), description: t('progress.descDone') }
+                ]);
+                setCurrentProgressStep(0);
+                setShowProgressModal(true);
             }
+
+            // Call ZK proof API
+            const zkResponse = await fetch(ENDPOINTS.PROOF.RECEIPT_DATA, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    credential_type: 'wallet',
+                    data: {
+                        address: walletAccount,
+                        balance_wei: ethers.utils.parseEther(balance).toString(),
+                        transaction_count: txCount,
+                        chain_id: 11155111,
+                        signature: signature,
+                        message: message
+                    },
+                    recipient: walletAccount
+                })
+            });
+
+            const zkData = await zkResponse.json();
+
+            if (!zkResponse.ok || zkData.status === 'error') {
+                throw new Error(zkData.message || 'ZK proof generation failed');
+            }
+
+            const zkProof = {
+                proofId: zkData.proofId || `zk - wallet - ${Date.now()} `,
+                receipt: zkData.receipt_hex || zkData.receipt,
+                journal: zkData.journal_hex || zkData.journal,
+                imageId: zkData.image_id_hex || zkData.imageId,
+                nullifier: zkData.nullifier_hex || zkData.nullifier,
+                timestamp: zkData.timestamp || Date.now(),
+                verified: true
+            };
+
+            // Trigger minting
+            if (mintCredential) {
+                await new Promise(r => setTimeout(r, 500));
+                const success = await mintCredential(zkProof, CREDENTIAL_TYPE.WALLET, true);
+                if (success) {
+                    setStatus('minted');
+                } else {
+                    setStatus('error');
+                    setError('Minting failed');
+                }
+            }
+        } catch (err) {
+            console.error('Mint error:', err);
+            setStatus('error');
+            setError(err.message || 'Failed to generate proof');
         }
     };
 
-    const handleConnect = () => {
-        if (onConnectWallet) {
-            onConnectWallet();
-        }
-    };
+    // Verified/Minted State
+    if (status === 'success' || status === 'generating_proof' || status === 'minted') {
+        const isMinted = status === 'minted';
+        const statusColor = isMinted ? 'emerald' : 'cyan';
 
-    // Render verified state
-    if (status === 'success') {
         return (
-            <div className="space-y-3">
-                {/* Main info row */}
+            <div className="space-y-4">
+                {/* Header with status */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center bg-indigo-50 p-2">
-                            <img src={walletIcon} alt="Wallet" className="w-full h-full object-contain" />
+                        <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center
+                                       bg-gradient-to-br ${isMinted ? 'from-emerald-500/20 to-emerald-600/20 border-emerald-500/30' : 'from-cyan-500/20 to-purple-500/20 border-cyan-500/30'} 
+                                       border shadow-[0_0_20px_rgba(${isMinted ? '16,185,129' : '0,255,255'},0.2)]`}>
+                            <EthereumIcon size={24} className={isMinted ? 'text-emerald-400' : 'text-cyan-400'} />
                         </div>
                         <div>
-                            <div className="font-semibold text-gray-900">On-Chain Assets</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="font-bold text-theme-text-primary text-sm tracking-tight">{t('portfolio.onChainAssets')}</div>
+                            <div className="text-xs text-theme-text-muted font-medium">
                                 {walletAccount?.slice(0, 6)}...{walletAccount?.slice(-4)}
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="text-right">
-                            <div className="text-base font-bold text-gray-900 font-mono">{balance} ETH</div>
+                            <div className={`text-base font-bold tracking-tight ${isMinted ? 'text-emerald-400' : 'text-cyan-400'}`}>
+                                {balance} ETH
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-                            <CheckCircle size={12} />
-                            <span>Verified</span>
+                        <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider
+                                       ${isMinted
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                                : 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(0,255,255,0.3)]'
+                            }`}>
+                            <CheckCircle size={14} />
+                            <span>{isMinted ? t('portfolio.minted') : t('portfolio.verified')}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* TX count info row */}
-                <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Info size={14} className="text-gray-400" />
-                        <span>Transaction History</span>
+                {/* TX count info */}
+                <div className="flex items-center justify-between py-2 px-3 bg-surface-elevated-2 rounded-lg border border-theme-border-medium">
+                    <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-theme-text-muted uppercase">
+                        <Info size={14} className="text-theme-text-muted" />
+                        <span>{t('portfolio.transactionHistory')}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-mono font-medium text-gray-900">{txCount} TX</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${txCount >= REQUIRED_TX_COUNT
-                                ? 'bg-indigo-100 text-indigo-700'
-                                : 'bg-gray-100 text-gray-600'
+                        <span className="text-sm font-bold text-theme-text-primary">{t('portfolio.txCount', { count: txCount })}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${txCount >= REQUIRED_TX_COUNT
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-surface-elevated-3 text-theme-text-muted border border-theme-border-medium'
                             }`}>
-                            {txCount >= REQUIRED_TX_COUNT ? '≥10' : '<10'}
+                            {txCount >= REQUIRED_TX_COUNT ? '10+' : '<10'}
                         </span>
                     </div>
                 </div>
+
+                {/* Mint Button */}
+                {status !== 'minted' && (
+                    <button
+                        onClick={handleMint}
+                        disabled={status === 'generating_proof'}
+                        className="w-full py-3 rounded-xl text-sm font-bold tracking-widest uppercase
+                                 bg-gradient-to-r from-cyan-500 to-purple-500 text-white
+                                 shadow-[0_0_30px_rgba(0,255,255,0.3)]
+                                 hover:shadow-[0_0_40px_rgba(0,255,255,0.5)]
+                                 disabled:opacity-50 disabled:cursor-not-allowed
+                                 transition-all duration-300 cursor-pointer
+                                 flex items-center justify-center gap-2"
+                    >
+                        {status === 'generating_proof' ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-white">{t('portfolio.generatingProof')}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Zap size={16} />
+                                <span>{t('portfolio.mint')}</span>
+                            </>
+                        )}
+                    </button>
+                )}
             </div>
         );
     }
 
-    // Render connect/verify state
+    // Connect/Verify State
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center bg-indigo-50 p-2">
-                    <img src={walletIcon} alt="Wallet" className="w-full h-full object-contain" />
+                <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center 
+                              bg-surface-elevated-2 border border-theme-border-medium">
+                    <EthereumIcon size={24} className="text-theme-text-muted" />
                 </div>
                 <div>
-                    <div className="font-semibold text-gray-900">On-Chain Assets</div>
-                    <div className="text-xs text-gray-500">
-                        {walletAccount ? 'Verify wallet ownership' : 'Connect wallet to verify'}
+                    <div className="font-bold text-theme-text-primary text-sm tracking-tight">{t('portfolio.onChainAssets')}</div>
+                    <div className="text-xs text-theme-text-muted font-medium tracking-wider uppercase">
+                        {walletAccount ? t('portfolio.readyToVerify') : t('wallet.connect')}
                     </div>
                 </div>
             </div>
 
             {!walletAccount ? (
-                // Show Connect button when wallet not connected
                 <button
                     onClick={handleConnect}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-indigo-600 text-white hover:bg-indigo-700 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-sm font-bold tracking-widest uppercase
+                             bg-gradient-to-r from-cyan-500 to-purple-500 text-white
+                             shadow-[0_0_20px_rgba(0,255,255,0.3)]
+                             hover:shadow-[0_0_30px_rgba(0,255,255,0.5)]
+                             transition-all duration-300 cursor-pointer
+                             flex items-center gap-2"
                 >
-                    Connect
+                    <Zap size={14} />
+                    {t('common.connect')}
                 </button>
             ) : (
-                // Show Verify button when wallet is connected
                 <button
                     onClick={handleVerify}
                     disabled={status === 'verifying'}
-                    className="px-4 py-2 rounded-xl text-sm font-semibold transition-all bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl text-xs font-bold tracking-widest uppercase
+                             bg-cyan-500/20 border border-cyan-500/30 text-cyan-400
+                             hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(0,255,255,0.3)]
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             transition-all duration-300 cursor-pointer
+                             flex items-center gap-2"
                 >
                     {status === 'verifying' ? (
                         <>
-                            <Loader className="w-4 h-4 animate-spin" />
-                            <span>Signing...</span>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span>{t('portfolio.signing')}</span>
                         </>
                     ) : status === 'error' ? (
                         <>
                             <AlertCircle className="w-4 h-4" />
-                            <span>Retry</span>
+                            <span>{t('portfolio.retry')}</span>
                         </>
                     ) : (
-                        <span>Verify</span>
+                        <span>{t('portfolio.verify')}</span>
                     )}
                 </button>
             )}

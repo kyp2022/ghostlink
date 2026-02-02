@@ -1,0 +1,16 @@
+{
+    "name": "GhostLink Twitter Credential",
+    "description": "Verified Twitter identity via GhostLink ZK Proof",
+    "image": "https://purple-cheerful-amphibian-24.mypinata.cloud/ipfs/bafkreiaeru4txpaueqnzyfj6cq75dtb3sijwhn3pnvgtazjzmitiqhxkby",
+    "external_url": "https://github.com/kyp2022",
+    "attributes": [
+        {
+            "trait_type": "Credential Type",
+            "value": "Twitter"
+        },
+        {
+            "trait_type": "Verification System",
+            "value": "RISC Zero"
+        }
+    ]
+}
