@@ -1,115 +1,135 @@
 # GhostLink 👻🔗
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+<div align="center">
 
-**GhostLink** is a “Zero-Knowledge Data Passport” prototype: turn your Web2 signals into **verifiable on-chain credentials** (SBT/NFT) — **without exposing raw data**.  
-One sentence: **prove you meet a condition, not who you are.** 🕶️✨
+![GhostLink Banner](docs/screenshots/01-home-dark.png)
 
-> Slogan: Your Reputation, Unchained & Unseen.
+**Your Reputation, Unchained & Unseen**
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Sepolia](https://img.shields.io/badge/Network-Sepolia-blue)](https://sepolia.etherscan.io/)
+[![RISC Zero](https://img.shields.io/badge/Powered%20by-RISC%20Zero-00D4AA)](https://risczero.com/)
 
-## The “Why” 🌉
+[English](README.md) | [简体中文](README.zh-CN.md) | [Live Demo](https://ghostlink.pages.dev)
 
-Web3 lacks trust, while Web2 is full of reputation. GhostLink connects them — **privacy-first**:
-
-- 🧙 Prove you’re a real developer / real human / above an asset threshold — without doxxing accounts, statements, or exact numbers
-- 🛡️ Help projects run airdrops, allowlists, and access control with less Sybil pain
-- 🧩 Make off-chain signals composable on-chain (permissions, gating, identity layers)
-
-Big vision: **data becomes programmable private property, reputation becomes verifiable public capability.** 🧠⚙️
+</div>
 
 ---
 
-## What you can imagine building 🚀
+## 🌟 What is GhostLink?
 
-Not “features list”, but “product imagination list”:
+GhostLink is a **Zero-Knowledge Data Passport** that transforms your Web2 reputation into **verifiable on-chain credentials** (SBT) — **without exposing your raw data**.
 
-- 🏅 Dev-Pass: prove developer credibility from GitHub signals (age, contributions, merges…)
-- 📣 Social-Pass: prove social reach from X/Twitter signals (followers, account age…)
-- 💎 Asset-Pass: prove “≥ threshold” from statements — **show solvency without showing balances**
-- 🧷 Sybil Guard: one-person-one-claim via `nullifier` (no repeated minting / claiming)
-- 🧱 Private allowlists: events, communities, beta programs, RWA access, DeFi credit primitives
+> **One sentence:** Prove you meet a condition, not who you are.
 
-Some of these are in prototype UI/flows today; others are the intended direction (see roadmap + `productdoc/`).
+### The Problem
+
+- Web3 lacks trust signals; Web2 has abundant reputation data
+- Proving credentials often requires doxxing private information
+- Sybil attacks plague airdrops, allowlists, and community access
+
+### Our Solution
+
+GhostLink bridges this gap with **privacy-first verification**:
+
+| What's Visible ✅ | What's Hidden ❌ |
+|------------------|------------------|
+| Whether you meet a requirement | Your raw account data |
+| Cryptographic proof of validity | Exact balances or follower counts |
+| Reusable credential on-chain | Your identity across platforms |
 
 ---
 
-## The core trick: visibility vs. invisibility 🎭
+## 📸 Screenshots
 
-GhostLink doesn’t “move data”, it “moves conclusions”:
-
-- ✅ Public: whether a requirement is met
-- ❌ Private: raw data (accounts, transaction details, exact amounts)
-- 🔁 Reusable: third parties verify a credential, not your entire life
-- 🧷 Anti-replay: `nullifier` prevents “same identity, multiple mints”
+<table>
+<tr>
+<td><img src="docs/screenshots/01-home-dark.png" alt="Home Dark"><br><sub>Dark Mode</sub></td>
+<td><img src="docs/screenshots/02-home-light.png" alt="Home Light"><br><sub>Light Mode</sub></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/03-solutions.png" alt="Solutions"><br><sub>ZK Privacy Bridge</sub></td>
+<td><img src="docs/screenshots/04-explorer.png" alt="Explorer"><br><sub>Credential Explorer</sub></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/screenshots/05-contracts.png" alt="Contracts"><br><sub>Contract Inspector (Blueprint Studio)</sub></td>
+</tr>
+</table>
 
 ---
 
-## Web-First architecture (local privacy zone) 🧩
+## ✨ Features
 
-We lean toward **Thick Client, Thin Server**: keep privacy computation on the user side, keep the server minimal.
+### 🎫 Credential Passports
+
+- **Dev-Pass**: Prove developer credibility from GitHub (account age, contributions, repos)
+- **Social-Pass**: Prove social reach from X/Twitter (followers, engagement, account age)
+- **Asset-Pass**: Prove "≥ threshold" from financial data — show solvency without revealing balances
+
+### 🛡️ Privacy & Security
+
+- **Zero-Knowledge Proofs**: Powered by RISC Zero zkVM
+- **Nullifier System**: Prevents double-claiming with cryptographic uniqueness
+- **On-Chain Verification**: All proofs verified by smart contracts
+
+### 🎨 User Experience
+
+- **Dual Theme**: Professional dark mode & clean light mode (Blueprint aesthetic)
+- **Multi-Language**: Full English & Chinese (中文) support
+- **Contract Inspector**: Transparent smart contract auditing with live logic analysis
+- **Real-Time Explorer**: Track credential minting and holder statistics
+
+---
+
+## 🏗️ Architecture
 
 ```mermaid
 graph TD
-  subgraph Browser["Browser / Local Privacy Zone"]
-    UI["UI (web/)"]
-    Prover["Local proving (target: zkVM/WASM)"]
-    UI --> Prover
-  end
-  subgraph Backend["Minimal backend (src/)"]
-    API["OAuth callbacks / PDF parsing / proof orchestration"]
-  end
-  subgraph Chain["On-chain"]
-    Verifier["Verifier contract"]
-    SBT["SBT/NFT credential"]
+    subgraph Browser["🌐 Browser (Privacy Zone)"]
+        UI["React Frontend"]
+        Wallet["Wallet Connection"]
+    end
+    
+    subgraph Backend["⚙️ Backend (Spring Boot)"]
+        OAuth["OAuth Callbacks"]
+        Prover["ZK Proof Generator"]
+    end
+    
+    subgraph Chain["⛓️ Ethereum (Sepolia)"]
+        Verifier["RISC Zero Verifier"]
+        SBT["GhostLinkSBT Contract"]
+    end
+    
+    UI --> Wallet
+    UI --> OAuth
+    OAuth --> Prover
+    Prover --> Verifier
     Verifier --> SBT
-  end
-  UI --> API
-  API --> Verifier
+    Wallet --> SBT
 ```
 
-In this repo, proof generation currently runs in **demo mode** (mock proof) to validate product flows and UX. The target ZK + on-chain design is documented in `productdoc/`.
+### Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18 + Vite + Tailwind CSS + Framer Motion |
+| Backend | Java 17 + Spring Boot 3 |
+| Blockchain | Ethereum (Sepolia) + Solidity |
+| ZK Proving | RISC Zero zkVM + Groth16 |
+| Deployment | Cloudflare Pages + Alibaba Cloud |
 
 ---
 
-## Why zkVM + zkTLS? 🧬
+## 🚀 Quick Start
 
-GhostLink’s design docs assume a future where:
+### Prerequisites
 
-- ⚙️ A general-purpose zkVM (e.g. RISC Zero) runs **real parsing + verification logic** in standard Rust
-- 📄 We can handle not only neat JSON, but also messy HTML / PDFs (the real world is unstructured)
-- 🔁 Verification logic can evolve quickly (update rules, not rewrite circuits from scratch)
-- 🛰️ zkTLS (e.g. TLSNotary-style attestation) can prove the data truly came from a website/API without trusting the user or the server
+- Node.js 18+
+- Java 17+
+- Maven 3.8+
+- MetaMask or compatible wallet
 
-The repo focuses on **product UX + end-to-end flow** first, then swaps the proof engine underneath when ready. 🪄
-
----
-
-## Screenshots (drop yours here) 📸
-
-Put images under `docs/screenshots/` and they will show up:
-
-![Home Hero](docs/screenshots/01-home-hero.png)
-![Solutions Overview](docs/screenshots/02-solutions-overview.png)
-![GitHub Flow](docs/screenshots/03-solutions-github-flow.png)
-![Explorer Dashboard](docs/screenshots/06-explorer-dashboard.png)
-
-More slots + recommended filenames: `docs/screenshots/README.md`
-
----
-
-## Quick start ⚡
-
-### Backend (Java)
-
-```bash
-./mvnw spring-boot:run
-```
-
-Default port: `8080`
-
-### Frontend (Vite)
+### Frontend
 
 ```bash
 cd web
@@ -117,46 +137,119 @@ npm install
 npm run dev
 ```
 
-The terminal prints the local URL (commonly `http://localhost:5173`).
+Open `http://localhost:5173` in your browser.
+
+### Backend
+
+```bash
+./mvnw spring-boot:run
+```
+
+API available at `http://localhost:8080`.
+
+### Smart Contract
+
+The `GhostLinkSBT` contract is deployed on Sepolia:
+
+```
+Address: 0xe62f6F1E02507880a561A8cd7a88050E61CFA4Ad
+```
+
+[View on Etherscan →](https://sepolia.etherscan.io/address/0xe62f6F1E02507880a561A8cd7a88050E61CFA4Ad)
 
 ---
 
-## Configuration (please do this before going public) 🔐
+## ⚙️ Configuration
 
-Backend OAuth reads env vars (no secrets in source control):
+### Backend Environment Variables
 
-- `GHOSTLINK_GITHUB_CLIENT_ID`
-- `GHOSTLINK_GITHUB_CLIENT_SECRET`
-- `GHOSTLINK_TWITTER_CLIENT_ID`
-- `GHOSTLINK_TWITTER_CLIENT_SECRET`
+```bash
+# OAuth Credentials (Required for production)
+export GHOSTLINK_GITHUB_CLIENT_ID="your_github_client_id"
+export GHOSTLINK_GITHUB_CLIENT_SECRET="your_github_client_secret"
+export GHOSTLINK_TWITTER_CLIENT_ID="your_twitter_client_id"
+export GHOSTLINK_TWITTER_CLIENT_SECRET="your_twitter_client_secret"
+```
 
-Frontend supports optional Vite overrides:
+### Frontend Environment Variables (Optional)
 
-- `VITE_GITHUB_CLIENT_ID`
-- `VITE_TWITTER_CLIENT_ID`
-
----
-
-## Product / Protocol docs 📚
-
-- `productdoc/GhostLink_Product_Spec.md`
-- `productdoc/需求文档.md`
-- `productdoc/risc_zero_spec.md`
-- `productdoc/smart_contract_spec.md`
+```bash
+# Create .env.local in /web
+VITE_API_BASE_URL=http://localhost:8080
+VITE_GITHUB_CLIENT_ID=your_github_client_id
+```
 
 ---
 
-## Roadmap (star first, ship next) 🗺️✨
+## 📁 Project Structure
 
-- ✅ Web MVP: multi-page product UI + flows + demo proof plumbing
-- 🚧 Real proving: zkVM/WASM, local privacy computation, auditable rules
-- 🚧 zkTLS: prove the data source is authentic + untampered
-- 🌈 SDK & marketplace: “bring your own logic” for any dApp
-- 📱 Mobile: privacy + identity in your pocket
+```
+ghostlink/
+├── web/                  # React Frontend
+│   ├── src/
+│   │   ├── components/   # Reusable UI components
+│   │   ├── pages/        # Page components
+│   │   ├── contexts/     # React contexts (Theme, I18n)
+│   │   ├── i18n/         # Internationalization strings
+│   │   └── config/       # Configuration constants
+│   └── public/           # Static assets
+├── src/                  # Spring Boot Backend
+│   └── main/java/org/example/ghostlink/
+│       ├── controller/   # REST controllers
+│       ├── service/      # Business logic
+│       └── config/       # Configuration
+├── contracts/            # Solidity smart contracts
+│   ├── GhostLinkSBT.sol  # Main SBT contract
+│   └── IRiscZeroVerifier.sol
+├── productdoc/           # Product specifications
+└── docs/                 # Documentation & screenshots
+```
 
 ---
 
-## Join us 🤝
+## 📚 Documentation
 
-If this direction resonates, please give the repo a ⭐️ — it’s the fastest way to turn a privacy vision into real infrastructure.  
-Open an Issue with the one condition you wish you could prove… privately 👀
+| Document | Description |
+|----------|-------------|
+| [Product Spec](productdoc/GhostLink_Product_Spec.md) | Full product specification |
+| [Smart Contract Spec](productdoc/smart_contract_spec.md) | Contract architecture & functions |
+| [RISC Zero Spec](productdoc/risc_zero_spec.md) | ZK proving system design |
+| [需求文档](productdoc/需求文档.md) | Chinese requirements document |
+
+---
+
+## 🗺️ Roadmap
+
+- [x] **V1 MVP**: Multi-page Web UI + Demo proof flows
+- [x] **Contract Inspector**: Blueprint Studio with live logic analysis
+- [x] **Dual Theme**: Dark/Light mode with i18n support
+- [ ] **Real Proving**: zkVM/WASM local privacy computation
+- [ ] **zkTLS Integration**: Prove data authenticity from sources
+- [ ] **SDK & Marketplace**: "Bring your own logic" for any dApp
+- [ ] **Mobile App**: Privacy + identity in your pocket
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. **Star the repo** ⭐ — it helps visibility
+2. **Open an Issue** — share ideas or report bugs
+3. **Submit a PR** — improve code, docs, or translations
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+**Built with 💜 by the GhostLink Team**
+
+[Website](https://ghostlink.pages.dev) · [GitHub](https://github.com/kyp2022/ghostlink) · [Etherscan](https://sepolia.etherscan.io/address/0xe62f6F1E02507880a561A8cd7a88050E61CFA4Ad)
+
+</div>

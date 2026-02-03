@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X, Zap, Ghost, Sun, Moon, LogOut } from 'lucide-react';
+import { Menu, X, Zap, Ghost, Sun, Moon, LogOut, FileCode2 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useI18n } from '../../contexts/I18nContext';
 import LanguageToggle from '../ui/LanguageToggle';
@@ -14,6 +14,7 @@ export const Navbar = ({ activeTab, setActiveTab, account, onConnectWallet, disc
         { key: 'home', label: t('nav.home') },
         { key: 'solutions', label: t('nav.solutions') },
         { key: 'explorer', label: t('nav.explorer') },
+        { key: 'contractInspector', label: t('nav.contracts') },
         { key: 'developers', label: t('nav.developers') },
         { key: 'company', label: t('nav.company') }
     ];

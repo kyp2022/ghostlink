@@ -1,116 +1,135 @@
 # GhostLink 👻🔗
 
-[简体中文](README.zh-CN.md) | [English](README.md)
+<div align="center">
 
-**GhostLink** 是一个“去中心化零知识数据护照”原型：把你的 Web2 行为/资产信号，变成 **链上可验证、但不泄露原始数据** 的凭证（SBT/NFT）。  
-一句话：**证明你“满足条件”，而不是暴露你“是谁/有什么”。** 🕶️✨
+![GhostLink Banner](docs/screenshots/01-home-dark.png)
 
-> 口号：Your Reputation, Unchained & Unseen.
+**你的声誉，解放且隐形**
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Sepolia](https://img.shields.io/badge/Network-Sepolia-blue)](https://sepolia.etherscan.io/)
+[![RISC Zero](https://img.shields.io/badge/Powered%20by-RISC%20Zero-00D4AA)](https://risczero.com/)
 
-## 为什么会有 GhostLink？🌉
+[English](README.md) | [简体中文](README.zh-CN.md) | [在线演示](https://ghostlink.pages.dev)
 
-Web3 世界缺的是“可信”，而 Web2 世界堆满了“声誉”。  
-GhostLink 想把两者接起来，同时不牺牲隐私：
-
-- 🧙 你可以证明“我是老牌开发者 / 真人 / 有资产门槛”，但不必公开你的账号、流水、具体金额
-- 🛡️ 项目方可以用更温和的方式防女巫、做白名单、发空投、做准入
-- 🧩 dApp 可以把“链下信号”变成“链上可组合的权限与资产”
-
-更大的愿景是：**把“数据”变成可编程的私人资产，把“声誉”变成可验证的公共能力。** 🧠⚙️
+</div>
 
 ---
 
-## 你可以想象用它做什么？🚀
+## 🌟 什么是 GhostLink？
 
-这不是“接口清单”，而是一份“产品想象清单”：
+GhostLink 是一个**零知识数据护照**，将你的 Web2 声誉转化为**可验证的链上凭证** (SBT) — **无需暴露原始数据**。
 
-- 🏅 Dev-Pass：用 GitHub 信号证明开发者可信度（账号年龄、贡献度、合并记录等）
-- 📣 Social-Pass：用 X/Twitter 信号证明影响力（粉丝、账号年龄等）
-- 💎 Asset-Pass：用账单证明“≥ 阈值”——**只证明门槛，不暴露余额**
-- 🧷 Sybil Guard：用 `nullifier` 做“一人一次”的空投/准入/领奖
-- 🧱 私人白名单：活动、社群、内测、RWA、DeFi 信用等场景的隐私准入
+> **一句话概括：** 证明你符合条件，而非证明你是谁。
 
-其中一部分在当前网页原型里已经呈现了交互流程；更完整的目标与规范见 `productdoc/`。
+### 问题
+
+- Web3 缺乏信任信号；Web2 拥有丰富的声誉数据
+- 验证凭证往往需要暴露私人信息
+- 空投、白名单和社区准入饱受女巫攻击困扰
+
+### 我们的解决方案
+
+GhostLink 以**隐私优先**的方式弥合这一鸿沟：
+
+| 可见内容 ✅ | 隐藏内容 ❌ |
+|-------------|-------------|
+| 是否满足某项要求 | 你的原始账户数据 |
+| 有效性的密码学证明 | 确切的余额或粉丝数量 |
+| 链上可复用的凭证 | 你在各平台的身份 |
 
 ---
 
-## 核心创意：数据护照的“可见/不可见”🎭
+## 📸 界面预览
 
-GhostLink 的核心不是“搬运数据”，而是“搬运结论”：
-
-- ✅ 公开：你是否满足某个门槛（例如账户年龄、贡献度、资产阈值）
-- ❌ 不公开：你的原始数据（账号、明细、金额、历史记录）
-- 🔁 可复用：第三方只需要验证链上凭证，不需要重新收集你的一切
-- 🧷 防重复：用 `nullifier` 避免同一身份重复铸造/重复领奖
+<table>
+<tr>
+<td><img src="docs/screenshots/01-home-dark.png" alt="暗色首页"><br><sub>暗色模式</sub></td>
+<td><img src="docs/screenshots/02-home-light.png" alt="亮色首页"><br><sub>亮色模式</sub></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/03-solutions.png" alt="解决方案"><br><sub>ZK 隐私桥</sub></td>
+<td><img src="docs/screenshots/04-explorer.png" alt="探索"><br><sub>凭证探索器</sub></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/screenshots/05-contracts.png" alt="合约"><br><sub>合约审计台 (图纸工作室)</sub></td>
+</tr>
+</table>
 
 ---
 
-## 它怎么工作？（Web-First 思路）🧩
+## ✨ 核心功能
 
-我们偏向 **“重客户端、轻服务端”**：把隐私计算尽量留在用户侧，把服务端做成最小必要的转发/验证层。
+### 🎫 凭证护照
+
+- **Dev-Pass**: 通过 GitHub 证明开发者可信度（账户年龄、贡献、仓库）
+- **Social-Pass**: 通过 X/Twitter 证明社交影响力（粉丝数、互动、账户年龄）
+- **Asset-Pass**: 证明 "≥ 阈值" — 展示偿付能力而不暴露余额
+
+### 🛡️ 隐私与安全
+
+- **零知识证明**: 由 RISC Zero zkVM 驱动
+- **Nullifier 机制**: 通过密码学唯一性防止重复领取
+- **链上验证**: 所有证明由智能合约验证
+
+### 🎨 用户体验
+
+- **双主题**: 专业暗色模式 & 简洁亮色模式（蓝图美学）
+- **多语言**: 完整的英文和中文支持
+- **合约审计台**: 透明的智能合约审计，配合实时逻辑分析
+- **实时探索器**: 追踪凭证铸造和持有者统计
+
+---
+
+## 🏗️ 系统架构
 
 ```mermaid
 graph TD
-  subgraph Browser["用户浏览器 / 本地隐私区"]
-    UI["前端 UI（web/）"]
-    Prover["本地证明（未来：zkVM/WASM）"]
-    UI --> Prover
-  end
-  subgraph Backend["轻后端（src/）"]
-    API["OAuth 回调 / PDF 解析 / 证明编排"]
-  end
-  subgraph Chain["链上"]
-    Verifier["Verifier 合约"]
-    SBT["SBT/NFT 凭证"]
+    subgraph Browser["🌐 浏览器 (隐私区)"]
+        UI["React 前端"]
+        Wallet["钱包连接"]
+    end
+    
+    subgraph Backend["⚙️ 后端 (Spring Boot)"]
+        OAuth["OAuth 回调"]
+        Prover["ZK 证明生成器"]
+    end
+    
+    subgraph Chain["⛓️ 以太坊 (Sepolia)"]
+        Verifier["RISC Zero 验证器"]
+        SBT["GhostLinkSBT 合约"]
+    end
+    
+    UI --> Wallet
+    UI --> OAuth
+    OAuth --> Prover
+    Prover --> Verifier
     Verifier --> SBT
-  end
-  UI --> API
-  API --> Verifier
+    Wallet --> SBT
 ```
 
-当前仓库里，证明部分以“演示模式”跑通（mock proof），用于打通 UI/流程/交互；产品设计目标与对接规范在 `productdoc/`。
+### 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 前端 | React 18 + Vite + Tailwind CSS + Framer Motion |
+| 后端 | Java 17 + Spring Boot 3 |
+| 区块链 | Ethereum (Sepolia) + Solidity |
+| ZK 证明 | RISC Zero zkVM + Groth16 |
+| 部署 | Cloudflare Pages + 阿里云 |
 
 ---
 
-## 为什么要用 zkVM + zkTLS？🧬
+## 🚀 快速开始
 
-GhostLink 的设计文档指向一个更“可扩展”的未来：
+### 前置条件
 
-- ⚙️ 用通用 zkVM（例如 RISC Zero）在标准 Rust 里跑**真实解析 + 真实校验逻辑**
-- 📄 不只处理规整的 JSON，也能处理更现实的 HTML / PDF（世界本来就不结构化）
-- 🔁 规则可以快速演进（改规则，不用每次都“重写电路”）
-- 🛰️ 用 zkTLS（例如 TLSNotary 思路）证明“数据确实来自某网站/API 且未被篡改”，减少对用户与服务端的信任假设
+- Node.js 18+
+- Java 17+
+- Maven 3.8+
+- MetaMask 或兼容钱包
 
-这个仓库的策略是：先把 **产品体验 + 端到端流程** 做到顺滑，再把证明引擎像“换电池”一样替换到位。🪄
-
----
-
-## 它看起来像什么？（建议你放截图）📸
-
-把截图放到 `docs/screenshots/` 后，README 会自动展示：
-
-![首页 Hero](docs/screenshots/01-home-hero.png)
-![Solutions 总览](docs/screenshots/02-solutions-overview.png)
-![GitHub 流程](docs/screenshots/03-solutions-github-flow.png)
-![Explorer 仪表盘](docs/screenshots/06-explorer-dashboard.png)
-
-更多截图位与命名建议：`docs/screenshots/README.md`
-
----
-
-## 快速开始（本地跑起来）⚡
-
-### 1）启动后端（Java）
-
-```bash
-./mvnw spring-boot:run
-```
-
-默认端口：`8080`
-
-### 2）启动前端（Vite）
+### 前端
 
 ```bash
 cd web
@@ -118,58 +137,119 @@ npm install
 npm run dev
 ```
 
-默认地址：终端会输出本地访问地址（通常是 `http://localhost:5173`）。
+在浏览器打开 `http://localhost:5173`。
+
+### 后端
+
+```bash
+./mvnw spring-boot:run
+```
+
+API 地址为 `http://localhost:8080`。
+
+### 智能合约
+
+`GhostLinkSBT` 合约已部署在 Sepolia：
+
+```
+地址: 0xe62f6F1E02507880a561A8cd7a88050E61CFA4Ad
+```
+
+[在 Etherscan 查看 →](https://sepolia.etherscan.io/address/0xe62f6F1E02507880a561A8cd7a88050E61CFA4Ad)
 
 ---
 
-## 配置说明（建议你发版前一定做）🔐
+## ⚙️ 配置
 
-为了避免把密钥提交到仓库，后端 OAuth 已改为读取环境变量：
+### 后端环境变量
 
-- `GHOSTLINK_GITHUB_CLIENT_ID`
-- `GHOSTLINK_GITHUB_CLIENT_SECRET`
-- `GHOSTLINK_TWITTER_CLIENT_ID`
-- `GHOSTLINK_TWITTER_CLIENT_SECRET`
+```bash
+# OAuth 凭证（生产环境必需）
+export GHOSTLINK_GITHUB_CLIENT_ID="你的_github_client_id"
+export GHOSTLINK_GITHUB_CLIENT_SECRET="你的_github_client_secret"
+export GHOSTLINK_TWITTER_CLIENT_ID="你的_twitter_client_id"
+export GHOSTLINK_TWITTER_CLIENT_SECRET="你的_twitter_client_secret"
+```
 
-前端支持用 Vite 环境变量覆盖（可选）：
+### 前端环境变量（可选）
 
-- `VITE_GITHUB_CLIENT_ID`
-- `VITE_TWITTER_CLIENT_ID`
-
----
-
-## 设计原则（我们坚持什么）🧭
-
-- 🔒 隐私优先：默认不收集、不上传、不留存原始数据
-- 🧪 可审计：把验证逻辑写成“可读的规则”，而不是黑盒
-- 🧩 可组合：凭证上链后能被更多 dApp 复用
-- 🧠 结论优先：只公开“是否满足条件”，不公开“具体细节”
-- 🌍 体验优先：把复杂密码学藏在“像魔法一样顺滑”的交互后面 ✨
+```bash
+# 在 /web 目录创建 .env.local
+VITE_API_BASE_URL=http://localhost:8080
+VITE_GITHUB_CLIENT_ID=你的_github_client_id
+```
 
 ---
 
-## 设计文档 / 产品规格 📚
+## 📁 项目结构
 
-如果你想从“产品愿景 → 技术方案 → 路线图”快速理解 GhostLink：
-
-- `productdoc/GhostLink_Product_Spec.md`
-- `productdoc/需求文档.md`
-- `productdoc/risc_zero_spec.md`
-- `productdoc/smart_contract_spec.md`
+```
+ghostlink/
+├── web/                  # React 前端
+│   ├── src/
+│   │   ├── components/   # 可复用 UI 组件
+│   │   ├── pages/        # 页面组件
+│   │   ├── contexts/     # React 上下文（主题、国际化）
+│   │   ├── i18n/         # 国际化字符串
+│   │   └── config/       # 配置常量
+│   └── public/           # 静态资源
+├── src/                  # Spring Boot 后端
+│   └── main/java/org/example/ghostlink/
+│       ├── controller/   # REST 控制器
+│       ├── service/      # 业务逻辑
+│       └── config/       # 配置
+├── contracts/            # Solidity 智能合约
+│   ├── GhostLinkSBT.sol  # 主 SBT 合约
+│   └── IRiscZeroVerifier.sol
+├── productdoc/           # 产品规格文档
+└── docs/                 # 文档和截图
+```
 
 ---
 
-## 路线图（欢迎先点赞再催更）🗺️✨
+## 📚 文档
 
-- ✅ Web MVP：多页面官网 + 交互流程 + 演示证明链路
-- 🚧 接入真实证明：zkVM/WASM、本地隐私计算、可审计规则
-- 🚧 zkTLS：把“数据来自某网站且未被篡改”也纳入证明
-- 🌈 SDK/市场：让任何 dApp 都能定义自己的“护照规则”
-- 📱 移动端：把身份与隐私计算带到更贴身的设备里
+| 文档 | 描述 |
+|------|------|
+| [产品规格](productdoc/GhostLink_Product_Spec.md) | 完整产品规格 |
+| [智能合约规格](productdoc/smart_contract_spec.md) | 合约架构与函数 |
+| [RISC Zero 规格](productdoc/risc_zero_spec.md) | ZK 证明系统设计 |
+| [需求文档](productdoc/需求文档.md) | 中文需求文档 |
 
 ---
 
-## 加入我们 🤝
+## 🗺️ 路线图
 
-如果你认同这个方向，请给一个 ⭐️：这会直接决定我们能不能把“隐私的愿景”变成“可用的基础设施”。  
-也欢迎提 Issue：你最想证明的“那个条件”是什么？👀
+- [x] **V1 MVP**: 多页面 Web UI + 演示证明流程
+- [x] **合约审计台**: 图纸工作室，配合实时逻辑分析
+- [x] **双主题**: 暗色/亮色模式，支持国际化
+- [ ] **真实证明**: zkVM/WASM 本地隐私计算
+- [ ] **zkTLS 集成**: 证明数据来源的真实性
+- [ ] **SDK 与市场**: 为任何 dApp 提供 "自带逻辑" 能力
+- [ ] **移动应用**: 口袋中的隐私 + 身份
+
+---
+
+## 🤝 参与贡献
+
+我们欢迎贡献！以下是你可以帮助的方式：
+
+1. **给仓库加星** ⭐ — 帮助提高可见度
+2. **提交 Issue** — 分享想法或报告 Bug
+3. **提交 PR** — 改进代码、文档或翻译
+
+---
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 — 详情请参阅 [LICENSE](LICENSE) 文件。
+
+---
+
+<div align="center">
+
+**由 GhostLink 团队用 💜 打造**
+
+[网站](https://ghostlink.pages.dev) · [GitHub](https://github.com/kyp2022/ghostlink) · [Etherscan](https://sepolia.etherscan.io/address/0xe62f6F1E02507880a561A8cd7a88050E61CFA4Ad)
+
+</div>

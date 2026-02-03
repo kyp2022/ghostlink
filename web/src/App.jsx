@@ -15,6 +15,7 @@ import { ExplorerPage } from './pages/ExplorerPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { CompanyPage } from './pages/CompanyPage';
 import { WhitepaperPage } from './pages/WhitepaperPage';
+import { ContractInspectorPage } from './pages/ContractInspectorPage';
 import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI } from './config/constants';
 import { ENDPOINTS } from './config/endpoints';
 
@@ -36,6 +37,9 @@ function App() {
             const hash = (window.location.hash || '').toLowerCase();
             if (hash === '#documentation' || hash === '#docs' || hash === '#whitepaper') {
                 setActiveTab('whitepaper');
+            }
+            if (hash === '#contracts' || hash === '#contract') {
+                setActiveTab('contractInspector');
             }
         };
         syncFromHash();
@@ -305,6 +309,7 @@ function App() {
             case 'developers': return <DevelopersPage />;
             case 'company': return <CompanyPage />;
             case 'whitepaper': return <WhitepaperPage onBack={() => setActiveTab('home')} />;
+            case 'contractInspector': return <ContractInspectorPage />;
             default: return <HomePage
                 onConnectWallet={connectWallet}
                 onViewDemo={() => setActiveTab('solutions')}
@@ -345,7 +350,12 @@ function App() {
                     isConnecting={isConnecting}
                 />
             }
-            footer={<Footer onOpenWhitepaper={() => setActiveTab('whitepaper')} />}
+            footer={
+                <Footer
+                    onOpenWhitepaper={() => setActiveTab('whitepaper')}
+                    onOpenContracts={() => setActiveTab('contractInspector')}
+                />
+            }
         >
             {/* Only show lens flare in dark mode */}
             {!isLight && <LensFlareTransition />}

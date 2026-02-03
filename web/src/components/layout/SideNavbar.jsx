@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ghost, Zap, Sun, Moon, Home, Layers, Search, Code, Building2, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { Ghost, Zap, Sun, Moon, Home, Layers, Search, Code, Building2, ChevronLeft, ChevronRight, LogOut, FileCode2 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useI18n } from '../../contexts/I18nContext';
 import LanguageToggle from '../ui/LanguageToggle';
@@ -22,6 +22,7 @@ export const SideNavbar = ({ activeTab, setActiveTab, account, onConnectWallet, 
         { key: 'home', label: t('nav.home'), icon: Home },
         { key: 'solutions', label: t('nav.solutions'), icon: Layers },
         { key: 'explorer', label: t('nav.explorer'), icon: Search },
+        { key: 'contractInspector', label: t('nav.contracts'), icon: FileCode2 },
         { key: 'developers', label: t('nav.developers'), icon: Code },
         { key: 'company', label: t('nav.company'), icon: Building2 }
     ];

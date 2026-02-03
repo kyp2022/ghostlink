@@ -1,7 +1,7 @@
 import { Github, Twitter, ExternalLink, Ghost } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
-export const Footer = ({ onOpenWhitepaper }) => {
+export const Footer = ({ onOpenWhitepaper, onOpenContracts }) => {
     const { t } = useI18n();
     return (
         <footer className="bg-surface-1 border-t border-theme-border-medium py-16 px-6">
@@ -71,7 +71,15 @@ export const Footer = ({ onOpenWhitepaper }) => {
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="text-theme-text-muted hover:text-theme-accent-primary text-sm transition-colors cursor-pointer">
+                                <a
+                                    href="#contracts"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.location.hash = '#contracts';
+                                        onOpenContracts?.();
+                                    }}
+                                    className="text-theme-text-muted hover:text-theme-accent-primary text-sm transition-colors cursor-pointer"
+                                >
                                     {t('footer.smartContracts')}
                                 </a>
                             </li>
