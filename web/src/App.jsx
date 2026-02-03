@@ -6,6 +6,7 @@ import { useI18n } from './contexts/I18nContext';
 import { LayoutShell } from './components/layout/LayoutShell';
 import { Navbar } from './components/layout/Navbar';
 import { SideNavbar } from './components/layout/SideNavbar';
+import { LightHeader } from './components/layout/LightHeader';
 import { Footer } from './components/layout/Footer';
 import { LensFlareTransition } from './components/ui/LensFlareTransition';
 import { HomePage } from './pages/HomePage';
@@ -13,6 +14,7 @@ import { SolutionsPage } from './pages/SolutionsPage';
 import { ExplorerPage } from './pages/ExplorerPage';
 import { DevelopersPage } from './pages/DevelopersPage';
 import { CompanyPage } from './pages/CompanyPage';
+import { WhitepaperPage } from './pages/WhitepaperPage';
 import { GITHUB_CLIENT_ID, TWITTER_CLIENT_ID, REDIRECT_URI } from './config/constants';
 import { ENDPOINTS } from './config/endpoints';
 
@@ -27,6 +29,19 @@ function App() {
         const saved = localStorage.getItem('ghostlink_active_tab');
         return saved || 'home';
     });
+
+    // 允许通过超链接直接打开文档页
+    useEffect(() => {
+        const syncFromHash = () => {
+            const hash = (window.location.hash || '').toLowerCase();
+            if (hash === '#documentation' || hash === '#docs' || hash === '#whitepaper') {
+                setActiveTab('whitepaper');
+            }
+        };
+        syncFromHash();
+        window.addEventListener('hashchange', syncFromHash);
+        return () => window.removeEventListener('hashchange', syncFromHash);
+    }, []);
 
     // Save to localStorage whenever activeTab changes
     useEffect(() => {
@@ -289,9 +304,11 @@ function App() {
             case 'explorer': return <ExplorerPage walletSigner={signer} />;
             case 'developers': return <DevelopersPage />;
             case 'company': return <CompanyPage />;
+            case 'whitepaper': return <WhitepaperPage onBack={() => setActiveTab('home')} />;
             default: return <HomePage
                 onConnectWallet={connectWallet}
                 onViewDemo={() => setActiveTab('solutions')}
+                onOpenDocs={() => setActiveTab('whitepaper')}
             />;
         }
     };
@@ -300,14 +317,23 @@ function App() {
     return (
         <LayoutShell
             topNavbar={
-                <Navbar
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    account={account}
-                    onConnectWallet={connectWallet}
-                    disconnectWallet={disconnectWallet}
-                    isConnecting={isConnecting}
-                />
+                isLight ? (
+                    <LightHeader
+                        account={account}
+                        onConnectWallet={connectWallet}
+                        disconnectWallet={disconnectWallet}
+                        isConnecting={isConnecting}
+                    />
+                ) : (
+                    <Navbar
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        account={account}
+                        onConnectWallet={connectWallet}
+                        disconnectWallet={disconnectWallet}
+                        isConnecting={isConnecting}
+                    />
+                )
             }
             sideNavbar={
                 <SideNavbar
@@ -319,7 +345,7 @@ function App() {
                     isConnecting={isConnecting}
                 />
             }
-            footer={<Footer />}
+            footer={<Footer onOpenWhitepaper={() => setActiveTab('whitepaper')} />}
         >
             {/* Only show lens flare in dark mode */}
             {!isLight && <LensFlareTransition />}

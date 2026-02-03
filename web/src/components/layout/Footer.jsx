@@ -1,7 +1,7 @@
 import { Github, Twitter, ExternalLink, Ghost } from 'lucide-react';
 import { useI18n } from '../../contexts/I18nContext';
 
-export const Footer = () => {
+export const Footer = ({ onOpenWhitepaper }) => {
     const { t } = useI18n();
     return (
         <footer className="bg-surface-1 border-t border-theme-border-medium py-16 px-6">
@@ -54,7 +54,14 @@ export const Footer = () => {
                         <h4 className="font-mono text-sm font-semibold text-theme-text-primary mb-4 tracking-wider">{t('footer.resources')}</h4>
                         <ul className="space-y-3">
                             <li>
-                                <a href="#" className="text-theme-text-muted hover:text-theme-accent-primary text-sm transition-colors cursor-pointer flex items-center gap-1">
+                                <a
+                                    href="#documentation"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onOpenWhitepaper?.();
+                                    }}
+                                    className="text-theme-text-muted hover:text-theme-accent-primary text-sm transition-colors cursor-pointer flex items-center gap-1"
+                                >
                                     {t('footer.documentation')} <ExternalLink size={12} />
                                 </a>
                             </li>

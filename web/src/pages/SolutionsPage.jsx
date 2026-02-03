@@ -49,9 +49,11 @@ export const SolutionsPage = ({
     const [activeTab, setActiveTab] = useState('defi');
     const account = walletAccount;
     const signer = walletSigner;
+    const autoMintedRef = useRef({ github: null, twitter: null });
 
     const {
         mintCredential,
+        resetProgress,
         isMinting,
         mintStatus,
         progressSteps,
@@ -66,14 +68,12 @@ export const SolutionsPage = ({
         ensureProgressInitialized
     } = useContract(signer, account);
 
-    // Auto-progress effects...
+    // OAuth 回调开始后自动显示弹窗，并重置状态，避免沿用上一次成功/失败的状态
     useEffect(() => {
         const githubLoading = initialVerificationStatus === 'loading';
         const twitterLoading = twitterStatus === 'loading';
         if (githubLoading || twitterLoading) {
-            ensureProgressInitialized(githubLoading ? t('progress.githubProofToMint') : t('progress.twitterProofToMint'));
-            setProgressSteps(defaultProgressSteps);
-            setCurrentProgressStep(0);
+            resetProgress(githubLoading ? t('progress.githubProofToMint') : t('progress.twitterProofToMint'));
             setShowProgressModal(true);
         }
     }, [initialVerificationStatus, twitterStatus]);
@@ -81,18 +81,25 @@ export const SolutionsPage = ({
     useEffect(() => {
         if ((initialVerificationStatus === 'success' && initialZkProof) || (twitterStatus === 'success' && twitterProof)) {
             const isTwitter = twitterStatus === 'success';
+            const proof = isTwitter ? twitterProof : initialZkProof;
+            const proofId = proof?.proofId || 'N/A';
+            const key = isTwitter ? 'twitter' : 'github';
+            if (autoMintedRef.current[key] === proofId) return;
+            autoMintedRef.current[key] = proofId;
+
             setProgressTitle(isTwitter ? t('progress.twitterProofToMint') : t('progress.githubProofToMint'));
             setProgressSteps(prev => (prev && prev.length > 0 ? prev : defaultProgressSteps));
             setProgressSteps(prev => prev.map((s, i) =>
-                i === 0 ? { ...s, description: t('progress.proofReady'), details: `Proof ID: ${(isTwitter ? twitterProof : initialZkProof).proofId || 'N/A'}` } : s
+                i === 0 ? { ...s, description: t('progress.proofReady'), details: `Proof ID: ${proofId}` } : s
             ));
             setCurrentProgressStep(1);
+            setShowProgressModal(true);
 
-            // Auto-trigger minting
+            // 自动触发 mint（需要用户在钱包里确认交易，流程会在此处等待）
             if (isTwitter) {
-                mintCredential(twitterProof, 2, false); // 2 = Twitter
+                mintCredential(twitterProof, 2, true); // 2 = Twitter
             } else {
-                mintCredential(initialZkProof, 0, false); // 0 = Github
+                mintCredential(initialZkProof, 0, true); // 0 = Github
             }
         }
     }, [initialVerificationStatus, initialZkProof, twitterStatus, twitterProof]);

@@ -25,6 +25,14 @@ export const useContract = (signer, account) => {
         setProgressSteps(prev => (prev && prev.length > 0 ? prev : defaultProgressSteps));
     };
 
+    const resetProgress = (titleOverride) => {
+        setIsMinting(false);
+        setMintStatus(null);
+        setProgressTitle(titleOverride || t('modal.processing'));
+        setProgressSteps(defaultProgressSteps);
+        setCurrentProgressStep(0);
+    };
+
     const mintCredential = async (zkProof, credentialType, autoStart = false) => {
         if (!signer || !account) {
             alert(t('errors.connectWalletFirst'));
@@ -37,6 +45,7 @@ export const useContract = (signer, account) => {
         }
 
         setIsMinting(true);
+        setMintStatus(null);
         ensureProgressInitialized(t('progress.proofToMint'));
 
         if (autoStart) {
@@ -190,6 +199,7 @@ export const useContract = (signer, account) => {
 
     return {
         mintCredential,
+        resetProgress,
         isMinting,
         mintStatus,
         progressSteps,
