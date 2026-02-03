@@ -370,7 +370,7 @@ export const ContractInspectorPage = () => {
                 }}
             />
 
-            <div className="max-w-[1600px] mx-auto relative">
+            <div className="max-w-[1400px] mx-auto relative">
                 {/* Header Section */}
                 <div className="mb-6">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

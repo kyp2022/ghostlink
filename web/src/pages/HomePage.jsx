@@ -222,7 +222,7 @@ const ProtocolStatusBar = () => {
                 animate={{ x: ['0%', '180%'] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
             />
-            <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-6">
+            <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between gap-6">
                 <div className="flex-1 overflow-hidden text-xs tracking-[0.22em]">
                     {/* 量一下单次内容宽度，用于无缝循环滚动 */}
                     <div className="absolute -z-10 opacity-0 pointer-events-none" aria-hidden="true">
@@ -273,59 +273,59 @@ const HeroVisualization = () => {
 
     return (
         <div className="relative w-full h-full min-h-[480px] bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Technical Grid Background */}
-        <BlueprintGridBackground />
+            {/* Technical Grid Background */}
+            <BlueprintGridBackground />
 
-        {/* Scanline + ambient glows (light mode should still feel "running") */}
-        <motion.div
-            className="absolute inset-x-6 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent z-20"
-            animate={{ top: ['12%', '88%', '12%'] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.div
-            className="absolute -top-10 -right-10 w-40 h-40 bg-amber-200/40 rounded-full blur-3xl"
-            animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0.5, 0.35] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-            className="absolute -bottom-12 -left-12 w-44 h-44 bg-sky-200/40 rounded-full blur-3xl"
-            animate={{ scale: [1.08, 1, 1.08], opacity: [0.3, 0.45, 0.3] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        />
-
-        {/* Corner Technical Marks */}
-        <div className="absolute top-3 left-3 w-6 h-6 border-l border-t border-slate-300" />
-        <div className="absolute top-3 right-3 w-6 h-6 border-r border-t border-slate-300" />
-        <div className="absolute bottom-3 left-3 w-6 h-6 border-l border-b border-slate-300" />
-        <div className="absolute bottom-3 right-3 w-6 h-6 border-r border-b border-slate-300" />
-
-        {/* Document ID */}
-        <div className="absolute top-3 left-12 text-[12px] font-mono text-slate-400 tracking-widest">
-            {s('DOC::ZK_BRIDGE_SCHEMATIC_v3.2', '文档::ZK_BRIDGE_SCHEMATIC_v3.2')}
-        </div>
-
-        {/* Generated Image */}
-        <motion.div className="absolute inset-0 flex items-center justify-center p-6">
-            <motion.img
-                src="/images/zk_bridge_blueprint.png"
-                alt={s('ZK Bridge Blueprint', '零知识桥蓝图')}
-                className="max-w-full max-h-full object-contain drop-shadow-sm"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1, y: [0, -6, 0] }}
-                transition={{
-                    opacity: { duration: 0.45, ease: "easeOut" },
-                    scale: { duration: 0.45, ease: "easeOut" },
-                    y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
-                }}
+            {/* Scanline + ambient glows (light mode should still feel "running") */}
+            <motion.div
+                className="absolute inset-x-6 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent z-20"
+                animate={{ top: ['12%', '88%', '12%'] }}
+                transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
             />
-        </motion.div>
+            <motion.div
+                className="absolute -top-10 -right-10 w-40 h-40 bg-amber-200/40 rounded-full blur-3xl"
+                animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0.5, 0.35] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+                className="absolute -bottom-12 -left-12 w-44 h-44 bg-sky-200/40 rounded-full blur-3xl"
+                animate={{ scale: [1.08, 1, 1.08], opacity: [0.3, 0.45, 0.3] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            />
 
-        {/* Bottom Status */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-4 text-[12px] font-mono text-slate-400">
-            <span>{s('PROTOCOL::GHOSTLINK', '协议::GHOSTLINK')}</span>
-            <span className="w-1 h-1 bg-slate-300 rounded-full" />
-            <span>{s('CHAIN::ETHEREUM', '链::Ethereum')}</span>
-        </div>
+            {/* Corner Technical Marks */}
+            <div className="absolute top-3 left-3 w-6 h-6 border-l border-t border-slate-300" />
+            <div className="absolute top-3 right-3 w-6 h-6 border-r border-t border-slate-300" />
+            <div className="absolute bottom-3 left-3 w-6 h-6 border-l border-b border-slate-300" />
+            <div className="absolute bottom-3 right-3 w-6 h-6 border-r border-b border-slate-300" />
+
+            {/* Document ID */}
+            <div className="absolute top-3 left-12 text-[12px] font-mono text-slate-400 tracking-widest">
+                {s('DOC::ZK_BRIDGE_SCHEMATIC_v3.2', '文档::ZK_BRIDGE_SCHEMATIC_v3.2')}
+            </div>
+
+            {/* Generated Image */}
+            <motion.div className="absolute inset-0 flex items-center justify-center p-6">
+                <motion.img
+                    src="/images/zk_bridge_blueprint.png"
+                    alt={s('ZK Bridge Blueprint', '零知识桥蓝图')}
+                    className="max-w-full max-h-full object-contain drop-shadow-sm"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1, y: [0, -6, 0] }}
+                    transition={{
+                        opacity: { duration: 0.45, ease: "easeOut" },
+                        scale: { duration: 0.45, ease: "easeOut" },
+                        y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                />
+            </motion.div>
+
+            {/* Bottom Status */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-4 text-[12px] font-mono text-slate-400">
+                <span>{s('PROTOCOL::GHOSTLINK', '协议::GHOSTLINK')}</span>
+                <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                <span>{s('CHAIN::ETHEREUM', '链::Ethereum')}</span>
+            </div>
         </div>
     );
 };
@@ -339,8 +339,8 @@ const MechanismStep = ({ step, icon, title, subtitle, description, delay, isCent
             className={`
             h-full p-6 rounded-xl border transition-all duration-200
             ${isCenter
-                ? 'bg-slate-900 text-white border-slate-800 shadow-md'
-                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'}
+                    ? 'bg-slate-900 text-white border-slate-800 shadow-md'
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'}
         `}
         >
             {/* Step Badge */}
@@ -441,32 +441,32 @@ const UseCaseCard = ({ id, title, subtitle, description, tag, color, delay }) =>
             whileHover={{ y: -3, boxShadow: '0 8px 30px rgba(0,0,0,0.08)' }}
             className="bg-white border border-slate-200 rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group"
         >
-        {/* Color Tab */}
-        <div className={`h-1.5 ${color === 'amber' ? 'bg-amber-400' :
-            color === 'emerald' ? 'bg-emerald-500' :
-                'bg-slate-900'
-            }`} />
+            {/* Color Tab */}
+            <div className={`h-1.5 ${color === 'amber' ? 'bg-amber-400' :
+                color === 'emerald' ? 'bg-emerald-500' :
+                    'bg-slate-900'
+                }`} />
 
-        <div className="p-5">
-            <div className="text-[12px] font-mono text-slate-400 tracking-widest mb-3 flex items-center gap-1.5">
-                <span className="w-1 h-1 bg-slate-300 rounded-full" />
-                {tag}
+            <div className="p-5">
+                <div className="text-[12px] font-mono text-slate-400 tracking-widest mb-3 flex items-center gap-1.5">
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                    {tag}
+                </div>
+
+                <h3 className="text-base font-bold text-slate-900 mb-0.5 group-hover:text-slate-700 transition-colors">
+                    {title}
+                </h3>
+                <p className="text-[12px] font-mono text-slate-500 mb-3">
+                    {subtitle}
+                </p>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">
+                    {description}
+                </p>
+
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 group-hover:gap-2.5 transition-all">
+                    {learnMore} <ArrowRight size={12} />
+                </div>
             </div>
-
-            <h3 className="text-base font-bold text-slate-900 mb-0.5 group-hover:text-slate-700 transition-colors">
-                {title}
-            </h3>
-            <p className="text-[12px] font-mono text-slate-500 mb-3">
-                {subtitle}
-            </p>
-            <p className="text-sm text-slate-600 leading-relaxed mb-4">
-                {description}
-            </p>
-
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 group-hover:gap-2.5 transition-all">
-                {learnMore} <ArrowRight size={12} />
-            </div>
-        </div>
         </motion.div>
     );
 };
@@ -479,48 +479,48 @@ const CodePreview = () => {
 
     return (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Editor Header */}
-        <div className="flex items-center gap-2.5 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
-            <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+            {/* Editor Header */}
+            <div className="flex items-center gap-2.5 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+                </div>
+                <span className="text-[12px] font-mono text-slate-500">proof_inspector.rs</span>
             </div>
-            <span className="text-[12px] font-mono text-slate-500">proof_inspector.rs</span>
-        </div>
 
-        {/* Code Content */}
-        <div className="p-5 font-mono text-[13px] leading-relaxed overflow-x-auto">
-            <div className="text-slate-400">{s('// GhostLink Proof Inspector', '// GhostLink 证明检查器')}</div>
-            <div className="mt-2">
-                <span className="text-purple-600">struct</span>{' '}
-                <span className="text-amber-600">ProofOutput</span> {'{'}
+            {/* Code Content */}
+            <div className="p-5 font-mono text-[13px] leading-relaxed overflow-x-auto">
+                <div className="text-slate-400">{s('// GhostLink Proof Inspector', '// GhostLink 证明检查器')}</div>
+                <div className="mt-2">
+                    <span className="text-purple-600">struct</span>{' '}
+                    <span className="text-amber-600">ProofOutput</span> {'{'}
+                </div>
+                <div className="pl-4 text-slate-700">
+                    claim: <span className="text-emerald-600">String</span>,
+                </div>
+                <div className="pl-4 text-slate-700">
+                    verified: <span className="text-emerald-600">bool</span>,
+                </div>
+                <div className="text-slate-700">{'}'}</div>
+                <div className="mt-3 text-slate-400">{s('// Zero-knowledge verification', '// 零知识验证')}</div>
+                <div>
+                    <span className="text-purple-600">fn</span>{' '}
+                    <span className="text-blue-600">verify</span>(journal: &[u8]) {'{'}
+                </div>
+                <div className="pl-4 text-slate-700">
+                    risc0_zkvm::verify(<span className="text-emerald-600">IMAGE_ID</span>, journal)
+                </div>
+                <div className="text-slate-700">{'}'}</div>
             </div>
-            <div className="pl-4 text-slate-700">
-                claim: <span className="text-emerald-600">String</span>,
-            </div>
-            <div className="pl-4 text-slate-700">
-                verified: <span className="text-emerald-600">bool</span>,
-            </div>
-            <div className="text-slate-700">{'}'}</div>
-            <div className="mt-3 text-slate-400">{s('// Zero-knowledge verification', '// 零知识验证')}</div>
-            <div>
-                <span className="text-purple-600">fn</span>{' '}
-                <span className="text-blue-600">verify</span>(journal: &[u8]) {'{'}
-            </div>
-            <div className="pl-4 text-slate-700">
-                risc0_zkvm::verify(<span className="text-emerald-600">IMAGE_ID</span>, journal)
-            </div>
-            <div className="text-slate-700">{'}'}</div>
-        </div>
 
-        {/* Footer */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <span className="text-[12px] font-mono text-slate-400">{s('Rust • UTF-8', 'Rust • UTF-8')}</span>
-            <span className="text-[12px] font-mono text-emerald-600 flex items-center gap-1">
-                <Check size={10} /> {s('VERIFIED_BY_RISC0', '已由 RISC0 验证')}
-            </span>
-        </div>
+            {/* Footer */}
+            <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <span className="text-[12px] font-mono text-slate-400">{s('Rust • UTF-8', 'Rust • UTF-8')}</span>
+                <span className="text-[12px] font-mono text-emerald-600 flex items-center gap-1">
+                    <Check size={10} /> {s('VERIFIED_BY_RISC0', '已由 RISC0 验证')}
+                </span>
+            </div>
         </div>
     );
 };
@@ -782,16 +782,72 @@ export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
                 </section>
 
                 {/* TRUST SECTION */}
-                <section className="px-8 py-12 border-t border-slate-200">
+                <section className="px-8 py-16 border-t border-slate-200">
                     <div className="max-w-4xl mx-auto text-center">
-                        <p className="text-[12px] font-mono text-slate-400 tracking-widest mb-6">
+                        <p className="text-[12px] font-mono text-slate-500 tracking-widest mb-8">
                             {s('TRUSTED_INFRASTRUCTURE', '可信底座')}
                         </p>
-                        <div className="flex flex-wrap justify-center gap-10 text-base font-bold font-mono text-slate-300">
-                            <span className="hover:text-slate-900 transition-colors cursor-pointer">RISC_ZERO</span>
-                            <span className="hover:text-slate-900 transition-colors cursor-pointer">ETHEREUM</span>
-                            <span className="hover:text-slate-900 transition-colors cursor-pointer">TLS_NOTARY</span>
-                            <span className="hover:text-slate-900 transition-colors cursor-pointer">STARKWARE</span>
+                        <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+                            {[
+                                { name: 'RISC_ZERO', color: 'from-cyan-500 to-teal-500', hoverColor: 'group-hover:text-cyan-600' },
+                                { name: 'ETHEREUM', color: 'from-indigo-500 to-purple-500', hoverColor: 'group-hover:text-indigo-600' },
+                                { name: 'TLS_NOTARY', color: 'from-emerald-500 to-green-500', hoverColor: 'group-hover:text-emerald-600' },
+                                { name: 'STARKWARE', color: 'from-orange-500 to-amber-500', hoverColor: 'group-hover:text-orange-600' }
+                            ].map((item, index) => (
+                                <motion.div
+                                    key={item.name}
+                                    className="group relative cursor-pointer"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.1 }}
+                                    whileHover={{ y: -4, scale: 1.05 }}
+                                >
+                                    {/* Glow effect on hover */}
+                                    <motion.div
+                                        className={`absolute -inset-2 bg-gradient-to-r ${item.color} rounded-xl opacity-0 blur-lg group-hover:opacity-20 transition-opacity duration-300`}
+                                    />
+
+                                    {/* Logo text */}
+                                    <span className={`relative text-base md:text-lg font-bold font-mono text-slate-400 ${item.hoverColor} transition-colors duration-300`}>
+                                        {item.name}
+                                    </span>
+
+                                    {/* Underline animation */}
+                                    <motion.div
+                                        className={`absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r ${item.color} origin-left`}
+                                        initial={{ scaleX: 0 }}
+                                        whileHover={{ scaleX: 1 }}
+                                        transition={{ duration: 0.3 }}
+                                    />
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Floating particles animation */}
+                        <div className="relative h-6 mt-8 overflow-hidden">
+                            <motion.div
+                                className="absolute inset-0 flex items-center justify-center gap-4"
+                                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                {[...Array(5)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="w-1 h-1 bg-slate-300 rounded-full"
+                                        animate={{
+                                            y: [0, -8, 0],
+                                            opacity: [0.3, 0.8, 0.3]
+                                        }}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: Infinity,
+                                            delay: i * 0.3,
+                                            ease: "easeInOut"
+                                        }}
+                                    />
+                                ))}
+                            </motion.div>
                         </div>
                     </div>
                 </section>
@@ -879,16 +935,16 @@ export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
                             <Zap size={18} className="group-hover:animate-pulse" />
                             {s('Connect Wallet', '连接钱包')}
                         </button>
-	                        <button
-	                            onClick={onViewDemo}
-	                            className="px-8 py-4 bg-surface-1 border border-theme-border-strong 
+                        <button
+                            onClick={onViewDemo}
+                            className="px-8 py-4 bg-surface-1 border border-theme-border-strong 
 	                                     text-cyan-400 rounded-xl font-medium 
 	                                     hover:bg-surface-2
 	                                     shadow-theme-glow
 	                                     transition-all duration-300 cursor-pointer"
-	                        >
-	                            {s('View Demo →', '查看演示 →')}
-	                        </button>
+                        >
+                            {s('View Demo →', '查看演示 →')}
+                        </button>
                     </motion.div>
                 </div>
 

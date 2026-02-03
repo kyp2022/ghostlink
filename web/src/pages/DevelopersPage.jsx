@@ -8,9 +8,9 @@ export const DevelopersPage = () => {
 
     const copy = isZh ? {
         tag: '开发者::SDK',
-        titleA: '接入。',
-        titleB: '验证。',
-        titleC: '铸造。',
+        titleA: '接入',
+        titleB: '验证',
+        titleC: '铸造',
         subtitle: '用 Rust SDK 编写自定义解析器，把验证逻辑写成可审计的 Rust 规则。',
         quickStart: '快速开始',
         steps: [
