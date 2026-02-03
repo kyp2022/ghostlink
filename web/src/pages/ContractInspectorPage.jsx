@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { FolderOpen, FileCode2, ShieldCheck, ExternalLink, Copy, Check, Download, Info } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import { FolderOpen, FileCode2, ShieldCheck, ExternalLink, Copy, Check, Download, Github, Zap, Eye, Code2, ChevronRight } from 'lucide-react';
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../config/constants';
 import { useTheme } from '../contexts/ThemeContext';
 import { useI18n } from '../contexts/I18nContext';
 
+// === File Tree Configuration ===
 const FILES = [
     {
         id: 'GhostLinkSBT',
@@ -20,6 +21,113 @@ const FILES = [
     },
 ];
 
+// === Function Logic Summaries ===
+const FUNCTION_SUMMARIES = {
+    'constructor': {
+        name: 'constructor',
+        signature: 'constructor(address _verifier, bytes32 _imageId, string _baseURI, string _name, string _symbol)',
+        summary: 'Initializes the GhostLinkSBT contract with RISC Zero verifier address, guest program Image ID, and token metadata.',
+        params: [
+            '_verifier: RISC Zero Verifier Router address',
+            '_imageId: Guest program Image ID (32 bytes)',
+            '_baseURI: Base URI for token metadata',
+            '_name: ERC721 token name',
+            '_symbol: ERC721 token symbol'
+        ],
+        returns: null,
+        zkRelated: true,
+        lineRange: [77, 91]
+    },
+    'mint': {
+        name: 'mint',
+        signature: 'mint(bytes seal, bytes32 nullifier, CredentialType credType) → uint256',
+        summary: 'Mints a new Soul Bound Token after verifying the ZK proof. The seal must contain a valid Groth16 proof from RISC Zero.',
+        params: [
+            'seal: ZK proof seal (Groth16 format with 4-byte selector)',
+            'nullifier: Unique identifier to prevent double minting',
+            'credType: Credential type enum (GITHUB=0, ALIPAY=1, TWITTER=2, WALLET=3)'
+        ],
+        returns: 'tokenId: The newly minted token ID',
+        zkRelated: true,
+        lineRange: [102, 144]
+    },
+    'getCredentials': {
+        name: 'getCredentials',
+        signature: 'getCredentials(address user) → Credential[]',
+        summary: 'Returns all credentials (SBTs) owned by a specific user address.',
+        params: ['user: The wallet address to query'],
+        returns: 'Array of Credential structs containing type, timestamp, and nullifier',
+        zkRelated: false,
+        lineRange: [153, 166]
+    },
+    'hasCredentialType': {
+        name: 'hasCredentialType',
+        signature: 'hasCredentialType(address user, CredentialType credType) → bool',
+        summary: 'Checks if a user has a specific type of credential.',
+        params: [
+            'user: The wallet address to check',
+            'credType: The credential type to look for'
+        ],
+        returns: 'true if user has the credential type, false otherwise',
+        zkRelated: false,
+        lineRange: [174, 188]
+    },
+    'calculateJournalHash': {
+        name: 'calculateJournalHash',
+        signature: 'calculateJournalHash(address user, bytes32 nullifier, CredentialType credType) → bytes32',
+        summary: 'Debug helper to calculate the expected SHA-256 journal hash. Useful for verifying proof parameters off-chain.',
+        params: [
+            'user: The recipient address',
+            'nullifier: The nullifier from ZK proof',
+            'credType: The credential type'
+        ],
+        returns: 'The calculated SHA-256 hash',
+        zkRelated: true,
+        lineRange: [211, 217]
+    },
+    'setImageId': {
+        name: 'setImageId',
+        signature: 'setImageId(bytes32 newImageId) [onlyOwner]',
+        summary: 'Updates the guest program Image ID. Used when upgrading the ZK circuit.',
+        params: ['newImageId: New 32-byte Image ID'],
+        returns: null,
+        zkRelated: true,
+        lineRange: [268, 273]
+    },
+    'setVerifier': {
+        name: 'setVerifier',
+        signature: 'setVerifier(address newVerifier) [onlyOwner]',
+        summary: 'Updates the RISC Zero Verifier contract address.',
+        params: ['newVerifier: New verifier contract address'],
+        returns: null,
+        zkRelated: true,
+        lineRange: [279, 284]
+    },
+    '_update': {
+        name: '_update',
+        signature: '_update(address to, uint256 tokenId, address auth) → address [internal]',
+        summary: 'Overrides ERC721 transfer to enforce SBT (Soul Bound Token) non-transferability. Only minting and burning are allowed.',
+        params: [
+            'to: Recipient address',
+            'tokenId: Token ID being transferred',
+            'auth: Authorized address'
+        ],
+        returns: 'Previous owner address',
+        zkRelated: false,
+        lineRange: [302, 317]
+    },
+    'totalSupply': {
+        name: 'totalSupply',
+        signature: 'totalSupply() → uint256',
+        summary: 'Returns the total number of SBTs that have been minted.',
+        params: [],
+        returns: 'Total minted token count',
+        zkRelated: false,
+        lineRange: [339, 341]
+    }
+};
+
+// === Solidity Syntax Highlighting ===
 const SOL_KEYWORDS = new Set([
     'pragma', 'solidity', 'import', 'from', 'as', 'using',
     'contract', 'interface', 'library', 'struct', 'enum', 'event',
@@ -27,7 +135,7 @@ const SOL_KEYWORDS = new Set([
     'mapping', 'address', 'bool', 'string', 'bytes', 'calldata', 'memory', 'storage',
     'public', 'private', 'internal', 'external', 'view', 'pure', 'payable',
     'if', 'else', 'for', 'while', 'do', 'break', 'continue',
-    'emit', 'revert', 'require', 'unchecked',
+    'emit', 'revert', 'require', 'unchecked', 'override', 'virtual',
 ]);
 
 const SOL_TYPES = new Set([
@@ -47,7 +155,6 @@ const classForToken = (type, isLight) => {
         if (type === 'punct') return 'text-slate-600';
         return 'text-slate-900';
     }
-
     if (type === 'comment') return 'text-slate-400';
     if (type === 'string') return 'text-emerald-300';
     if (type === 'number') return 'text-amber-300';
@@ -60,20 +167,15 @@ const classForToken = (type, isLight) => {
 
 const highlightSolidityLine = (line, isLight) => {
     const tokens = [];
-
     const commentIndex = line.indexOf('//');
     const codePart = commentIndex >= 0 ? line.slice(0, commentIndex) : line;
     const commentPart = commentIndex >= 0 ? line.slice(commentIndex) : '';
 
     let i = 0;
-    const push = (text, type = 'plain') => {
-        if (!text) return;
-        tokens.push({ text, type });
-    };
+    const push = (text, type = 'plain') => { if (text) tokens.push({ text, type }); };
 
     while (i < codePart.length) {
         const ch = codePart[i];
-
         if (/\s/.test(ch)) {
             let j = i + 1;
             while (j < codePart.length && /\s/.test(codePart[j])) j++;
@@ -81,33 +183,25 @@ const highlightSolidityLine = (line, isLight) => {
             i = j;
             continue;
         }
-
-        if (ch === '"' || ch === '\'') {
+        if (ch === '"' || ch === "'") {
             const quote = ch;
             let j = i + 1;
             while (j < codePart.length) {
-                const cj = codePart[j];
-                if (cj === '\\') { j += 2; continue; }
-                if (cj === quote) { j++; break; }
+                if (codePart[j] === '\\') { j += 2; continue; }
+                if (codePart[j] === quote) { j++; break; }
                 j++;
             }
             push(codePart.slice(i, j), 'string');
             i = j;
             continue;
         }
-
         if (/[0-9]/.test(ch)) {
             let j = i + 1;
             while (j < codePart.length && /[0-9_]/.test(codePart[j])) j++;
-            if (codePart[j] === '.' && /[0-9]/.test(codePart[j + 1])) {
-                j++;
-                while (j < codePart.length && /[0-9_]/.test(codePart[j])) j++;
-            }
             push(codePart.slice(i, j), 'number');
             i = j;
             continue;
         }
-
         if (/[A-Za-z_$]/.test(ch)) {
             let j = i + 1;
             while (j < codePart.length && /[A-Za-z0-9_$]/.test(codePart[j])) j++;
@@ -119,43 +213,28 @@ const highlightSolidityLine = (line, isLight) => {
             i = j;
             continue;
         }
-
         push(ch, 'punct');
         i++;
     }
-
     if (commentPart) push(commentPart, 'comment');
 
     return tokens.map((t, idx) => (
-        <span key={idx} className={classForToken(t.type, isLight)}>
-            {t.text}
-        </span>
+        <span key={idx} className={classForToken(t.type, isLight)}>{t.text}</span>
     ));
 };
 
-const findRiscZeroRange = (content) => {
-    const lines = String(content || '').replace(/\r\n/g, '\n').split('\n');
-    const startA = lines.findIndex(l => l.includes('bytes32 journalHash'));
-    const startB = lines.findIndex(l => l.includes('journalHash = sha256'));
-    const end = lines.findIndex(l => l.includes('verifier.verify'));
+// === ZK Logic Line Detection ===
+const ZK_KEYWORDS = ['verifier', 'verify', 'imageId', 'journalHash', 'seal', 'sha256', 'IRiscZeroVerifier'];
+const isZkRelatedLine = (line) => ZK_KEYWORDS.some(kw => line.includes(kw));
 
-    const start = [startA, startB].filter(n => n >= 0).sort((a, b) => a - b)[0];
-    if (start === undefined || end < 0 || end < start) return null;
-
-    return { startLine: start + 1, endLine: end + 1 };
-};
-
-const formatAddress = (addr) => {
-    if (!addr) return '';
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-};
+// === Utility Functions ===
+const formatAddress = (addr) => addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
 
 const copyText = async (text) => {
     if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
         return;
     }
-
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
@@ -178,20 +257,28 @@ const downloadJson = (filename, data) => {
     URL.revokeObjectURL(url);
 };
 
+// === Main Component ===
 export const ContractInspectorPage = () => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
     const { t } = useI18n();
 
     const [activeFileId, setActiveFileId] = useState(FILES[0].id);
-    const [fileContents, setFileContents] = useState(() => ({}));
+    const [fileContents, setFileContents] = useState({});
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [copied, setCopied] = useState(false);
     const [scanKey, setScanKey] = useState(0);
-    const [tooltip, setTooltip] = useState(null); // {x,y}
+    const [zkTooltip, setZkTooltip] = useState(null);
+    const [activeLine, setActiveLine] = useState(0);
+    const [activeFunction, setActiveFunction] = useState(null);
 
     const codeWrapRef = useRef(null);
+    const containerRef = useRef(null);
+
+    // Parallax effect
+    const { scrollY } = useScroll();
+    const backgroundY = useTransform(scrollY, [0, 500], [0, 50]);
 
     const activeFile = useMemo(
         () => FILES.find(f => f.id === activeFileId) || FILES[0],
@@ -199,11 +286,12 @@ export const ContractInspectorPage = () => {
     );
 
     const activeContent = fileContents[activeFileId] || '';
-    const riscRange = useMemo(() => {
-        if (activeFileId !== 'GhostLinkSBT') return null;
-        return findRiscZeroRange(activeContent);
-    }, [activeFileId, activeContent]);
+    const lines = useMemo(
+        () => String(activeContent || '').replace(/\r\n/g, '\n').split('\n'),
+        [activeContent]
+    );
 
+    // Load file content
     useEffect(() => {
         let ignore = false;
         const load = async () => {
@@ -228,19 +316,29 @@ export const ContractInspectorPage = () => {
         return () => { ignore = true; };
     }, [activeFileId, activeFile.url, fileContents]);
 
-    useEffect(() => {
-        setTooltip(null);
-    }, [activeFileId]);
+    // Detect active function based on scroll position
+    const handleCodeScroll = useCallback((e) => {
+        const scrollTop = e.target.scrollTop;
+        const lineHeight = 24; // Approximate line height
+        const visibleLine = Math.floor(scrollTop / lineHeight) + 1;
+        setActiveLine(visibleLine);
 
-    const lines = useMemo(
-        () => String(activeContent || '').replace(/\r\n/g, '\n').split('\n'),
-        [activeContent]
-    );
+        // Find which function this line belongs to
+        for (const [key, func] of Object.entries(FUNCTION_SUMMARIES)) {
+            if (visibleLine >= func.lineRange[0] && visibleLine <= func.lineRange[1]) {
+                setActiveFunction(func);
+                return;
+            }
+        }
+        setActiveFunction(null);
+    }, []);
 
     const etherscanUrl = useMemo(
         () => `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`,
         []
     );
+
+    const githubUrl = 'https://github.com/kyp2022/ghostlink/blob/main/contracts/GhostLinkSBT.sol';
 
     const onCopy = async () => {
         try {
@@ -256,175 +354,166 @@ export const ContractInspectorPage = () => {
         downloadJson('GhostLinkSBT.abi.json', { address: CONTRACT_ADDRESS, abi: CONTRACT_ABI });
     };
 
-    const getTooltipStyle = () => {
-        const wrapWidth = codeWrapRef.current?.clientWidth || 0;
-        const maxLeft = Math.max(16, wrapWidth - 380);
-        return {
-            left: Math.min(tooltip.x + 16, maxLeft),
-            top: Math.max(tooltip.y + 16, 16),
-        };
-    };
-
     return (
-        <div className="min-h-screen pt-28 pb-20 px-6 relative overflow-hidden">
-            <div
+        <div ref={containerRef} className="min-h-screen pt-20 pb-12 px-4 relative overflow-hidden">
+            {/* Parallax Background with Verified Seal */}
+            <motion.div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                    backgroundImage: "url('/images/onchain_vault_cad.svg')",
+                    backgroundImage: "url('/images/vault_blueprint_verified.png')",
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center top',
-                    backgroundSize: 'min(1200px, 100%)',
-                    opacity: isLight ? 0.22 : 0.12,
-                    filter: isLight ? 'none' : 'invert(1) hue-rotate(180deg) saturate(1.2) contrast(1.1)',
+                    backgroundSize: 'cover',
+                    opacity: isLight ? 0.08 : 0.04,
+                    filter: isLight ? 'none' : 'invert(1) hue-rotate(180deg) saturate(1.2) brightness(1.1)',
+                    y: backgroundY,
                 }}
             />
 
-            <div className="max-w-7xl mx-auto relative">
-                <div className="mb-8">
-                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-[1600px] mx-auto relative">
+                {/* Header Section */}
+                <div className="mb-6">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                         <div>
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-mono tracking-wider
-                                            bg-surface-2/60 border-theme-border-medium text-theme-text-muted">
-                                <Info size={14} className="text-theme-accent-secondary" />
+                                bg-surface-2/60 border-theme-border-medium text-theme-text-muted mb-3">
+                                <Code2 size={14} className="text-theme-accent-secondary" />
                                 {t('contractInspector.tag')}
                             </div>
-                            <h1 className="mt-4 text-3xl md:text-4xl font-bold text-theme-text-primary">
+                            <h1 className="text-2xl md:text-3xl font-bold text-theme-text-primary">
                                 {t('contractInspector.title')}
                             </h1>
-                            <p className="mt-2 text-theme-text-secondary max-w-2xl">
+                            <p className="mt-1 text-theme-text-secondary text-sm max-w-xl">
                                 {t('contractInspector.subtitle')}
                             </p>
                         </div>
 
-                        <a
-                            href={etherscanUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={`
-                                inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold
-                                transition-all cursor-pointer
-                                ${isLight
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
-                                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15'
-                                }
-                            `}
-                            title={t('contractInspector.openEtherscan')}
-                        >
-                            <ShieldCheck size={16} />
-                            <span>{t('contractInspector.verifiedBadge')}</span>
-                            <ExternalLink size={14} className="opacity-80" />
-                        </a>
+                        {/* Action Bar */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <a
+                                href={etherscanUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer
+                                    ${isLight
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100'
+                                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15'
+                                    }`}
+                            >
+                                <ShieldCheck size={14} />
+                                {t('contractInspector.verifiedBadge')}
+                                <ExternalLink size={12} />
+                            </a>
+
+                            <button
+                                onClick={onDownloadAbi}
+                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer
+                                    ${isLight
+                                        ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-physical-1'
+                                        : 'bg-white/5 border-white/10 text-theme-text-primary hover:bg-white/10'
+                                    }`}
+                            >
+                                <Download size={14} />
+                                {t('contractInspector.copyAbi')}
+                            </button>
+
+                            <a
+                                href={githubUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer
+                                    ${isLight
+                                        ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
+                                        : 'bg-theme-accent-primary/15 border-theme-accent-primary/25 text-theme-text-primary hover:bg-theme-accent-primary/20'
+                                    }`}
+                            >
+                                <Github size={14} />
+                                {t('contractInspector.viewOnGithub')}
+                                <ExternalLink size={12} />
+                            </a>
+                        </div>
                     </div>
                 </div>
 
+                {/* Three-Column Blueprint Studio Layout */}
                 <div className="rounded-2xl border border-theme-border-medium overflow-hidden shadow-theme-strong bg-surface-elevated-1/80 dark:bg-white/5 backdrop-blur">
-                    <div className="flex min-h-[640px]">
-                        {/* File tree */}
-                        <aside className="w-[280px] border-r border-theme-border-medium bg-surface-2/60 dark:bg-white/5">
-                            <div className="px-4 py-3 border-b border-theme-border-medium flex items-center justify-between">
+                    <div className="flex min-h-[700px]">
+                        {/* LEFT: File Explorer */}
+                        <aside className="w-[220px] border-r border-theme-border-medium bg-surface-2/60 dark:bg-white/5 shrink-0">
+                            <div className="px-4 py-3 border-b border-theme-border-medium">
                                 <div className="flex items-center gap-2 text-xs font-mono tracking-wider text-theme-text-muted">
                                     <FolderOpen size={14} />
                                     {t('contractInspector.fileTree')}
                                 </div>
                             </div>
-
                             <div className="p-3">
                                 <div className="flex items-center gap-2 text-sm font-mono text-theme-text-primary mb-2">
                                     <FolderOpen size={16} className="text-theme-accent-secondary" />
                                     contracts
                                 </div>
-                                <div className="space-y-1">
+                                <div className="space-y-1 ml-2">
                                     {FILES.map((f) => {
                                         const isActive = f.id === activeFileId;
                                         return (
                                             <button
                                                 key={f.id}
                                                 onClick={() => setActiveFileId(f.id)}
-                                                className={`
-                                                    w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left
-                                                    transition-all cursor-pointer
+                                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all cursor-pointer text-sm
                                                     ${isActive
-                                                        ? (isLight ? 'bg-slate-900 text-white shadow-physical-1' : 'bg-theme-accent-primary/10 text-theme-text-primary border border-theme-accent-primary/20')
+                                                        ? (isLight ? 'bg-slate-900 text-white' : 'bg-theme-accent-primary/10 text-theme-text-primary border border-theme-accent-primary/20')
                                                         : (isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-theme-text-muted hover:bg-white/5')
-                                                    }
-                                                `}
+                                                    }`}
                                             >
-                                                <FileCode2 size={16} className={isActive ? 'opacity-100' : 'opacity-70'} />
-                                                <span className="text-sm">{f.label}</span>
+                                                <FileCode2 size={14} className={isActive ? 'opacity-100' : 'opacity-70'} />
+                                                <span className="truncate">{f.label}</span>
                                             </button>
                                         );
                                     })}
                                 </div>
+
+                                <div className="mt-6 pt-4 border-t border-theme-border-subtle">
+                                    <div className="text-xs font-mono text-theme-text-muted mb-2">{t('contractInspector.contractAddress')}</div>
+                                    <div className="text-xs font-mono text-theme-text-secondary break-all">
+                                        {formatAddress(CONTRACT_ADDRESS)}
+                                    </div>
+                                </div>
                             </div>
                         </aside>
 
-                        {/* Code editor */}
+                        {/* CENTER: Code Display */}
                         <section className="flex-1 flex flex-col min-w-0">
-                            <div className={`
-                                px-4 py-3 border-b border-theme-border-medium flex items-center justify-between gap-3
-                                ${isLight ? 'bg-white' : 'bg-white/5'}
-                            `}>
+                            {/* Code Header */}
+                            <div className={`px-4 py-3 border-b border-theme-border-medium flex items-center justify-between gap-3 ${isLight ? 'bg-white' : 'bg-white/5'}`}>
                                 <div className="flex items-center gap-3 min-w-0">
                                     <div className="flex gap-1.5 shrink-0">
                                         <div className="w-3 h-3 rounded-full bg-red-500/60"></div>
                                         <div className="w-3 h-3 rounded-full bg-yellow-500/60"></div>
                                         <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
                                     </div>
-
-                                    <div className="min-w-0">
-                                        <div className="text-xs font-mono text-theme-text-muted truncate">
-                                            {activeFile.treePath}
-                                        </div>
-                                        <div className="text-xs font-mono text-theme-text-muted truncate">
-                                            {t('contractInspector.contractAddress')}: {formatAddress(CONTRACT_ADDRESS)}
-                                        </div>
+                                    <div className="text-xs font-mono text-theme-text-muted truncate">
+                                        {activeFile.treePath}
                                     </div>
                                 </div>
-
-                                <div className="flex items-center gap-2 shrink-0">
-                                    <button
-                                        onClick={onCopy}
-                                        className={`
-                                            inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold
-                                            transition-all cursor-pointer
-                                            ${isLight
-                                                ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 shadow-physical-1'
-                                                : 'bg-white/5 border-white/10 text-theme-text-primary hover:bg-white/10'
-                                            }
-                                        `}
-                                        title={t('contractInspector.copySource')}
-                                        disabled={!activeContent || loading}
-                                    >
-                                        {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                                        <span>{copied ? t('contractInspector.copied') : t('contractInspector.copy')}</span>
-                                    </button>
-
-                                    <button
-                                        onClick={onDownloadAbi}
-                                        className={`
-                                            inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold
-                                            transition-all cursor-pointer
-                                            ${isLight
-                                                ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800 shadow-physical-2'
-                                                : 'bg-theme-accent-primary/15 border-theme-accent-primary/25 text-theme-text-primary hover:bg-theme-accent-primary/20'
-                                            }
-                                        `}
-                                        title={t('contractInspector.downloadAbi')}
-                                    >
-                                        <Download size={14} />
-                                        <span>{t('contractInspector.downloadAbi')}</span>
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={onCopy}
+                                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer
+                                        ${isLight
+                                            ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                                            : 'bg-white/5 border-white/10 text-theme-text-primary hover:bg-white/10'
+                                        }`}
+                                    disabled={!activeContent || loading}
+                                >
+                                    {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                                    {copied ? t('contractInspector.copied') : t('contractInspector.copy')}
+                                </button>
                             </div>
 
+                            {/* Code Area with Laser Scanner */}
                             <div className="flex-1 relative min-h-0">
                                 <div
                                     ref={codeWrapRef}
-                                    className={`
-                                        absolute inset-0 overflow-auto
-                                        ${isLight ? 'bg-white' : 'bg-[#0b1020]/40'}
-                                    `}
-                                    onMouseLeave={() => setTooltip(null)}
+                                    className={`absolute inset-0 overflow-auto ${isLight ? 'bg-white' : 'bg-[#0b1020]/40'}`}
+                                    onScroll={handleCodeScroll}
                                 >
                                     {loading && (
                                         <div className="p-6 text-sm text-theme-text-muted">{t('contractInspector.loading')}</div>
@@ -434,104 +523,187 @@ export const ContractInspectorPage = () => {
                                     )}
 
                                     {!loading && !loadError && (
-                                        <div className="px-6 py-5 font-mono text-[13px] leading-6">
+                                        <div className="px-4 py-4 font-mono text-[13px] leading-6 relative">
                                             {lines.map((ln, idx) => {
                                                 const lineNumber = idx + 1;
-                                                const inRisc = riscRange && lineNumber >= riscRange.startLine && lineNumber <= riscRange.endLine;
+                                                const isZkLine = isZkRelatedLine(ln);
+                                                const isActiveLineCurrent = lineNumber === activeLine;
+
                                                 return (
                                                     <div
                                                         key={idx}
-                                                        className={`
-                                                            group flex items-start gap-4
-                                                            ${inRisc
-                                                                ? (isLight ? 'bg-amber-50/60' : 'bg-emerald-500/5')
-                                                                : ''
-                                                            }
-                                                        `}
-                                                        onMouseEnter={(e) => {
-                                                            if (!inRisc) return;
-                                                            const wrap = codeWrapRef.current?.getBoundingClientRect();
-                                                            if (!wrap) return;
-                                                            setTooltip({
-                                                                x: e.clientX - wrap.left,
-                                                                y: e.clientY - wrap.top,
-                                                            });
+                                                        className={`group flex items-start gap-3 relative transition-all duration-150
+                                                            ${isZkLine ? 'hover:bg-cyan-500/10' : ''}
+                                                            ${isActiveLineCurrent ? 'bg-theme-accent-primary/5' : ''}`}
+                                                        onMouseEnter={() => {
+                                                            if (isZkLine) setZkTooltip(lineNumber);
                                                         }}
-                                                        onMouseMove={(e) => {
-                                                            if (!inRisc) return;
-                                                            const wrap = codeWrapRef.current?.getBoundingClientRect();
-                                                            if (!wrap) return;
-                                                            setTooltip({
-                                                                x: e.clientX - wrap.left,
-                                                                y: e.clientY - wrap.top,
-                                                            });
-                                                        }}
+                                                        onMouseLeave={() => setZkTooltip(null)}
                                                     >
-                                                        <div className={`
-                                                            w-12 shrink-0 text-right select-none text-[12px]
-                                                            ${isLight ? 'text-slate-400' : 'text-theme-text-dim'}
-                                                        `}>
+                                                        {/* Line Number */}
+                                                        <div className={`w-10 shrink-0 text-right select-none text-[11px] ${isLight ? 'text-slate-400' : 'text-theme-text-dim'}`}>
                                                             {lineNumber}
                                                         </div>
-                                                        <div className="min-w-0 flex-1 whitespace-pre">
+
+                                                        {/* ZK Indicator */}
+                                                        {isZkLine && (
+                                                            <div className="absolute left-14 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                                                        )}
+
+                                                        {/* Code Content */}
+                                                        <div className={`min-w-0 flex-1 whitespace-pre ${isZkLine ? 'pl-3' : ''}`}>
                                                             {highlightSolidityLine(ln, isLight)}
                                                         </div>
+
+                                                        {/* ZK Tooltip */}
+                                                        <AnimatePresence>
+                                                            {zkTooltip === lineNumber && isZkLine && (
+                                                                <motion.div
+                                                                    initial={{ opacity: 0, x: 10 }}
+                                                                    animate={{ opacity: 1, x: 0 }}
+                                                                    exit={{ opacity: 0, x: 10 }}
+                                                                    className={`absolute right-4 top-0 z-20 px-3 py-1.5 rounded-lg text-xs font-mono tracking-wider
+                                                                        ${isLight
+                                                                            ? 'bg-cyan-600 text-white shadow-lg'
+                                                                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Zap size={12} />
+                                                                        {t('contractInspector.zkBadge')}
+                                                                    </div>
+                                                                </motion.div>
+                                                            )}
+                                                        </AnimatePresence>
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                     )}
 
-                                    {/* 扫描审计效果 */}
+                                    {/* Scanning Animation on Load */}
                                     <AnimatePresence>
                                         {!loading && !loadError && !!activeContent && (
                                             <motion.div
                                                 key={scanKey}
-                                                initial={{ y: '-25%', opacity: 0 }}
-                                                animate={{ y: '125%', opacity: [0, 1, 0] }}
+                                                initial={{ y: '-10%', opacity: 0 }}
+                                                animate={{ y: '110%', opacity: [0, 1, 1, 0] }}
                                                 exit={{ opacity: 0 }}
-                                                transition={{ duration: 1.35, ease: 'easeInOut' }}
-                                                className={`
-                                                    pointer-events-none absolute left-0 right-0 h-28
-                                                    ${isLight
-                                                        ? 'bg-gradient-to-b from-transparent via-slate-900/10 to-transparent'
-                                                        : 'bg-gradient-to-b from-transparent via-cyan-400/15 to-transparent'
-                                                    }
-                                                `}
+                                                transition={{ duration: 2, ease: 'linear' }}
+                                                className="pointer-events-none absolute left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_0_20px_4px_rgba(0,255,255,0.6)]"
                                             />
                                         )}
                                     </AnimatePresence>
 
-                                    {/* RISC Zero 说明浮层 */}
-                                    <AnimatePresence>
-                                        {tooltip && riscRange && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 6 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 6 }}
-                                                className={`
-                                                    pointer-events-none absolute z-10
-                                                    w-[360px] max-w-[min(360px,calc(100%-24px))]
-                                                    rounded-xl border p-4 shadow-theme-strong
-                                                    ${isLight
-                                                        ? 'bg-white border-slate-200 text-slate-900'
-                                                        : 'bg-[#0b1020]/90 border-white/10 text-theme-text-primary backdrop-blur'
-                                                    }
-                                                `}
-                                                style={getTooltipStyle()}
-                                            >
-                                                <div className="text-xs font-mono tracking-wider text-theme-text-muted mb-2">
-                                                    {t('contractInspector.riscTitle')}
-                                                </div>
-                                                <div className="text-sm leading-relaxed">
-                                                    {t('contractInspector.riscBody')}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                    {/* Active Line Laser Scanner */}
+                                    {activeLine > 0 && !loading && (
+                                        <motion.div
+                                            className="pointer-events-none absolute left-0 right-0 h-[1px] bg-cyan-400/50"
+                                            style={{ top: `${(activeLine - 1) * 24 + 16}px` }}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 0.5 }}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </section>
+
+                        {/* RIGHT: Live Logic Summary */}
+                        <aside className="w-[300px] border-l border-theme-border-medium bg-surface-2/60 dark:bg-white/5 shrink-0 hidden xl:block">
+                            <div className="px-4 py-3 border-b border-theme-border-medium">
+                                <div className="flex items-center gap-2 text-xs font-mono tracking-wider text-theme-text-muted">
+                                    <Eye size={14} />
+                                    {t('contractInspector.liveLogicSummary')}
+                                </div>
+                            </div>
+
+                            <div className="p-4">
+                                <AnimatePresence mode="wait">
+                                    {activeFunction ? (
+                                        <motion.div
+                                            key={activeFunction.name}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="space-y-4"
+                                        >
+                                            {/* Function Name */}
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    {activeFunction.zkRelated && (
+                                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                                                            ZK
+                                                        </span>
+                                                    )}
+                                                    <span className="text-sm font-bold text-theme-text-primary font-mono">
+                                                        {activeFunction.name}()
+                                                    </span>
+                                                </div>
+                                                <code className="text-[11px] text-theme-text-muted block bg-surface-3/50 rounded-lg p-2 font-mono break-all">
+                                                    {activeFunction.signature}
+                                                </code>
+                                            </div>
+
+                                            {/* Summary */}
+                                            <div>
+                                                <div className="text-[10px] font-mono text-theme-text-dim uppercase tracking-wider mb-1">
+                                                    {t('contractInspector.summary')}
+                                                </div>
+                                                <p className="text-sm text-theme-text-secondary leading-relaxed">
+                                                    {activeFunction.summary}
+                                                </p>
+                                            </div>
+
+                                            {/* Parameters */}
+                                            {activeFunction.params.length > 0 && (
+                                                <div>
+                                                    <div className="text-[10px] font-mono text-theme-text-dim uppercase tracking-wider mb-2">
+                                                        {t('contractInspector.parameters')}
+                                                    </div>
+                                                    <ul className="space-y-1.5">
+                                                        {activeFunction.params.map((p, i) => (
+                                                            <li key={i} className="flex items-start gap-2 text-xs">
+                                                                <ChevronRight size={12} className="text-theme-accent-secondary shrink-0 mt-0.5" />
+                                                                <span className="text-theme-text-secondary">{p}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* Returns */}
+                                            {activeFunction.returns && (
+                                                <div>
+                                                    <div className="text-[10px] font-mono text-theme-text-dim uppercase tracking-wider mb-1">
+                                                        {t('contractInspector.returns')}
+                                                    </div>
+                                                    <p className="text-xs text-theme-text-secondary">
+                                                        {activeFunction.returns}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            <div className="pt-3 border-t border-theme-border-subtle">
+                                                <div className="text-[10px] font-mono text-theme-text-dim">
+                                                    {t('contractInspector.lines')} {activeFunction.lineRange[0]}–{activeFunction.lineRange[1]}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="text-center py-12"
+                                        >
+                                            <Eye size={32} className="mx-auto text-theme-text-dim mb-3 opacity-50" />
+                                            <p className="text-sm text-theme-text-muted">
+                                                {t('contractInspector.scrollToSee')}
+                                            </p>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </aside>
                     </div>
                 </div>
             </div>
