@@ -42,9 +42,7 @@ export const LayoutShell = ({
             <div className="ml-[280px] min-h-screen flex flex-col">
                 {/* Top Header Bar (contextual actions, wallet, etc.) */}
                 <header className="sticky top-0 z-40 bg-surface-base/95 backdrop-blur-sm border-b border-border-medium">
-                    <div className="h-16 px-8 flex items-center justify-end gap-4">
-                        {/* Wallet and theme toggle will be passed as slot content */}
-                    </div>
+                    {topNavbar}
                 </header>
 
                 {/* Page Content */}

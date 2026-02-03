@@ -103,6 +103,12 @@ const MissionLog = ({ date, title, desc, status, index }) => {
                             <span>{isZh ? '进行中' : 'ACTIVE'}</span>
                         </div>
                     )}
+                    {isComplete && (
+                        <div className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded text-xs font-mono text-emerald-500 dark:text-emerald-400">
+                            <Check className="w-3 h-3" />
+                            <span>{isZh ? '已完成' : 'DONE'}</span>
+                        </div>
+                    )}
                 </div>
                 <h4 className="text-theme-text-primary font-bold mb-2 font-mono text-base">{title}</h4>
                 <p className="text-theme-text-secondary text-sm leading-relaxed font-professional">{desc}</p>
@@ -196,14 +202,14 @@ export const CompanyPage = () => {
                         date="Q1 2026"
                         title={s('Phase Alpha: MVP Launch', '阶段 Alpha：MVP 上线')}
                         desc={s('Deploy GitHub Passport authentication and foundational SDK release. Establish secure verification infrastructure with RISC Zero integration.', '上线 GitHub 通行证验证与基础 SDK。完成与 RISC Zero 的证明链路整合，搭建可复用的验证基础设施。')}
-                        status="active"
+                        status="complete"
                         index={0}
                     />
                     <MissionLog
                         date="Q2 2026"
                         title={s('Phase Beta: SDK Ecosystem', '阶段 Beta：SDK 生态')}
                         desc={s('Launch plug-and-play ZK components for React & Vue frameworks. Enable seamless dApp integration with comprehensive developer tooling and documentation.', '推出 React/Vue 即插即用组件，完善开发工具链与文档，让 dApp 集成更顺滑。')}
-                        status="pending"
+                        status="complete"
                         index={1}
                     />
                     <MissionLog

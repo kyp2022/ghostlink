@@ -562,19 +562,26 @@ export const ExplorerPage = ({ walletSigner }) => {
 
                     {/* Search Bar */}
                     <div className="flex-1 min-w-[300px] relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted dark:text-slate-400" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             placeholder={s('Search by Wallet Address or Token ID...', '输入钱包地址或凭证编号搜索…')}
-                            className="w-full pl-10 pr-4 py-2.5 bg-surface-elevated-2 border border-theme-border-medium rounded-xl text-theme-text-primary placeholder-theme-text-muted focus:outline-none focus:ring-2 focus:ring-theme-accent-primary/50 focus:border-theme-accent-primary/50 transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl transition-all focus:outline-none focus:ring-2
+                                     bg-surface-elevated-2 border border-theme-border-medium
+                                     text-theme-text-primary placeholder-theme-text-muted
+                                     focus:ring-theme-accent-primary/50 focus:border-theme-accent-primary/50
+                                     dark:bg-white/[0.06] dark:border-white/15 dark:text-slate-100 dark:placeholder-slate-500
+                                     dark:backdrop-blur-md dark:shadow-[0_12px_40px_rgba(0,0,0,0.35)]
+                                     dark:caret-cyan-300
+                                     dark:focus:ring-cyan-500/30 dark:focus:border-cyan-400/50"
                         />
                         {searchResult && (
                             <button
                                 onClick={() => { setSearchQuery(''); setSearchResult(null); fetchStats(); }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-text-muted hover:text-theme-accent-primary cursor-pointer"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-text-muted dark:text-slate-400 hover:text-theme-accent-primary cursor-pointer"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -586,14 +593,14 @@ export const ExplorerPage = ({ walletSigner }) => {
                         <div className="h-8 w-px bg-theme-border-medium hidden md:block"></div>
 
                         {/* Time Filter Pills */}
-                        <div className="flex bg-surface-elevated-2 p-1 rounded-lg border border-theme-border-medium">
+                        <div className="flex bg-surface-elevated-2 p-1 rounded-lg border border-theme-border-medium dark:bg-white/[0.06] dark:border-white/15 dark:backdrop-blur-md">
                             {['all', 'today', 'week', 'month'].map((range) => (
                                 <button
                                     key={range}
                                     onClick={() => setFilters(f => ({ ...f, timeRange: range }))}
                                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${filters.timeRange === range
                                         ? 'bg-theme-accent-primary/20 text-theme-accent-primary border border-theme-accent-primary/30'
-                                        : 'text-theme-text-muted hover:text-theme-text-primary'
+                                        : 'text-theme-text-muted hover:text-theme-text-primary dark:text-slate-400 dark:hover:text-slate-100'
                                         }`}
                                 >
                                     {isZh
@@ -608,13 +615,17 @@ export const ExplorerPage = ({ walletSigner }) => {
                             <select
                                 value={filters.sortBy}
                                 onChange={(e) => setFilters(f => ({ ...f, sortBy: e.target.value }))}
-                                className="appearance-none pl-3 pr-8 py-2 bg-surface-elevated-2 border border-theme-border-medium rounded-lg text-sm font-medium text-theme-text-primary hover:border-theme-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-theme-accent-primary/50 cursor-pointer"
+                                className="appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all
+                                           bg-surface-elevated-2 border border-theme-border-medium text-theme-text-primary
+                                           hover:border-theme-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-theme-accent-primary/50
+                                           dark:bg-white/[0.06] dark:border-white/15 dark:text-slate-100 dark:backdrop-blur-md
+                                           dark:hover:border-cyan-400/30 dark:focus:ring-cyan-500/30 dark:focus:border-cyan-400/50"
                             >
                                 <option value="newest">{s('Newest First', '最新优先')}</option>
                                 <option value="oldest">{s('Oldest First', '最早优先')}</option>
                                 <option value="tokenId">{s('Token ID', '编号')}</option>
                             </select>
-                            <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted pointer-events-none" />
+                            <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-text-muted dark:text-slate-400 pointer-events-none" />
                         </div>
 
                         <button onClick={handleSearch} disabled={searching}

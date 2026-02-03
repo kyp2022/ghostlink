@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Cpu, Smartphone, Blocks, Zap, Shield, Lock, ArrowRight, Check, Github, CreditCard, Wallet } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -31,6 +32,21 @@ const RevealLight = ({ children, delay = 0, className = "" }) => (
         {children}
     </motion.div>
 );
+
+// Light Mode: Top-of-page motion (gentle, continuous, non-distracting)
+const lightHeroContainer = {
+    hidden: { opacity: 0, y: 14 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.45, ease: "easeOut", staggerChildren: 0.08 }
+    }
+};
+
+const lightHeroItem = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } }
+};
 
 // ============================================================================
 // DARK MODE COMPONENTS (Original)
@@ -129,29 +145,120 @@ const ProtocolStatusBar = () => {
     const isZh = locale === 'zh';
     const s = (en, zh) => (isZh ? zh : en);
 
+    const measureRef = useRef(null);
+    const [loopWidth, setLoopWidth] = useState(0);
+
+    const items = useMemo(() => ([
+        {
+            key: 'status',
+            node: (
+                <span className="flex items-center gap-2 text-emerald-300">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
+                    {s('STATUS: OPERATIONAL', '状态：运行中')}
+                </span>
+            )
+        },
+        {
+            key: 'proofs',
+            node: (
+                <span className="text-slate-100">
+                    <span className="text-cyan-200">{s('PROOFS_GENERATED:', '已生成证明：')}</span>{' '}
+                    <span className="text-white font-semibold tabular-nums">12,847</span>
+                </span>
+            )
+        },
+        {
+            key: 'avg',
+            node: (
+                <span className="text-slate-100">
+                    <span className="text-amber-200">{s('AVG_VERIFY_TIME:', '平均验证：')}</span>{' '}
+                    <span className="text-white font-semibold tabular-nums">~2.3s</span>
+                </span>
+            )
+        },
+        {
+            key: 'active',
+            node: (
+                <span className="text-slate-100">
+                    <span className="text-fuchsia-200">{s('ACTIVE_SBT:', '活跃凭证：')}</span>{' '}
+                    <span className="text-white font-semibold tabular-nums">3,291</span>
+                </span>
+            )
+        }
+    ]), [isZh]);
+
+    const renderTicker = (keyPrefix = '') => (
+        <>
+            {items.map((it, idx) => (
+                <span key={`${keyPrefix}${it.key}`} className="inline-flex items-center">
+                    {idx > 0 && <span className="mx-5 text-slate-500/70">|</span>}
+                    {it.node}
+                </span>
+            ))}
+        </>
+    );
+
+    useEffect(() => {
+        const measure = () => {
+            const el = measureRef.current;
+            if (!el) return;
+            const w = el.scrollWidth || 0;
+            setLoopWidth(w);
+        };
+
+        measure();
+        window.addEventListener('resize', measure);
+        return () => window.removeEventListener('resize', measure);
+    }, [isZh]);
+
     return (
-        <div className="w-full bg-slate-900 border-b border-slate-800">
-            <div className="max-w-7xl mx-auto px-8 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-8 font-mono text-xs tracking-wider">
-                    <span className="flex items-center gap-2 text-emerald-400">
-                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                        {s('STATUS: OPERATIONAL', '状态：运行中')}
-                    </span>
-                    <span className="text-slate-400">|</span>
-                    <span className="text-slate-300">
-                        {s('PROOFS_GENERATED:', '已生成证明：')} <span className="text-white font-semibold">12,847</span>
-                    </span>
-                    <span className="text-slate-400">|</span>
-                    <span className="text-slate-300">
-                        {s('AVG_VERIFY_TIME:', '平均验证：')} <span className="text-white font-semibold">~2.3s</span>
-                    </span>
-                    <span className="text-slate-400">|</span>
-                    <span className="text-slate-300">
-                        {s('ACTIVE_SBT:', '活跃凭证：')} <span className="text-white font-semibold">3,291</span>
-                    </span>
+        <div className="w-full bg-slate-950 border-b border-slate-800/70 relative overflow-hidden">
+            {/* Top gradient edge */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+
+            {/* Subtle moving highlight to make the bar feel "live" */}
+            <motion.div
+                className="absolute inset-y-0 -left-40 w-40 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                animate={{ x: ['0%', '180%'] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-6">
+                <div className="flex-1 overflow-hidden text-xs tracking-[0.22em]">
+                    {/* 量一下单次内容宽度，用于无缝循环滚动 */}
+                    <div className="absolute -z-10 opacity-0 pointer-events-none" aria-hidden="true">
+                        <div ref={measureRef} className="flex items-center whitespace-nowrap">
+                            {renderTicker('m-')}
+                        </div>
+                    </div>
+
+                    {loopWidth > 0 ? (
+                        <motion.div
+                            className="flex items-center whitespace-nowrap font-mono"
+                            animate={{ x: [0, -loopWidth] }}
+                            transition={{
+                                duration: Math.max(18, loopWidth / 55),
+                                repeat: Infinity,
+                                ease: 'linear'
+                            }}
+                        >
+                            <div className="flex items-center pr-10">
+                                {renderTicker()}
+                            </div>
+                            <div className="flex items-center pr-10" aria-hidden="true">
+                                {renderTicker('d-')}
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <div className="flex items-center whitespace-nowrap font-mono">
+                            {renderTicker()}
+                        </div>
+                    )}
                 </div>
-                <span className="text-[12px] font-mono text-slate-500 tracking-widest">
-                    {s('NETWORK::SEPOLIA_LIVE', '网络::Sepolia_运行中')}
+                <span className="whitespace-nowrap flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-white/5 backdrop-blur-sm">
+                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+                    <span className="text-[12px] font-mono tracking-[0.26em] bg-gradient-to-r from-cyan-200 via-white to-fuchsia-200 bg-clip-text text-transparent">
+                        {s('NETWORK::SEPOLIA_LIVE', '网络::Sepolia_运行中')}
+                    </span>
                 </span>
             </div>
         </div>
@@ -169,6 +276,23 @@ const HeroVisualization = () => {
         {/* Technical Grid Background */}
         <BlueprintGridBackground />
 
+        {/* Scanline + ambient glows (light mode should still feel "running") */}
+        <motion.div
+            className="absolute inset-x-6 h-px bg-gradient-to-r from-transparent via-slate-900/20 to-transparent z-20"
+            animate={{ top: ['12%', '88%', '12%'] }}
+            transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+            className="absolute -top-10 -right-10 w-40 h-40 bg-amber-200/40 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.12, 1], opacity: [0.35, 0.5, 0.35] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+            className="absolute -bottom-12 -left-12 w-44 h-44 bg-sky-200/40 rounded-full blur-3xl"
+            animate={{ scale: [1.08, 1, 1.08], opacity: [0.3, 0.45, 0.3] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        />
+
         {/* Corner Technical Marks */}
         <div className="absolute top-3 left-3 w-6 h-6 border-l border-t border-slate-300" />
         <div className="absolute top-3 right-3 w-6 h-6 border-r border-t border-slate-300" />
@@ -181,16 +305,18 @@ const HeroVisualization = () => {
         </div>
 
         {/* Generated Image */}
-        <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="absolute inset-0 flex items-center justify-center p-6"
-        >
-            <img
+        <motion.div className="absolute inset-0 flex items-center justify-center p-6">
+            <motion.img
                 src="/images/zk_bridge_blueprint.png"
                 alt={s('ZK Bridge Blueprint', '零知识桥蓝图')}
                 className="max-w-full max-h-full object-contain drop-shadow-sm"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1, y: [0, -6, 0] }}
+                transition={{
+                    opacity: { duration: 0.45, ease: "easeOut" },
+                    scale: { duration: 0.45, ease: "easeOut" },
+                    y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+                }}
             />
         </motion.div>
 
@@ -207,12 +333,16 @@ const HeroVisualization = () => {
 // Mechanism Flow Step Component
 const MechanismStep = ({ step, icon, title, subtitle, description, delay, isCenter = false }) => (
     <RevealLight delay={delay} className="relative">
-        <div className={`
+        <motion.div
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className={`
             h-full p-6 rounded-xl border transition-all duration-200
             ${isCenter
                 ? 'bg-slate-900 text-white border-slate-800 shadow-md'
                 : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'}
-        `}>
+        `}
+        >
             {/* Step Badge */}
             <div className={`
                 absolute -top-2.5 left-5 px-2.5 py-0.5 text-[12px] font-mono font-bold tracking-wider rounded
@@ -245,7 +375,7 @@ const MechanismStep = ({ step, icon, title, subtitle, description, delay, isCent
             <p className={`text-sm leading-relaxed ${isCenter ? 'text-slate-300' : 'text-slate-600'}`}>
                 {description}
             </p>
-        </div>
+        </motion.div>
     </RevealLight>
 );
 
@@ -399,7 +529,7 @@ const CodePreview = () => {
 // MAIN HOMEPAGE COMPONENT
 // ============================================================================
 
-export const HomePage = ({ onConnectWallet, onViewDemo }) => {
+export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
     const { locale } = useI18n();
@@ -419,24 +549,49 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                 <ProtocolStatusBar />
 
                 {/* HERO SECTION: Split-Panel Design */}
-                <section className="px-8 py-16 max-w-7xl mx-auto">
+                <section className="px-8 py-16 max-w-7xl mx-auto relative">
+                    {/* Ambient ink blots */}
+                    <motion.div
+                        className="pointer-events-none absolute left-8 top-28 w-56 h-56 bg-sky-100 rounded-full blur-3xl opacity-60"
+                        animate={{ scale: [1, 1.08, 1], opacity: [0.45, 0.7, 0.45] }}
+                        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.div
+                        className="pointer-events-none absolute right-20 top-16 w-64 h-64 bg-amber-100 rounded-full blur-3xl opacity-60"
+                        animate={{ scale: [1.05, 1, 1.05], opacity: [0.4, 0.65, 0.4] }}
+                        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+                    />
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                         {/* Left Panel: Typography */}
-                        <div className="space-y-6">
+                        <motion.div
+                            variants={lightHeroContainer}
+                            initial="hidden"
+                            animate="show"
+                            className="space-y-6"
+                        >
                             {/* Technical Label */}
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md">
+                            <motion.div
+                                variants={lightHeroItem}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md"
+                            >
                                 <span className="text-[12px] font-mono text-slate-500 tracking-widest">
                                     {s('PROTOCOL::GHOSTLINK_V3', '协议::GHOSTLINK_V3')}
                                 </span>
-                            </div>
+                            </motion.div>
 
                             {/* Massive Headline */}
-                            <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-black text-slate-900 leading-[1.1] tracking-tight">
+                            <motion.h1
+                                variants={lightHeroItem}
+                                className="text-4xl md:text-5xl lg:text-[3.25rem] font-black text-slate-900 leading-[1.1] tracking-tight"
+                            >
                                 {s('Bridging Web2 Data with Zero-Knowledge Privacy.', '让 Web2 轨迹变成可验证的隐私资产')}
-                            </h1>
+                            </motion.h1>
 
                             {/* Subtitle */}
-                            <p className="text-lg text-slate-600 leading-relaxed max-w-lg">
+                            <motion.p
+                                variants={lightHeroItem}
+                                className="text-lg text-slate-600 leading-relaxed max-w-lg"
+                            >
                                 {isZh ? (
                                     <>
                                         把<strong className="font-semibold text-slate-900">真实世界履历</strong>变成链上可验凭证 只交结论 不交细节
@@ -449,32 +604,42 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                                         Built on RISC Zero zkVM.
                                     </>
                                 )}
-                            </p>
+                            </motion.p>
 
                             {/* CTA Buttons */}
-                            <div className="flex items-center gap-4 pt-2">
-                                <button
+                            <motion.div variants={lightHeroItem} className="flex items-center gap-4 pt-2">
+                                <motion.button
                                     onClick={onConnectWallet}
+                                    whileHover={{ y: -1 }}
+                                    whileTap={{ scale: 0.98 }}
                                     className="px-6 py-3 bg-slate-900 text-white rounded-lg font-semibold text-sm
                                              shadow-sm hover:shadow-md hover:bg-slate-800
                                              transition-all duration-200 cursor-pointer flex items-center gap-2"
                                 >
                                     <Zap size={16} className="text-amber-400" />
                                     {s('Start Bridging', '开始连接')}
-                                </button>
-                                <button
-                                    onClick={onViewDemo}
+                                </motion.button>
+                                <motion.button
+                                    onClick={onOpenDocs || onViewDemo}
+                                    whileHover={{ y: -1 }}
+                                    whileTap={{ scale: 0.98 }}
                                     className="px-6 py-3 bg-white border border-slate-300 text-slate-900 rounded-lg font-semibold text-sm
                                              hover:bg-slate-50 hover:border-slate-400
                                              transition-all duration-200 cursor-pointer"
                                 >
                                     {s('Read Docs →', '查看文档 →')}
-                                </button>
-                            </div>
-                        </div>
+                                </motion.button>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Right Panel: Visualization */}
-                        <HeroVisualization />
+                        <motion.div
+                            initial={{ opacity: 0, x: 12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.45, ease: "easeOut", delay: 0.15 }}
+                        >
+                            <HeroVisualization />
+                        </motion.div>
                     </div>
                 </section>
 
@@ -714,16 +879,16 @@ export const HomePage = ({ onConnectWallet, onViewDemo }) => {
                             <Zap size={18} className="group-hover:animate-pulse" />
                             {s('Connect Wallet', '连接钱包')}
                         </button>
-                        <button
-                            onClick={onViewDemo}
-                            className="px-8 py-4 bg-surface-1 border border-theme-border-strong 
-                                     text-cyan-400 rounded-xl font-medium 
-                                     hover:bg-surface-2
-                                     shadow-theme-glow
-                                     transition-all duration-300 cursor-pointer"
-                        >
-                            {s('View Demo →', '查看演示 →')}
-                        </button>
+	                        <button
+	                            onClick={onViewDemo}
+	                            className="px-8 py-4 bg-surface-1 border border-theme-border-strong 
+	                                     text-cyan-400 rounded-xl font-medium 
+	                                     hover:bg-surface-2
+	                                     shadow-theme-glow
+	                                     transition-all duration-300 cursor-pointer"
+	                        >
+	                            {s('View Demo →', '查看演示 →')}
+	                        </button>
                     </motion.div>
                 </div>
 
