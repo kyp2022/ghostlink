@@ -28,6 +28,16 @@ coverage/
 
 # Environment
 .env
+.env.*
+.deploy.env
+web/.env
+web/.env.*
+web/.env.local
+web/.env.*.local
+
+# Allow example env files
+!.env.example
+!web/.env.example
 
 # Secrets / Keys (never commit)
 *.pem
@@ -38,3 +48,6 @@ coverage/
 # Node modules
 node_modules/
 web/node_modules/
+
+# Frontend build output
+web/dist/

@@ -6,6 +6,7 @@ import org.example.ghostlink.model.TwitterUser;
 import org.example.ghostlink.model.ZkProof;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -17,16 +18,28 @@ import java.util.Map;
 @Service
 public class TwitterAuthService {
 
-    private static final String CLIENT_ID = "Y2ZMMWgzOGNNYjdISDhVZ1BHNjc6MTpjaQ";
-    private static final String CLIENT_SECRET = "77Qg1qfdoG_n47-tkmZoRZY_WMQNIqibANyk5rMkpramUqjB4s";
-    
     private static final String TWITTER_TOKEN_URL = "https://api.twitter.com/2/oauth2/token";
     private static final String TWITTER_USER_API = "https://api.twitter.com/2/users/me?user.fields=created_at,public_metrics";
-    
+
+    private final String clientId;
+    private final String clientSecret;
+    private final ZkProofService zkProofService;
+
     @Autowired
-    private ZkProofService zkProofService;
+    public TwitterAuthService(
+            @Value("${ghostlink.twitter.client-id:}") String clientId,
+            @Value("${ghostlink.twitter.client-secret:}") String clientSecret,
+            ZkProofService zkProofService
+    ) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.zkProofService = zkProofService;
+    }
 
     public AuthResponse authenticateWithCode(String code, String redirectUri, String codeVerifier, String recipient) {
+        if (clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank()) {
+            return new AuthResponse("Twitter OAuth 配置缺失：请设置 GHOSTLINK_TWITTER_CLIENT_ID / GHOSTLINK_TWITTER_CLIENT_SECRET");
+        }
         String accessToken = exchangeCodeForToken(code, redirectUri, codeVerifier);
         if (accessToken == null) {
             return new AuthResponse("Failed to retrieve access token from Twitter");
@@ -38,12 +51,12 @@ public class TwitterAuthService {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setBasicAuth(CLIENT_ID, CLIENT_SECRET);
+        headers.setBasicAuth(clientId, clientSecret);
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("code", code);
         body.add("grant_type", "authorization_code");
-        body.add("client_id", CLIENT_ID);
+        body.add("client_id", clientId);
         body.add("redirect_uri", redirectUri);
         body.add("code_verifier", codeVerifier); // Twitter OAuth 2.0 PKCE 必须
 

@@ -1,0 +1,23 @@
+services:
+  ghostlink-backend:
+    container_name: ghostlink-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghostlink-backend:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${GHOSTLINK_BACKEND_PORT:-8080}:8080"
+
+  ghostlink-web:
+    container_name: ghostlink-web
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "${GHOSTLINK_WEB_PORT:-80}:80"
+    volumes:
+      - ./web-dist:/usr/share/nginx/html:ro
+      - ./web-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+

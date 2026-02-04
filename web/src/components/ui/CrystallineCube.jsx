@@ -1,18 +1,29 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
-const CrystallineCube = ({ size = 120 }) => {
+const CrystallineCube = memo(({ size = 120 }) => {
     return (
         <div
             className="relative flex items-center justify-center"
-            style={{ width: size, height: size, perspective: '800px' }}
+            style={{
+                width: size,
+                height: size,
+                perspective: '800px',
+                // Hardware acceleration to prevent flickering
+                transform: 'translateZ(0)',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden'
+            }}
         >
             {/* Outer Glow */}
             <div className="absolute inset-0 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
 
             <motion.div
                 className="relative w-1/2 h-1/2"
-                style={{ transformStyle: 'preserve-3d' }}
+                style={{
+                    transformStyle: 'preserve-3d',
+                    willChange: 'transform'
+                }}
                 animate={{
                     rotateX: [0, 360],
                     rotateY: [0, 360],
@@ -38,6 +49,7 @@ const CrystallineCube = ({ size = 120 }) => {
                         style={{
                             transform: `rotateX(${style.rotateX}deg) rotateY(${style.rotateY}deg) translateZ(${style.translateZ})`,
                             boxShadow: 'inset 0 0 15px rgba(0, 240, 255, 0.2)',
+                            backfaceVisibility: 'hidden'
                         }}
                     >
                         {/* Decorative inner lines */}
@@ -65,6 +77,7 @@ const CrystallineCube = ({ size = 120 }) => {
                 <motion.div
                     key={i}
                     className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+                    style={{ willChange: 'transform, opacity' }}
                     animate={{
                         x: [
                             Math.cos(i * 90) * 60,
@@ -87,6 +100,9 @@ const CrystallineCube = ({ size = 120 }) => {
             ))}
         </div>
     );
-};
+});
+
+CrystallineCube.displayName = 'CrystallineCube';
 
 export default CrystallineCube;
+
