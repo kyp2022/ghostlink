@@ -202,6 +202,7 @@ export const useContract = (signer, account) => {
         resetProgress,
         isMinting,
         mintStatus,
+        setMintStatus,
         progressSteps,
         currentProgressStep,
         showProgressModal,

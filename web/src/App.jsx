@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from './hooks/useWallet';
 import { useTheme } from './contexts/ThemeContext';
@@ -55,6 +55,7 @@ function App() {
     const [verificationStatus, setVerificationStatus] = useState('idle');
     const [userData, setUserData] = useState(null);
     const [zkProof, setZkProof] = useState(null);
+    const autoMintedRef = useRef({ github: null, twitter: null });
 
     // Twitter State
     const [twitterStatus, setTwitterStatus] = useState('idle');
@@ -301,6 +302,7 @@ function App() {
                     twitterUser={twitterUser}
                     twitterProof={twitterProof}
                     onTwitterConnect={onTwitterConnect}
+                    autoMintedRef={autoMintedRef}
                     walletAccount={account}
                     walletSigner={signer}
                     onConnectWallet={connectWallet}

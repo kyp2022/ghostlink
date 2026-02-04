@@ -26,6 +26,7 @@ const maskIdNumber = (value) => {
 const AlipayUpload = ({
     walletAccount,
     mintCredential,
+    resetProgress,
     setShowProgressModal,
     setProgressSteps,
     setCurrentProgressStep,
@@ -122,17 +123,9 @@ const AlipayUpload = ({
         setError('');
 
         try {
-            // Initialize progress modal
-            if (setProgressTitle && setProgressSteps && setCurrentProgressStep && setShowProgressModal) {
-                setProgressTitle(t('alipay.progressTitle'));
-                setProgressSteps([
-                    { title: t('progress.stepGenerate'), description: t('progress.descGenerate') },
-                    { title: t('progress.stepPrepare'), description: t('progress.descPrepare') },
-                    { title: t('progress.stepConfirm'), description: t('progress.descConfirm') },
-                    { title: t('progress.stepAwait'), description: t('progress.descAwait') },
-                    { title: t('progress.stepDone'), description: t('progress.descDone') }
-                ]);
-                setCurrentProgressStep(0);
+            // Initialize progress modal with resetProgress to clear any previous mintStatus
+            if (resetProgress && setShowProgressModal) {
+                resetProgress(t('alipay.progressTitle'));
                 setShowProgressModal(true);
             }
 

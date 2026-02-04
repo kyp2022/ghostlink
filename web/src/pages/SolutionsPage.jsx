@@ -40,6 +40,7 @@ const scanlineEntry = {
 export const SolutionsPage = ({
     initialVerificationStatus, initialUserData, initialZkProof, onGithubConnect,
     twitterStatus, twitterUser, twitterProof, onTwitterConnect,
+    autoMintedRef,
     walletAccount, walletSigner, onConnectWallet
 }) => {
     const { theme } = useTheme();
@@ -49,7 +50,6 @@ export const SolutionsPage = ({
     const [activeTab, setActiveTab] = useState('defi');
     const account = walletAccount;
     const signer = walletSigner;
-    const autoMintedRef = useRef({ github: null, twitter: null });
 
     const {
         mintCredential,
@@ -128,6 +128,7 @@ export const SolutionsPage = ({
                                         walletSigner={signer}
                                         onConnectWallet={onConnectWallet}
                                         mintCredential={mintCredential}
+                                        resetProgress={resetProgress}
                                     />
                                     <div className="flex items-center gap-4">
                                         <div className="h-px flex-1 bg-theme-border-medium" />
@@ -137,6 +138,7 @@ export const SolutionsPage = ({
                                     <AlipayUpload
                                         walletAccount={account}
                                         mintCredential={mintCredential}
+                                        resetProgress={resetProgress}
                                         setShowProgressModal={setShowProgressModal}
                                         setProgressSteps={setProgressSteps}
                                         setCurrentProgressStep={setCurrentProgressStep}
@@ -264,10 +266,10 @@ export const SolutionsPage = ({
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
-                                    <span className="status-light success">
-                                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                                        {t('solutions.systemOnline')}
-                                    </span>
+                                <span className="status-light success">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                                    {t('solutions.systemOnline')}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -314,6 +316,7 @@ export const SolutionsPage = ({
                                             walletSigner={signer}
                                             onConnectWallet={onConnectWallet}
                                             mintCredential={mintCredential}
+                                            resetProgress={resetProgress}
                                         />
                                         <div className="flex items-center gap-4 py-2">
                                             <div className="h-px flex-1 bg-slate-200" />
@@ -323,6 +326,7 @@ export const SolutionsPage = ({
                                         <AlipayUpload
                                             walletAccount={account}
                                             mintCredential={mintCredential}
+                                            resetProgress={resetProgress}
                                             setShowProgressModal={setShowProgressModal}
                                             setProgressSteps={setProgressSteps}
                                             setCurrentProgressStep={setCurrentProgressStep}

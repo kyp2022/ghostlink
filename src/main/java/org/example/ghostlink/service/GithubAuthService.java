@@ -25,13 +25,15 @@ public class GithubAuthService {
 
     @Autowired
     public GithubAuthService(
-            @Value("${ghostlink.github.client-id:}") String clientId,
-            @Value("${ghostlink.github.client-secret:}") String clientSecret,
+            @Value("${ghostlink.github.client-id}") String clientId,
+            @Value("${ghostlink.github.client-secret}") String clientSecret,
             ZkProofService zkProofService
     ) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.zkProofService = zkProofService;
+        System.out.println("DEBUG: GithubAuthService initialized with ClientID: " + 
+            (clientId != null && clientId.length() > 4 ? clientId.substring(0, 4) + "****" : "null/empty"));
     }
 
     /**
