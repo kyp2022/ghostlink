@@ -2,21 +2,26 @@
 
 set -euo pipefail
 
-REMOTE_HOST="${REMOTE_HOST:-${TencentHOST:-${HOST:-}}}"
-REMOTE_USER="${REMOTE_USER:-${TencentUSER:-${USER:-ubuntu}}}"
-REMOTE_DIR="${REMOTE_DIR:-/home/${REMOTE_USER}/ghostlink}"
-BACKEND_PUBLIC_URL="${BACKEND_PUBLIC_URL:-http://${REMOTE_HOST}:8080}"
-ZERO_PUBLIC_URL="${ZERO_PUBLIC_URL:-${BACKEND_PUBLIC_URL}}"
+if [ -f ".deploy.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./.deploy.env
+  set +a
+fi
+
+REMOTE_HOST="${REMOTE_HOST:-${1:-${TencentHOST:-${HOST:-}}}}"
+REMOTE_USER="${REMOTE_USER:-${2:-${TencentUSER:-ubuntu}}}"
+REMOTE_DIR="${REMOTE_DIR:-${3:-/home/${REMOTE_USER}/ghostlink}}"
 
 if [ -z "$REMOTE_HOST" ]; then
-  echo "❌ 缺少 REMOTE_HOST（或 TencentHOST/HOST）。用法示例：REMOTE_HOST=1.2.3.4 ./deploy_compose.sh"
+  echo "❌ 缺少 REMOTE_HOST（或 TencentHOST/HOST/参数1/.deploy.env）。"
+  echo "用法：./deploy_compose.sh 服务器IP [用户] [目录]"
   exit 1
 fi
 
 echo "🚧 开始部署（docker compose）..."
 echo "➡️  服务器：$REMOTE_USER@$REMOTE_HOST"
 echo "➡️  目录：$REMOTE_DIR"
-echo "➡️  前端接口：$BACKEND_PUBLIC_URL"
 
 echo "📦 构建后端 JAR..."
 ./mvnw -q clean package -DskipTests
@@ -32,16 +37,11 @@ echo "📦 构建前端..."
 (
   cd web
   if [ ! -f ".env.local" ]; then
-    if [ -z "${VITE_GITHUB_CLIENT_ID:-}" ] || [ -z "${VITE_TWITTER_CLIENT_ID:-}" ]; then
-      echo "⚠️  未检测到前端 OAuth 配置（web/.env.local 或 VITE_GITHUB_CLIENT_ID/VITE_TWITTER_CLIENT_ID）。页面相关授权功能将提示配置缺失，但不影响接口地址修正与静态站点部署。"
-    fi
+    cp .env.example .env.local
+    echo "⚠️  未找到 web/.env.local，已从 web/.env.example 生成。你可以按需修改其中的 VITE_*。"
   fi
   npm -s ci
-  VITE_API_BASE_URL="$BACKEND_PUBLIC_URL" VITE_API_ZERO_URL="$ZERO_PUBLIC_URL" npm -s run build
-  if rg -n "localhost:8080" dist >/dev/null 2>&1; then
-    echo "❌ 前端产物仍包含 localhost:8080，请检查 VITE_API_BASE_URL 是否生效"
-    exit 1
-  fi
+  npm -s run build
 )
 
 if [ ! -d "web/dist" ]; then
@@ -53,6 +53,11 @@ echo "🚀 上传部署文件到服务器..."
 ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" "mkdir -p '$REMOTE_DIR/target' '$REMOTE_DIR/web-dist'"
 scp -o StrictHostKeyChecking=no "$JAR_FILE" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/target/"
 scp -o StrictHostKeyChecking=no Dockerfile docker-compose.yml web-nginx.conf .env.example "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/"
+if [ -f ".env" ]; then
+  scp -o StrictHostKeyChecking=no .env "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/.env"
+else
+  echo "⚠️  未找到本地 .env，将不会覆盖服务器端 .env"
+fi
 scp -o StrictHostKeyChecking=no -r web/dist/* "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/web-dist/"
 
 echo "⚙️  服务器端启动/更新容器..."
@@ -64,6 +69,19 @@ ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" "
     echo '⚠️  未找到 .env，已从 .env.example 生成空白 .env。请尽快编辑填入 GHOSTLINK_*，再执行 docker compose restart ghostlink-backend。'
   fi
   docker compose up -d --build
+
+  # 提示：OAuth 密钥为空会导致相关接口直接报错
+  missing=0
+  for k in GHOSTLINK_GITHUB_CLIENT_ID GHOSTLINK_GITHUB_CLIENT_SECRET; do
+    v=\$(awk -F= -v key=\"\$k\" '\$1==key{print \$2}' .env 2>/dev/null | tr -d '\r')
+    if [ -z \"\$v\" ]; then
+      echo \"⚠️  服务器 .env 中 \$k 为空（需要填真实值）\"
+      missing=1
+    fi
+  done
+  if [ \"\$missing\" = \"1\" ]; then
+    echo \"⚠️  请在服务器上编辑：$REMOTE_DIR/.env，然后执行：docker compose restart ghostlink-backend\"
+  fi
 "
 
 echo "🏥 健康检查..."
@@ -87,17 +105,5 @@ else
   echo "⚠️  公网健康检查失败。尝试在服务器本机检查..."
   ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" "curl -fsS \"http://127.0.0.1:8080/actuator/health\" || true; echo"
   echo "⚠️  若服务器本机正常但公网不通，请检查云安全组/防火墙是否放行 ${BACKEND_PORT} 端口。"
-fi
-
-echo "🌐 前端连通性检查..."
-curl -fsS "http://$REMOTE_HOST/" >/dev/null && echo "前端首页：OK"
-INDEX_HTML="$(curl -fsS "http://$REMOTE_HOST/")"
-JS_PATH="$(printf '%s' "$INDEX_HTML" | grep -oE "/assets/index-[^\"]+\\.js" | head -n 1 || true)"
-if [ -n "$JS_PATH" ]; then
-  if curl -fsS "http://$REMOTE_HOST/$JS_PATH" | grep -q "localhost:8080"; then
-    echo "⚠️  远端前端产物里仍发现 localhost:8080，请确认你访问的是最新部署版本"
-  else
-    echo "前端接口地址未发现 localhost：OK"
-  fi
 fi
 echo "✅ 部署完成。"

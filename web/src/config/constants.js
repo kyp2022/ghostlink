@@ -1,6 +1,6 @@
-// OAuth Configuration（必须通过 Vite 环境变量提供；未配置将导致功能报错）
-export const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
-export const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID || "";
+// OAuth Configuration（优先 Vite 环境变量；未配置则使用默认值，方便一键部署/演示）
+export const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "Iv23li88rvwnNxTsjlfc";
+export const TWITTER_CLIENT_ID = import.meta.env.VITE_TWITTER_CLIENT_ID || "Y2ZMMWgzOGNNYjdISDhVZ1BHNjc6MTpjaQ";
 
 // The redirect URI must match what you configured in GitHub App settings
 export const REDIRECT_URI = window.location.origin + window.location.pathname;

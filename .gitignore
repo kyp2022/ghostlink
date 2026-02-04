@@ -28,6 +28,10 @@ coverage/
 
 # Environment
 .env
+.env.*
+.deploy.env
+web/.env
+web/.env.*
 web/.env.local
 web/.env.*.local
 

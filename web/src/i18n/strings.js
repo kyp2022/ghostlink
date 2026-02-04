@@ -198,8 +198,8 @@ const STRINGS = {
             idNumberNotAvailable: 'Not available',
         },
         errors: {
-            configGithubClientId: 'Configuration error: please set VITE_GITHUB_CLIENT_ID.',
-            configTwitterClientId: 'Configuration error: please set VITE_TWITTER_CLIENT_ID.',
+            configGithubClientId: 'Configuration error: please set GitHub Client ID.',
+            configTwitterClientId: 'Configuration error: please set Twitter Client ID.',
             walletConnectFailed: 'Failed to connect wallet. Please try again.',
             ethersLoadFailed: 'Failed to load ethers.js. Please refresh the page and try again.',
             metamaskNotDetected: 'MetaMask is not detected. Please install the MetaMask extension.',
@@ -402,8 +402,8 @@ const STRINGS = {
             idNumberNotAvailable: '暂未获取',
         },
         errors: {
-            configGithubClientId: '配置缺失：请先设置 VITE_GITHUB_CLIENT_ID。',
-            configTwitterClientId: '配置缺失：请先设置 VITE_TWITTER_CLIENT_ID。',
+            configGithubClientId: '配置缺失：请先设置 GitHub Client ID。',
+            configTwitterClientId: '配置缺失：请先设置 Twitter Client ID。',
             walletConnectFailed: '钱包连接失败，请重试。',
             ethersLoadFailed: '依赖加载失败，请刷新页面后重试。',
             metamaskNotDetected: '未检测到 MetaMask，请先安装钱包插件。',

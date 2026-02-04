@@ -171,10 +171,10 @@ export GHOSTLINK_TWITTER_CLIENT_ID="your_twitter_client_id"
 export GHOSTLINK_TWITTER_CLIENT_SECRET="your_twitter_client_secret"
 ```
 
-### Frontend Environment Variables (Required)
+### Frontend Environment Variables (Optional)
 
 ```bash
-# Create .env.local in /web (required for deploys to avoid accidentally using a deprecated backend)
+# Create .env.local in /web (optional)
 VITE_API_BASE_URL=http://localhost:8080
 VITE_API_ZERO_URL=http://localhost:8081
 VITE_GITHUB_CLIENT_ID=your_github_client_id
@@ -182,23 +182,6 @@ VITE_TWITTER_CLIENT_ID=your_twitter_client_id
 ```
 
 ---
-
-## 🚢 Deploy (docker compose, no reverse proxy)
-
-### Server prerequisites
-
-- Install `docker` and `docker compose`
-- Create server-side `.env` (copy from `.env.example`)
-- Create local `web/.env.local` (copy from `web/.env.example`)
-
-### One-command deploy
-
-Run in project root (replace `REMOTE_HOST` with your new server IP):
-
-```bash
-REMOTE_HOST=your_server_ip REMOTE_USER=ubuntu ./deploy_compose.sh
-```
-
 
 ## 📁 Project Structure
 
