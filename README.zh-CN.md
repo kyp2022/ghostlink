@@ -183,6 +183,27 @@ VITE_TWITTER_CLIENT_ID=你的_twitter_client_id
 
 ---
 
+## 🚢 部署（docker compose，无需反代）
+
+### 服务器端准备
+
+- 安装 `docker` 与 `docker compose`
+- 在服务器目录准备 `.env`（可从 `.env.example` 复制）
+- 在本机准备 `web/.env.local`（可从 `web/.env.example` 复制）
+
+### 一键部署
+
+在项目根目录执行（把 `REMOTE_HOST` 换成你的新服务器 IP）：
+
+```bash
+REMOTE_HOST=你的服务器IP REMOTE_USER=ubuntu ./deploy_compose.sh
+```
+
+脚本会：
+- 本地构建后端 `jar` 与前端 `dist`
+- 上传到服务器目录（默认 `/opt/ghostlink`）
+- 在服务器执行 `docker compose up -d --build`
+
 ## 📁 项目结构
 
 ```

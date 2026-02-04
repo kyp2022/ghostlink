@@ -183,6 +183,23 @@ VITE_TWITTER_CLIENT_ID=your_twitter_client_id
 
 ---
 
+## 🚢 Deploy (docker compose, no reverse proxy)
+
+### Server prerequisites
+
+- Install `docker` and `docker compose`
+- Create server-side `.env` (copy from `.env.example`)
+- Create local `web/.env.local` (copy from `web/.env.example`)
+
+### One-command deploy
+
+Run in project root (replace `REMOTE_HOST` with your new server IP):
+
+```bash
+REMOTE_HOST=your_server_ip REMOTE_USER=ubuntu ./deploy_compose.sh
+```
+
+
 ## 📁 Project Structure
 
 ```

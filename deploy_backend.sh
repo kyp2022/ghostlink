@@ -3,11 +3,16 @@
 # Stop on error
 set -e
 
-REMOTE_USER="root"
-REMOTE_HOST="118.31.238.137"
-REMOTE_DIR="/opt/ghostlink-backend"
+REMOTE_HOST="${REMOTE_HOST:-${TencentHOST:-${HOST:-}}}"
+REMOTE_USER="${REMOTE_USER:-${TencentUSER:-${USER:-ubuntu}}}"
+REMOTE_DIR="${REMOTE_DIR:-/opt/ghostlink-backend}"
 APP_NAME="ghostlink-backend"
 PORT="8080"
+
+if [ -z "$REMOTE_HOST" ]; then
+  echo "❌ 缺少 REMOTE_HOST（或 TencentHOST/HOST）。用法示例：REMOTE_HOST=1.2.3.4 ./deploy_backend.sh"
+  exit 1
+fi
 
 echo "🚧 Starting backend deployment..."
 
