@@ -6,6 +6,7 @@ import org.example.ghostlink.model.GithubUser;
 import org.example.ghostlink.model.ZkProof;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,20 +16,31 @@ import java.util.Map;
 @Service
 public class GithubAuthService {
 
-    private static final String CLIENT_ID = "Iv23li88rvwnNxTsjlfc";
-    private static final String CLIENT_SECRET = "addde702bf5e40b829d8ea079a29c402188446d0";
-    
     private static final String GITHUB_ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token";
     private static final String GITHUB_USER_API = "https://api.github.com/user";
-    
+
+    private final String clientId;
+    private final String clientSecret;
+    private final ZkProofService zkProofService;
 
     @Autowired
-    private ZkProofService zkProofService;
+    public GithubAuthService(
+            @Value("${ghostlink.github.client-id:}") String clientId,
+            @Value("${ghostlink.github.client-secret:}") String clientSecret,
+            ZkProofService zkProofService
+    ) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.zkProofService = zkProofService;
+    }
 
     /**
      * 处理 OAuth 回调逻辑：Code -> Token -> User -> ZK Proof
      */
     public AuthResponse authenticateWithCode(String code, String recipient, String redirectUri) {
+        if (clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank()) {
+            return new AuthResponse("GitHub OAuth 配置缺失：请设置 GHOSTLINK_GITHUB_CLIENT_ID / GHOSTLINK_GITHUB_CLIENT_SECRET");
+        }
         // 1. 用 Code 换取 Access Token
         String accessToken = exchangeCodeForToken(code, redirectUri);
         if (accessToken == null) {
@@ -70,8 +82,8 @@ public class GithubAuthService {
         headers.set("Accept", "application/json");
 
         Map<String, String> body = new HashMap<>();
-        body.put("client_id", CLIENT_ID);
-        body.put("client_secret", CLIENT_SECRET);
+        body.put("client_id", clientId);
+        body.put("client_secret", clientSecret);
         body.put("code", code);
         if (redirectUri != null && !redirectUri.isEmpty()) {
              body.put("redirect_uri", redirectUri);

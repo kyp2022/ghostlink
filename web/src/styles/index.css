@@ -402,6 +402,16 @@ h6,
   grid-template-columns: 1fr 2fr;
   gap: 24px;
   min-height: calc(100vh - 200px);
+  /* Prevent layout shifts and flickering */
+  contain: layout style;
+}
+
+/* Responsive: Stack on smaller screens */
+@media (max-width: 1024px) {
+  .layout-workbench {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 
 .layout-workbench .control-panel {
@@ -410,6 +420,10 @@ h6,
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  /* Hardware acceleration to prevent flickering */
+  transform: translateZ(0);
+  will-change: contents;
+  backface-visibility: hidden;
 }
 
 .layout-workbench .canvas-area {
@@ -418,6 +432,12 @@ h6,
   border-radius: 12px;
   position: relative;
   overflow: hidden;
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: contents;
+  backface-visibility: hidden;
+  /* Minimum height to prevent collapse */
+  min-height: 400px;
 }
 
 /* Animation: Crisp Slide-In for Light Mode */

@@ -171,12 +171,14 @@ export GHOSTLINK_TWITTER_CLIENT_ID="your_twitter_client_id"
 export GHOSTLINK_TWITTER_CLIENT_SECRET="your_twitter_client_secret"
 ```
 
-### Frontend Environment Variables (Optional)
+### Frontend Environment Variables (Required)
 
 ```bash
-# Create .env.local in /web
+# Create .env.local in /web (required for deploys to avoid accidentally using a deprecated backend)
 VITE_API_BASE_URL=http://localhost:8080
+VITE_API_ZERO_URL=http://localhost:8081
 VITE_GITHUB_CLIENT_ID=your_github_client_id
+VITE_TWITTER_CLIENT_ID=your_twitter_client_id
 ```
 
 ---

@@ -171,12 +171,14 @@ export GHOSTLINK_TWITTER_CLIENT_ID="你的_twitter_client_id"
 export GHOSTLINK_TWITTER_CLIENT_SECRET="你的_twitter_client_secret"
 ```
 
-### 前端环境变量（可选）
+### 前端环境变量（必需）
 
 ```bash
-# 在 /web 目录创建 .env.local
+# 在 /web 目录创建 .env.local（生产/部署时必须显式配置，避免误连到废弃后端）
 VITE_API_BASE_URL=http://localhost:8080
+VITE_API_ZERO_URL=http://localhost:8081
 VITE_GITHUB_CLIENT_ID=你的_github_client_id
+VITE_TWITTER_CLIENT_ID=你的_twitter_client_id
 ```
 
 ---
