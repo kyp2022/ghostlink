@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { FileText, ArrowLeft, AlertCircle, Loader2, Info, AlertTriangle, Lightbulb } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useI18n } from '../contexts/I18nContext';
 
@@ -89,13 +89,13 @@ const renderInline = (text) => {
             return (
                 <code
                     key={idx}
-                    className="px-1.5 py-0.5 rounded bg-surface-elevated-2 dark:bg-white/10 border border-theme-border-medium font-mono text-[12px]"
+                    className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 font-mono text-[13px] text-slate-700 dark:text-cyan-300"
                 >
                     {t.value}
                 </code>
             );
         }
-        if (t.type === 'bold') return <strong key={idx} className="font-semibold text-theme-text-primary">{t.value}</strong>;
+        if (t.type === 'bold') return <strong key={idx} className="font-semibold text-slate-900 dark:text-white">{t.value}</strong>;
         if (t.type === 'link') {
             return (
                 <a
@@ -103,7 +103,7 @@ const renderInline = (text) => {
                     href={t.href}
                     target={t.href?.startsWith('http') ? '_blank' : undefined}
                     rel={t.href?.startsWith('http') ? 'noreferrer' : undefined}
-                    className="text-theme-accent-primary hover:text-theme-accent-secondary underline underline-offset-4"
+                    className="text-blue-600 dark:text-cyan-400 hover:text-blue-800 dark:hover:text-cyan-300 underline underline-offset-4 transition-colors"
                 >
                     {t.label}
                 </a>
@@ -117,10 +117,12 @@ const parseMarkdown = (md) => {
     const lines = String(md || '').replace(/\r\n/g, '\n').split('\n');
     const blocks = [];
     let paragraph = [];
-    let list = null; // {type:'ul'|'ol', items:[]}
+    let list = null;
     let inCode = false;
     let codeLang = '';
     let code = [];
+    let inTable = false;
+    let tableRows = [];
 
     const flushParagraph = () => {
         if (paragraph.length === 0) return;
@@ -140,6 +142,13 @@ const parseMarkdown = (md) => {
         code = [];
     };
 
+    const flushTable = () => {
+        if (tableRows.length === 0) return;
+        blocks.push({ type: 'table', rows: tableRows });
+        tableRows = [];
+        inTable = false;
+    };
+
     for (let i = 0; i < lines.length; i++) {
         const raw = lines[i];
         const line = raw.trimEnd();
@@ -148,6 +157,7 @@ const parseMarkdown = (md) => {
             if (!inCode) {
                 flushParagraph();
                 flushList();
+                flushTable();
                 inCode = true;
                 codeLang = line.slice(3).trim();
                 continue;
@@ -162,6 +172,22 @@ const parseMarkdown = (md) => {
             continue;
         }
 
+        // Table detection
+        if (line.startsWith('|') && line.endsWith('|')) {
+            flushParagraph();
+            flushList();
+            const cells = line.split('|').slice(1, -1).map(c => c.trim());
+            // Skip separator rows
+            if (cells.every(c => /^[-:]+$/.test(c))) {
+                continue;
+            }
+            if (!inTable) inTable = true;
+            tableRows.push(cells);
+            continue;
+        } else if (inTable) {
+            flushTable();
+        }
+
         const headingMatch = line.match(/^(#{1,3})\s+(.*)$/);
         if (headingMatch) {
             flushParagraph();
@@ -172,7 +198,15 @@ const parseMarkdown = (md) => {
             continue;
         }
 
-        const ulMatch = line.match(/^- (.+)$/);
+        // Horizontal rule
+        if (/^---+$/.test(line.trim())) {
+            flushParagraph();
+            flushList();
+            blocks.push({ type: 'hr' });
+            continue;
+        }
+
+        const ulMatch = line.match(/^[-*]\s+(.+)$/);
         const olMatch = line.match(/^\d+\.\s+(.+)$/);
         if (ulMatch || olMatch) {
             flushParagraph();
@@ -196,9 +230,25 @@ const parseMarkdown = (md) => {
 
     flushParagraph();
     flushList();
+    flushTable();
     if (inCode) flushCode();
 
     return blocks;
+};
+
+// Detect special block types from content
+const detectSpecialBlock = (text) => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes('note:') || lowerText.includes('tip:') || lowerText.includes('info:')) {
+        return 'note';
+    }
+    if (lowerText.includes('warning:') || lowerText.includes('caution:') || lowerText.includes('important:')) {
+        return 'warning';
+    }
+    if (lowerText.includes('definition:') || text.includes('**Definition**') || text.includes('**Concept**')) {
+        return 'definition';
+    }
+    return null;
 };
 
 export const WhitepaperPage = ({ onBack }) => {
@@ -209,6 +259,7 @@ export const WhitepaperPage = ({ onBack }) => {
     const [raw, setRaw] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [activeSection, setActiveSection] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -216,7 +267,7 @@ export const WhitepaperPage = ({ onBack }) => {
             setLoading(true);
             setError('');
             try {
-                const res = await fetch('/whitepaper.md', { cache: 'no-store' });
+                const res = await fetch(`${import.meta.env.BASE_URL}whitepaper.md`, { cache: 'no-store' });
                 if (!res.ok) throw new Error(`加载失败：${res.status}`);
                 const text = await res.text();
                 if (!cancelled) setRaw(text);
@@ -231,6 +282,7 @@ export const WhitepaperPage = ({ onBack }) => {
     }, [isZh]);
 
     const blocks = useMemo(() => parseMarkdown(raw), [raw]);
+
     const toc = useMemo(() => {
         const list = [];
         const used = new Map();
@@ -246,10 +298,6 @@ export const WhitepaperPage = ({ onBack }) => {
         return list;
     }, [blocks]);
 
-    const headerTitle = 'Whitepaper';
-    const headerDesc = 'Turn real-world signals into verifiable on-chain credentials with privacy in mind';
-
-    // Build ids consistently for headings
     const headingIdMap = useMemo(() => {
         const map = new Map();
         const used = new Map();
@@ -264,150 +312,275 @@ export const WhitepaperPage = ({ onBack }) => {
         return map;
     }, [blocks]);
 
+    // Track active section on scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            const headings = document.querySelectorAll('[data-heading-id]');
+            let current = '';
+            headings.forEach((el) => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top <= 120) {
+                    current = el.getAttribute('data-heading-id') || '';
+                }
+            });
+            setActiveSection(current);
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [blocks]);
+
     return (
-        <div className={`min-h-screen ${isLight ? 'bg-white' : 'bg-surface-base'} pt-10 pb-16 px-6`}>
-            <div className="max-w-5xl mx-auto">
-                <div className="flex items-center justify-between gap-4 mb-6">
+        <div className={`min-h-screen ${isLight ? 'bg-white' : 'bg-surface-base'}`}>
+            {/* Blueprint Grid Background */}
+            <div
+                className="fixed inset-0 pointer-events-none opacity-[0.03]"
+                style={{
+                    backgroundImage: `
+                        linear-gradient(to right, #64748b 1px, transparent 1px),
+                        linear-gradient(to bottom, #64748b 1px, transparent 1px)
+                    `,
+                    backgroundSize: '40px 40px'
+                }}
+            />
+
+            {/* Hero Section */}
+            <div className={`relative border-b ${isLight ? 'border-slate-200 bg-gradient-to-b from-slate-50 to-white' : 'border-white/10 bg-gradient-to-b from-surface-elevated-1 to-surface-base'}`}>
+                <div className="max-w-7xl mx-auto px-6 py-12 pt-24">
                     <button
                         onClick={onBack}
-                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-elevated-1 border border-theme-border-medium text-theme-text-primary hover:border-theme-border-strong transition-all cursor-pointer"
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg mb-8 transition-all cursor-pointer ${isLight
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            : 'bg-white/5 hover:bg-white/10 text-white/80'
+                            }`}
                     >
                         <ArrowLeft size={16} />
-                        <span className="text-sm font-semibold">{isZh ? '返回' : 'Back'}</span>
+                        <span className="text-sm font-medium">{isZh ? '返回首页' : 'Back to Home'}</span>
                     </button>
-                    <div className="flex items-center gap-2 text-theme-text-muted">
-                        <FileText size={16} className="text-theme-accent-primary" />
-                        <span className="text-xs font-mono tracking-widest">{isZh ? '公开文档' : 'DOCUMENT'}</span>
-                    </div>
-                </div>
 
-                <div className={`rounded-2xl border border-theme-border-medium overflow-hidden shadow-theme-strong ${isLight ? 'bg-white' : 'bg-surface-elevated-1'}`}>
-                    <div className="p-6 md:p-8 border-b border-theme-border-medium bg-surface-elevated-2/60">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.35, ease: 'easeOut' }}
-                            className="text-2xl md:text-3xl font-bold text-theme-text-primary tracking-tight"
-                        >
-                            GhostLink {headerTitle}
-                        </motion.h1>
-                        <p className="mt-2 text-theme-text-secondary text-sm md:text-base leading-relaxed">
-                            {headerDesc}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <FileText className={`w-6 h-6 ${isLight ? 'text-blue-600' : 'text-cyan-400'}`} />
+                            <span className={`text-xs font-mono tracking-[0.2em] uppercase ${isLight ? 'text-slate-500' : 'text-white/50'}`}>
+                                Technical Documentation
+                            </span>
+                        </div>
+                        <h1 className={`text-4xl md:text-5xl font-bold tracking-tight mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`} style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                            GhostLink Protocol
+                        </h1>
+                        <p className={`text-lg md:text-xl mb-6 max-w-2xl ${isLight ? 'text-slate-600' : 'text-white/70'}`}>
+                            A Zero-Knowledge Framework for Privacy-Preserved Web2-to-Web3 Data Bridging
                         </p>
-                    </div>
+                        <div className={`flex flex-wrap items-center gap-4 text-sm ${isLight ? 'text-slate-500' : 'text-white/50'}`}>
+                            <span className="font-mono">Version: 1.0</span>
+                            <span className="w-1 h-1 rounded-full bg-current" />
+                            <span className="font-mono">February 2026</span>
+                            <span className="w-1 h-1 rounded-full bg-current" />
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${isLight ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                                Mainnet Ready
+                            </span>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
 
-                    <div className="p-6 md:p-8">
+            {/* Two-Column Layout */}
+            <div className="max-w-7xl mx-auto px-6 py-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                    {/* Left Sidebar - Sticky TOC */}
+                    <aside className="lg:col-span-3">
+                        <div className="sticky top-24">
+                            <div className={`rounded-xl p-5 ${isLight ? 'bg-slate-50 border border-slate-200' : 'bg-surface-elevated-1 border border-white/10'}`}>
+                                <h3 className={`text-xs font-mono tracking-[0.2em] uppercase mb-4 ${isLight ? 'text-slate-500' : 'text-white/50'}`}>
+                                    {isZh ? '目录' : 'Contents'}
+                                </h3>
+                                {loading ? (
+                                    <div className="flex items-center gap-2 text-slate-400">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span className="text-sm">{isZh ? '加载中...' : 'Loading...'}</span>
+                                    </div>
+                                ) : (
+                                    <nav className="space-y-1 max-h-[60vh] overflow-y-auto">
+                                        {toc.map((item) => (
+                                            <a
+                                                key={item.id}
+                                                href={`#${item.id}`}
+                                                className={`block py-1.5 text-sm transition-all border-l-2 ${item.level === 3 ? 'pl-5' : 'pl-3'
+                                                    } ${activeSection === item.id
+                                                        ? isLight
+                                                            ? 'border-blue-500 text-blue-700 font-medium bg-blue-50 -ml-px'
+                                                            : 'border-cyan-400 text-cyan-400 font-medium bg-cyan-500/10 -ml-px'
+                                                        : isLight
+                                                            ? 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                                                            : 'border-transparent text-white/50 hover:text-white/80 hover:border-white/30'
+                                                    }`}
+                                            >
+                                                {item.text.length > 40 ? item.text.slice(0, 40) + '...' : item.text}
+                                            </a>
+                                        ))}
+                                    </nav>
+                                )}
+                            </div>
+                        </div>
+                    </aside>
+
+                    {/* Right Panel - Main Content */}
+                    <main className="lg:col-span-9">
                         {loading && (
-                            <div className="flex items-center gap-2 text-theme-text-muted">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                <span className="text-sm">{isZh ? '正在加载…' : 'Loading…'}</span>
+                            <div className="flex items-center justify-center py-20">
+                                <Loader2 className={`w-8 h-8 animate-spin ${isLight ? 'text-slate-400' : 'text-white/40'}`} />
                             </div>
                         )}
 
                         {!loading && error && (
-                            <div className="flex items-start gap-2 text-red-400">
-                                <AlertCircle className="w-5 h-5 mt-0.5" />
+                            <div className={`flex items-start gap-3 p-4 rounded-xl ${isLight ? 'bg-red-50 border border-red-200' : 'bg-red-500/10 border border-red-500/30'}`}>
+                                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                                 <div>
-                                    <div className="text-sm font-semibold">{isZh ? '加载失败' : 'Failed to load'}</div>
-                                    <div className="text-sm opacity-90">{error}</div>
+                                    <div className="font-medium text-red-700 dark:text-red-400">{isZh ? '加载失败' : 'Failed to load'}</div>
+                                    <div className="text-sm text-red-600 dark:text-red-300/80">{error}</div>
                                 </div>
                             </div>
                         )}
 
                         {!loading && !error && (
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                                <aside className="lg:col-span-4">
-                                    <div className="sticky top-24">
-                                        <div className="rounded-xl border border-theme-border-medium bg-surface-elevated-2/50 p-4">
-                                            <div className="text-xs font-mono tracking-widest text-theme-text-muted mb-3">
-                                                {isZh ? '目录' : 'CONTENTS'}
-                                            </div>
-                                            <div className="space-y-2">
-                                                {toc.length === 0 ? (
-                                                    <div className="text-sm text-theme-text-muted">{isZh ? '暂无目录' : 'No contents'}</div>
-                                                ) : (
-                                                    toc.map((i) => (
-                                                        <a
-                                                            key={i.id}
-                                                            href={`#${i.id}`}
-                                                            className={`block text-sm text-theme-text-muted hover:text-theme-text-primary transition-colors ${
-                                                                i.level === 3 ? 'pl-4' : 'pl-0'
-                                                            }`}
-                                                        >
-                                                            {i.text}
-                                                        </a>
-                                                    ))
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </aside>
-
-                                <main className="lg:col-span-8">
-                                    <div className="space-y-5">
-                                        {blocks.map((b, idx) => {
-                                            if (b.type === 'h') {
-                                                const id = headingIdMap.get(idx);
-                                                const Tag = b.level === 1 ? 'h2' : b.level === 2 ? 'h3' : 'h4';
-                                                const cls = b.level === 1
-                                                    ? 'text-xl md:text-2xl font-bold text-theme-text-primary mt-6'
-                                                    : b.level === 2
-                                                        ? 'text-lg md:text-xl font-semibold text-theme-text-primary mt-6'
-                                                        : 'text-base font-semibold text-theme-text-primary mt-5';
-                                                return (
-                                                    <Tag key={idx} id={id} className={cls}>
-                                                        {b.text}
-                                                    </Tag>
-                                                );
-                                            }
-                                            if (b.type === 'p') {
-                                                return (
-                                                    <p key={idx} className="text-theme-text-secondary leading-relaxed">
+                            <article className="prose-container space-y-6" style={{ maxWidth: '90ch' }}>
+                                {blocks.map((b, idx) => {
+                                    if (b.type === 'h') {
+                                        const id = headingIdMap.get(idx);
+                                        const Tag = b.level === 1 ? 'h1' : b.level === 2 ? 'h2' : 'h3';
+                                        const classes = {
+                                            1: `text-3xl md:text-4xl font-bold tracking-tight mt-12 mb-6 ${isLight ? 'text-slate-900' : 'text-white'}`,
+                                            2: `text-2xl md:text-2xl font-bold tracking-tight mt-10 mb-4 pt-6 border-t ${isLight ? 'text-slate-900 border-slate-200' : 'text-white border-white/10'}`,
+                                            3: `text-lg md:text-xl font-semibold mt-8 mb-3 ${isLight ? 'text-slate-800' : 'text-white/90'}`
+                                        };
+                                        return (
+                                            <Tag
+                                                key={idx}
+                                                id={id}
+                                                data-heading-id={id}
+                                                className={classes[b.level]}
+                                                style={{ fontFamily: b.level <= 2 ? "'JetBrains Mono', monospace" : 'Inter, system-ui, sans-serif' }}
+                                            >
+                                                {b.text}
+                                            </Tag>
+                                        );
+                                    }
+                                    if (b.type === 'p') {
+                                        const specialType = detectSpecialBlock(b.text);
+                                        if (specialType === 'note') {
+                                            return (
+                                                <div key={idx} className={`flex gap-3 p-4 rounded-xl border-l-4 ${isLight ? 'bg-blue-50 border-blue-500' : 'bg-blue-500/10 border-blue-400'}`}>
+                                                    <Info className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
+                                                    <p className={`text-[15px] leading-relaxed ${isLight ? 'text-blue-800' : 'text-blue-200'}`}>
                                                         {renderInline(b.text)}
                                                     </p>
-                                                );
-                                            }
-                                            if (b.type === 'ul') {
-                                                return (
-                                                    <ul key={idx} className="list-disc pl-5 space-y-1 text-theme-text-secondary">
-                                                        {b.items.map((it, i) => (
-                                                            <li key={i} className="leading-relaxed">
-                                                                {renderInline(it)}
-                                                            </li>
+                                                </div>
+                                            );
+                                        }
+                                        if (specialType === 'warning') {
+                                            return (
+                                                <div key={idx} className={`flex gap-3 p-4 rounded-xl border-l-4 ${isLight ? 'bg-amber-50 border-amber-500' : 'bg-amber-500/10 border-amber-400'}`}>
+                                                    <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
+                                                    <p className={`text-[15px] leading-relaxed ${isLight ? 'text-amber-800' : 'text-amber-200'}`}>
+                                                        {renderInline(b.text)}
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
+                                        if (specialType === 'definition') {
+                                            return (
+                                                <div key={idx} className={`p-4 rounded-xl border-l-4 ${isLight ? 'bg-slate-50 border-slate-400' : 'bg-white/5 border-white/30'}`}>
+                                                    <p className={`text-[15px] leading-relaxed ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
+                                                        {renderInline(b.text)}
+                                                    </p>
+                                                </div>
+                                            );
+                                        }
+                                        return (
+                                            <p key={idx} className={`text-[16px] leading-[1.75] ${isLight ? 'text-slate-700' : 'text-white/80'}`} style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                                                {renderInline(b.text)}
+                                            </p>
+                                        );
+                                    }
+                                    if (b.type === 'ul') {
+                                        return (
+                                            <ul key={idx} className={`list-disc pl-6 space-y-2 ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
+                                                {b.items.map((it, i) => (
+                                                    <li key={i} className="text-[15px] leading-relaxed pl-1">
+                                                        {renderInline(it)}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        );
+                                    }
+                                    if (b.type === 'ol') {
+                                        return (
+                                            <ol key={idx} className={`list-decimal pl-6 space-y-2 ${isLight ? 'text-slate-700' : 'text-white/80'}`}>
+                                                {b.items.map((it, i) => (
+                                                    <li key={i} className="text-[15px] leading-relaxed pl-1">
+                                                        {renderInline(it)}
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        );
+                                    }
+                                    if (b.type === 'code') {
+                                        return (
+                                            <pre
+                                                key={idx}
+                                                className={`rounded-xl overflow-x-auto p-5 shadow-sm ${isLight ? 'bg-slate-900 text-slate-100' : 'bg-black/50 text-white/90 border border-white/10'}`}
+                                            >
+                                                {b.lang && (
+                                                    <div className={`text-xs font-mono mb-3 pb-2 border-b ${isLight ? 'text-slate-500 border-slate-700' : 'text-white/40 border-white/10'}`}>
+                                                        {b.lang}
+                                                    </div>
+                                                )}
+                                                <code className="font-mono text-[13px] leading-relaxed">
+                                                    {b.text}
+                                                </code>
+                                            </pre>
+                                        );
+                                    }
+                                    if (b.type === 'table') {
+                                        return (
+                                            <div key={idx} className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className={isLight ? 'bg-slate-50' : 'bg-white/5'}>
+                                                            {b.rows[0]?.map((cell, ci) => (
+                                                                <th key={ci} className={`px-4 py-3 text-left font-semibold ${isLight ? 'text-slate-900 border-b border-slate-200' : 'text-white border-b border-white/10'}`}>
+                                                                    {renderInline(cell)}
+                                                                </th>
+                                                            ))}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {b.rows.slice(1).map((row, ri) => (
+                                                            <tr key={ri} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5'}>
+                                                                {row.map((cell, ci) => (
+                                                                    <td key={ci} className={`px-4 py-3 ${isLight ? 'text-slate-700 border-b border-slate-100' : 'text-white/80 border-b border-white/5'}`}>
+                                                                        {renderInline(cell)}
+                                                                    </td>
+                                                                ))}
+                                                            </tr>
                                                         ))}
-                                                    </ul>
-                                                );
-                                            }
-                                            if (b.type === 'ol') {
-                                                return (
-                                                    <ol key={idx} className="list-decimal pl-5 space-y-1 text-theme-text-secondary">
-                                                        {b.items.map((it, i) => (
-                                                            <li key={i} className="leading-relaxed">
-                                                                {renderInline(it)}
-                                                            </li>
-                                                        ))}
-                                                    </ol>
-                                                );
-                                            }
-                                            if (b.type === 'code') {
-                                                return (
-                                                    <pre
-                                                        key={idx}
-                                                        className="rounded-xl border border-theme-border-medium bg-surface-elevated-2 dark:bg-white/5 overflow-x-auto p-4"
-                                                    >
-                                                        <code className="font-mono text-[12px] text-theme-text-primary">
-                                                            {b.text}
-                                                        </code>
-                                                    </pre>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                    </div>
-                                </main>
-                            </div>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        );
+                                    }
+                                    if (b.type === 'hr') {
+                                        return <hr key={idx} className={`my-8 ${isLight ? 'border-slate-200' : 'border-white/10'}`} />;
+                                    }
+                                    return null;
+                                })}
+                            </article>
                         )}
-                    </div>
+                    </main>
                 </div>
             </div>
         </div>

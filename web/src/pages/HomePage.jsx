@@ -307,7 +307,7 @@ const HeroVisualization = () => {
             {/* Generated Image */}
             <motion.div className="absolute inset-0 flex items-center justify-center p-6">
                 <motion.img
-                    src="/images/zk_bridge_blueprint.png"
+                    src={`${import.meta.env.BASE_URL}images/zk_bridge_blueprint.png`}
                     alt={s('ZK Bridge Blueprint', '零知识桥蓝图')}
                     className="max-w-full max-h-full object-contain drop-shadow-sm"
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -666,7 +666,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-20">
                                 <MechanismStep
                                     step={isZh ? '步骤 01' : 'STEP_01'}
-                                    icon="/images/icon_privacy_shielding.png"
+                                    icon={`${import.meta.env.BASE_URL}images/icon_privacy_shielding.png`}
                                     title={s('PRIVACY_SHIELDING', '隐私封装')}
                                     subtitle={s('Input Layer', '输入层')}
                                     description={s('Your data stays on your device. TLS encryption preserves privacy throughout the entire process.', '数据留在本地设备 传输加密与证明流程相伴 尽量减少暴露面')}
@@ -674,7 +674,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
                                 />
                                 <MechanismStep
                                     step={isZh ? '步骤 02' : 'STEP_02'}
-                                    icon="/images/icon_risc_zero_compute.png"
+                                    icon={`${import.meta.env.BASE_URL}images/icon_risc_zero_compute.png`}
                                     title={s('RISC_ZERO_COMPUTE', '证明计算')}
                                     subtitle={s('Processing Layer', '处理层')}
                                     description={s('RISC Zero zkVM generates a mathematical proof in an isolated, verifiable environment.', 'RISC Zero 在隔离环境里生成可验证的数学证明')}
@@ -683,7 +683,7 @@ export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
                                 />
                                 <MechanismStep
                                     step={isZh ? '步骤 03' : 'STEP_03'}
-                                    icon="/images/icon_verifiable_credential.png"
+                                    icon={`${import.meta.env.BASE_URL}images/icon_verifiable_credential.png`}
                                     title={s('VERIFIABLE_CREDENTIAL', '可验证凭证')}
                                     subtitle={s('Output Layer', '输出层')}
                                     description={s('Soulbound Token minted on-chain. Publicly verifiable, composable across DeFi protocols.', '把凭证铸到链上 公开可验 也能被各类应用组合使用')}
