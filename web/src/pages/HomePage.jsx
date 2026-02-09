@@ -529,7 +529,7 @@ const CodePreview = () => {
 // MAIN HOMEPAGE COMPONENT
 // ============================================================================
 
-export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
+export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs, isConnecting }) => {
     const { theme } = useTheme();
     const isLight = theme === 'light';
     const { locale } = useI18n();
@@ -610,14 +610,16 @@ export const HomePage = ({ onConnectWallet, onViewDemo, onOpenDocs }) => {
                             <motion.div variants={lightHeroItem} className="flex items-center gap-4 pt-2">
                                 <motion.button
                                     onClick={onConnectWallet}
+                                    disabled={isConnecting}
                                     whileHover={{ y: -1 }}
                                     whileTap={{ scale: 0.98 }}
                                     className="px-6 py-3 bg-slate-900 text-white rounded-lg font-semibold text-sm
                                              shadow-sm hover:shadow-md hover:bg-slate-800
-                                             transition-all duration-200 cursor-pointer flex items-center gap-2"
+                                             transition-all duration-200 cursor-pointer flex items-center gap-2
+                                             disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     <Zap size={16} className="text-amber-400" />
-                                    {s('Start Bridging', '开始连接')}
+                                    {isConnecting ? s('Connecting...', '正在连接...') : s('Start Bridging', '开始连接')}
                                 </motion.button>
                                 <motion.button
                                     onClick={onOpenDocs || onViewDemo}

@@ -314,6 +314,7 @@ function App() {
             case 'contractInspector': return <ContractInspectorPage />;
             default: return <HomePage
                 onConnectWallet={connectWallet}
+                isConnecting={isConnecting}
                 onViewDemo={() => setActiveTab('solutions')}
                 onOpenDocs={() => setActiveTab('whitepaper')}
             />;

@@ -13,6 +13,7 @@ export const useWallet = () => {
     const [isConnecting, setIsConnecting] = useState(false);
 
     const connectWallet = async () => {
+        if (isConnecting) return false;
         try {
             await waitForEthers();
         } catch (error) {
